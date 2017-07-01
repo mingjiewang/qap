@@ -1,0 +1,140 @@
+#!/usr/bin/env perl
+
+#################################################################################
+##                                                                             ##
+##                       Quasispecies Analysis Package                         ##
+##                                                                             ##
+#################################################################################
+##                                                                             ##
+##  A software suite designed for virus quasispecies analysis                  ##
+##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/gap/>        ##
+##                                                                             ##
+##  Version 1.0                                                                ##
+##                                                                             ##
+##  Copyright (C) 2017 by Mingjie Wang, All rights reserved.                   ##
+##  Contact:  huzai@sjtu.edu.cn                                                ##
+##  Organization: Research Laboratory of Clinical Virology, Rui-jin Hospital,  ##
+##  Shanghai Jiao Tong University, School of Medicine                          ##
+##                                                                             ##
+##  This file is a subprogram of GAP suite.                                    ##
+##                                                                             ##
+##  QAP is a free software; you can redistribute it and/or                     ##
+##  modify it under the terms of the GNU General Public License                ##
+##  as published by the Free Software Foundation; either version               ##
+##  3 of the License, or (at your option) any later version.                   ##
+##                                                                             ##
+##  QAP is distributed in the hope that it will be useful,                     ##
+##  but WITHOUT ANY WARRANTY; without even the implied warranty of             ##
+##  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              ##
+##  GNU General Public License for more details.                               ##
+##                                                                             ##
+##  You should have received a copy of the GNU General Public                  ##
+##  License along with ViralFusionSeq; if not, see                             ##
+##  <http://www.gnu.org/licenses/>.                                            ##
+##                                                                             ##
+#################################################################################
+
+use diagnostics;
+use strict;
+use warnings;
+use FindBin qw/$RealBin/;
+use File::Spec;
+use Pod::Usage;
+use lib "$FindBin::Bin/lib";
+use Cwd;
+
+####Use modules in this program####
+use General;
+
+
+####Display welcome information####
+my $who_output = `who -m`;
+my ($user,$ip) = (split " ",$who_output)[0,4];
+my $info = "Welcome ${user}\@${ip}";
+#&Info($info,"yellow");
+#sleep(1);
+
+#my $wd = getcwd;
+#print "wd:$wd\nbin:$RealBin\n";
+
+####Check subprogram input####
+my $subprogram = 'NA';
+if (defined $ARGV[0]){
+	$subprogram = $ARGV[0];
+}
+my @all_subprograms = qw/RawDataFiltration BarcodeSplitter TrimBarcode ExtractReadID ExtractSeqByID ExtractSeqByIDInR MapReadsToRef AssembleSeqFromSam ECnQSR MultipleSeqAlign AminoAcidTranslator CutSeqIntoTile CutSeqWithIntervals ConsensusSeq ShannonEntroy SingleBaseComplexity Diversity MFI MutationCaller MutationCallerFromMSA Circos IGV SampleRename/;
+my $flag = grep {$subprogram eq $_;} @all_subprograms;
+
+##display help if subprogram not provided
+if (not $flag){
+#&Info("You are running vip, please select a subprogram");
+#sleep(1);
+
+####Get program version####
+##Read version file
+my $versionFile = File::Spec -> catfile($RealBin,"doc","VERSION");
+die "Version file missing.\n" if not -e $versionFile;
+##Get program version
+my $version = `head -n 1 $versionFile`;
+chomp $version;
+
+####Show help screen####
+my $sepline = '-' x 70;
+print "\n";
+#printcol($sepline,'green');
+#printcol($sepline);
+print(
+qq/Program: qap (Quasispecies analysis Package)
+Version: $version
+
+Usage: gap <command> [options]
+
+/);
+#printcol($sepline);
+
+print(
+qq/Commands:
+  -- NGS data manipulation
+         RawDataFiltration        filter NGS raw data with base quality and read length
+         BarcodeSplitter          split raw sequence data according to sample barcoding
+         TrimBarcode              trim barcode in fastq\/fasta files 
+         ExtractReadID            extract read IDs from fastq data
+         ExtractSeqByID           extract reads from fastq files using read ID
+         ExtractSeqByIDInR        extract reads from fastq files using read ID in a faster way
+         MapReadsToRef            map reads to reference and generate SAM\/BAM files 
+         AssembleSeqFromSam       assemble amplicons using read paires in SAM file
+         ECnQSR                   sequencing error correction and quasispecies reconstruction 
+         
+  -- QS analysis
+         MultipleSeqAlign         multiple sequence alignment using different algorithms
+         AminoAcidTranslator      translate nucleotides into amino acids 
+         CutSeqIntoTile           cut sequences into tiles for downstream regional analysis
+         CutSeqWithIntervals      cut sequences into fragments with intervals 
+         ConsensusSeq             calculate and visulize consensus sequence in QS spectrum
+         ShannonEntroy            calculate QS Shannon entroy and show spectrum structure
+         SingleBaseComplexity     calculate Shannon entroy at single base resolution
+         Diversity                calculate QS diversity 
+         MFI                      calculate mutation frequency index 
+         MutationCaller           call variants from SAM\/BAM files
+         MutationCallerFromMSA    call variants from multiple sequence alignment files
+         
+  -- Visualization
+         Circos                   show sequence information in CIRCOS plot
+         IGV                      show mapping details using integrative genomics viewer
+         
+  -- Useful tools
+         SampleRename             rename sample files in batch
+
+/
+);
+#printcol("$sepline\n");
+
+}else{
+	print "\n";
+	my $subprogramPath = File::Spec -> catfile($RealBin,"bin",$subprogram);
+	$subprogramPath .= ".pl";
+	my $argsTosubprogram = join ' ',@ARGV[1..(scalar @ARGV - 1)];
+	system "perl $subprogramPath $argsTosubprogram";
+	#system "perl $subprogramPath ";
+}
+
