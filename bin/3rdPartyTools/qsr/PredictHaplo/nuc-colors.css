@@ -1,0 +1,60 @@
+/*
+  This CSS file contains the Default colors used for the Amino Acids representations
+*/
+.A{
+	color: black;
+}
+
+.C{
+	color: blue;
+}
+
+.G {
+	color: fuchsia;
+}
+
+.T{
+	color: green;
+}
+.N{
+    color: gray; 
+}
+.trueMut{
+    color: red;
+}
+
+.entropySel{
+    color: #FF9900;
+}
+
+.NotAA {
+	color: gray;
+}
+
+pre {
+	display: block;
+}
+
+.c99{
+    color: #FF0000;
+}
+
+.c95{
+    color: #FF3838;
+}
+
+.c90{
+    color: #FF7171;
+}
+
+.c85{
+    color: #FFAAAA;
+}
+
+.c80{
+    color: #FFC6C6;
+}
+
+.less80{
+    color: #FFE2E2;
+}

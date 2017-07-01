@@ -1,0 +1,38 @@
+;   MEGA-CC (Molecular Evolutionary Genetics Analysis Compute Core)
+;
+;   Suggested Citation for MEGA-CC 7:
+;
+;   Kumar S, Stecher G, Tamura K (2016)
+;   MEGA7: Molecular Evolutionary Genetics Analysis 7.0 for bigger datasets
+;   Molecular Biology and Evolution 33:1870-1874
+;
+;   Kumar S, Stecher G, Peterson D, and Tamura K (2012)
+;   MEGA-CC: Computing Core of Molecular Evolutionary Genetics
+;   Analysis Program for Automated and Iterative Data Analysis.
+;   Bioinformatics (2012) 28:2685-2686 (Epub 2012 Aug 24)
+
+
+; ****************************************************************************
+;        Please see the important message(s) at the bottom of this file 
+; ****************************************************************************
+
+[General Info]
+
+	Data Type                               = unknown
+	No. of Taxa                             =        0
+	Data File                               = 
+	Settings File                           = 
+	Command Line                            = 
+
+[Analysis Statistics]
+
+	Start Time                              = 18-5-17 10:49:27
+	End Time                                = 18-5-17 10:49:27
+	Execution Time                          =    0.001 (seconds)
+	Peak Memory Used(Working Set)           = Not available
+
+
+; ****************************************************************************
+;                 Please note the following important messages:
+; ****************************************************************************
+;	Error: The analysis (MAO) file you specified does not exist.  Please check your spelling and try again.

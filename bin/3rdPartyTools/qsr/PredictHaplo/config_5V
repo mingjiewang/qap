@@ -1,0 +1,45 @@
+% configuration file for the HIVhaplotyper
+% prefix
+5V_Ill_
+% filename of reference sequence (FASTA)
+5V_ref_seq.fasta
+% do_visualize (1 = true, 0 = false)
+1
+% filname of the aligned reads (sam format)
+Illumina_aln_pairs.sam
+% have_true_haplotypes  (1 = true, 0 = false)
+0
+% filname of the true haplotypes (MSA in FASTA format) (fill in any dummy filename if there is no "true" haplotypes)
+dd5VirusMixReference.fasta
+% do_local_analysis  (1 = true, 0 = false) (must be 1 in the first run)
+1
+% max_reads_in_window;
+10000
+% entropy_threshold
+4e-2
+%reconstruction_start
+790
+%reconstruction_stop
+5096
+%min_mapping_qual  
+30
+%min_readlength 
+220
+%max_gap_fraction (relative to alignment length)
+0.05
+%min_align_score_fraction (relative to read length)
+0.35
+%alpha_MN_local (prior parameter for multinomial tables over the nucleotides)
+25
+%min_overlap_factor (reads must have an overlap with the local reconstruction window of at least this factor times the window size)
+0.85
+%local_window_size_factor (size of  local reconstruction window relative to the median of the read lengths)
+0.7
+% max number of clusters (in the truncated Dirichlet process)
+25
+% MCMC iterations
+501
+% include deletions (0 = no, 1 = yes)
+1
+
+

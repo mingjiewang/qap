@@ -1,0 +1,12 @@
+new
+genome /home/wmj/projects/qap/code/bin/test/ref/hbv.fasta
+load /home/wmj/projects/qap/code/bin/yzt/Y01/5.Map/P01.sorted.bam
+snapshotDirectory ./
+goto all
+sort position
+collapse
+snapshot ss.png 
+snapshot ss.svg
+exit
+
+ 
