@@ -7,7 +7,7 @@
 #################################################################################
 ##                                                                             ##
 ##  A software suite designed for virus quasispecies analysis                  ##
-##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/gap/>        ##
+##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/>        ##
 ##                                                                             ##
 ##  Version 1.0                                                                ##
 ##                                                                             ##
@@ -16,7 +16,7 @@
 ##  Organization: Research Laboratory of Clinical Virology, Rui-jin Hospital,  ##
 ##  Shanghai Jiao Tong University, School of Medicine                          ##
 ##                                                                             ##
-##  This file is a subprogram of GAP suite.                                    ##
+##  This file is a subprogram of QAP suite.                                    ##
 ##                                                                             ##
 ##  QAP is a free software; you can redistribute it and/or                     ##
 ##  modify it under the terms of the GNU General Public License                ##
@@ -29,7 +29,7 @@
 ##  GNU General Public License for more details.                               ##
 ##                                                                             ##
 ##  You should have received a copy of the GNU General Public                  ##
-##  License along with ViralFusionSeq; if not, see                             ##
+##  License along with QAP; if not, see                             ##
 ##  <http://www.gnu.org/licenses/>.                                            ##
 ##                                                                             ##
 #################################################################################
@@ -89,6 +89,7 @@ my $fq2;
 my $outputDir;
 my $threads;
 my $ref;
+my $trim;
 
 my $DateNow = `date +"%Y%m%d_%Hh%Mm%Ss"`;
 chomp $DateNow;
@@ -96,10 +97,11 @@ chomp $DateNow;
 GetOptions(
 '1|fastq1|=s'        => \$fq1,
 '2|fastq2|=s'        => \$fq2,
-'r|reference|=s'     => \$ref,
+'r|refSeq|=s'        => \$ref,
 'o|outputDir|=s'     => \$outputDir,
 'h|help|'            => \$help,
-'t|threads|=s'       => \$threads
+'t|threads|=s'       => \$threads,
+'trim|=s'            => \$trim
 );
 
 ##check command line arguments
@@ -108,6 +110,7 @@ if (defined $help){
 }
 
 if (defined $outputDir){
+	$outputDir =~ s/\/$//;
 	$outputDir = abs_path($outputDir) . "/";
 	if (not -e $outputDir){
  		InfoWarn("The output directory $outputDir does NOT exist.",'yellow');
@@ -150,6 +153,18 @@ if(defined $ref){
 	InfoError("Input reference file MUST be provided.");
 	pod2usage(-verbose=>2,-exitval=>1);
 	exit;
+}
+
+if(defined $trim){
+	if(uc($trim) eq 'Y' or uc($trim) eq 'N'){
+		#nothing
+	}else{
+		InfoError("--trim $trim is not allowed. Please choose between \'Y\' or \'N\'.");
+		pod2usage(-verbose=>1,-exitval=>1);
+		exit;
+	}
+}else{
+	$trim = 'Y';
 }
 
 if (defined $threads){
@@ -326,7 +341,11 @@ close T;
 my $start = 1;
 $start = min(@pos);
 my $end = checkSeqLen($ref,$tmpdir);
-$end = max(@pos);
+if($trim =~ /y/i){
+	$end = $start + checkSeqLen($ref,$tmpdir) - 1;
+}else{
+	$end = max(@pos);
+}
 
 my $finalRef = File::Spec -> catfile($outputDir, removeFastaSuffix(basename($ref)) . ".FixedRef.fasta");
 #moveRegion($newref,$finalRef,'head2tail',$finalStart - 1);
@@ -366,11 +385,11 @@ qap -- Quasispecies analysis package
 
 
 
-gap FixCircRef [options]
+qap FixCircRef [options]
 
 Use --help to see more information.
 
-gap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
+qap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
 
 =head1 DESCRIPTION
 
@@ -392,6 +411,10 @@ Path to next generation sequencing raw data. REQUIRED for paired-end reads. Both
 
 Path to the reference fasta file. 
 
+=item --trim F<STRING> [Optional]
+
+If the rebuilded reference sequence is longer than the real reference, choose how to trim the additional bases. 'Y' for trim and 'N' for keep. The default value is --trim Y.
+
 =item --outputDir,-o F<FILE> [Optional]
 
 Path of the directory to storage result files. If NOT provided, the program will generate a folder automatically.
@@ -410,7 +433,7 @@ Display this detailed help information.
 
 =over 5
 
-gap FixCircRef -1 test_R1.fq -2 test_R2.fq -r HBV.fasta -t 5 -o ./newref
+qap FixCircRef -1 test_R1.fq -2 test_R2.fq -r HBV.fasta -t 5 -o ./newref
 
 =back
 

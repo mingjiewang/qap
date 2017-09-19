@@ -7,7 +7,7 @@
 #################################################################################
 ##                                                                             ##
 ##  A software suite designed for virus quasispecies analysis                  ##
-##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/gap/>        ##
+##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/>        ##
 ##                                                                             ##
 ##  Version 1.0                                                                ##
 ##                                                                             ##
@@ -16,7 +16,7 @@
 ##  Organization: Research Laboratory of Clinical Virology, Rui-jin Hospital,  ##
 ##  Shanghai Jiao Tong University, School of Medicine                          ##
 ##                                                                             ##
-##  This file is a subprogram of GAP suite.                                    ##
+##  This file is a subprogram of QAP suite.                                    ##
 ##                                                                             ##
 ##  QAP is a free software; you can redistribute it and/or                     ##
 ##  modify it under the terms of the GNU General Public License                ##
@@ -29,7 +29,7 @@
 ##  GNU General Public License for more details.                               ##
 ##                                                                             ##
 ##  You should have received a copy of the GNU General Public                  ##
-##  License along with ViralFusionSeq; if not, see                             ##
+##  License along with QAP; if not, see                             ##
 ##  <http://www.gnu.org/licenses/>.                                            ##
 ##                                                                             ##
 #################################################################################
@@ -93,6 +93,7 @@ if (defined $help){
 }
 
 if (defined $outputDir){
+	$outputDir =~ s/\/$//;
 	$outputDir = abs_path($outputDir) . "/";
 	if (not -e $outputDir){
  		InfoWarn("The output directory $outputDir does NOT exist.",'yellow');
@@ -190,10 +191,13 @@ if (not existFile($bedfile)){
 	exit(0);
 }
 
+$trackdata =~ s/,$//;
 my @trackdata = split ",",$trackdata;
 my $numberOftrackdata = scalar(@trackdata);
+$datatype =~ s/,$//;
 my @datatype = split ",",$datatype;
 my $numberOfdatatype = scalar(@datatype);
+$plottype =~ s/,$//;
 my @plottype = split ",",$plottype;
 my $numberOfplottype = scalar(@plottype);
 my @numTocheck = ($numberOfdatatype, $numberOfplottype, $numberOftrackdata);
@@ -343,7 +347,13 @@ for my $i (1..scalar(@plottype)){
 		print CF "radius = $radius\n";
 		print CF "bezier_radius = 0.01r\n";
 		print CF "color = 55,204,38,0.3\n";
-		print CF "ribbon = yes\n";
+		if($plottype[$i - 1] eq 'linkline'){
+			print CF "ribbon = no\n";
+		}elsif($plottype[$i - 1] eq 'ribbon'){
+			print CF "ribbon = yes\n";
+		}else{
+			#nothing
+		}
 		print CF "</link>\n\n";
 	}
 }
@@ -515,11 +525,11 @@ qap -- Quasispecies analysis package
 
 
 
-gap Circos [options]
+qap Circos [options]
 
 Use --help to see more information.
 
-gap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
+qap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
 
 =head1 DESCRIPTION
 
@@ -547,7 +557,7 @@ Display this detailed help information.
 
 =over 5
 
-gap Circos -c test.conf -o ./Circos
+qap Circos -c test.conf -o ./Circos
 
 =back
 

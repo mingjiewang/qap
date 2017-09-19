@@ -7,7 +7,7 @@
 #################################################################################
 ##                                                                             ##
 ##  A software suite designed for virus quasispecies analysis                  ##
-##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/gap/>        ##
+##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/>        ##
 ##                                                                             ##
 ##  Version 1.0                                                                ##
 ##                                                                             ##
@@ -16,7 +16,7 @@
 ##  Organization: Research Laboratory of Clinical Virology, Rui-jin Hospital,  ##
 ##  Shanghai Jiao Tong University, School of Medicine                          ##
 ##                                                                             ##
-##  This file is a subprogram of GAP suite.                                    ##
+##  This file is a subprogram of QAP suite.                                    ##
 ##                                                                             ##
 ##  QAP is a free software; you can redistribute it and/or                     ##
 ##  modify it under the terms of the GNU General Public License                ##
@@ -29,7 +29,7 @@
 ##  GNU General Public License for more details.                               ##
 ##                                                                             ##
 ##  You should have received a copy of the GNU General Public                  ##
-##  License along with ViralFusionSeq; if not, see                             ##
+##  License along with QAP; if not, see                             ##
 ##  <http://www.gnu.org/licenses/>.                                            ##
 ##                                                                             ##
 #################################################################################
@@ -55,7 +55,7 @@ use General;
 
 ##Show welcome
 print "You are now running subprogram: ";
-printcol ("ExtractSeq","green");
+printcol ("ExtractSeqInR","green");
 print "\n";
 
 ##get workding directory
@@ -71,19 +71,23 @@ my $fq1;
 my $fq2;
 my $outputDir;
 my $pairEnded = 0;
+my $sampleLabel;
 my $idFile;
 my $format;
+my $threads;
 
 my $DateNow = `date +"%Y%m%d_%Hh%Mm%Ss"`;
 chomp $DateNow;
 
 GetOptions(
-'1|fastq1|=s'      => \$fq1,
-'2|fastq2|=s'      => \$fq2,
-'o|outputDir=s'    => \$outputDir,
-'h|help|'          => \$help,
-'i|readID|=s'       => \$idFile,
-'f|outFormat|=s'    => \$format
+'1|fastq1|=s'       => \$fq1,
+'2|fastq2|=s'       => \$fq2,
+'o|outputDir|=s'    => \$outputDir,
+'i|idFile|=s'       => \$idFile,
+'f|outFormat|=s'    => \$format,
+'l|sampleLabel|=s'  => \$sampleLabel,
+'h|help|'           => \$help,
+'t|threads|=s'      => \$threads
 );
 
 
@@ -95,6 +99,7 @@ if (defined $help){
 
 
 if (defined $outputDir){
+	$outputDir =~ s/\/$//;
 	$outputDir = abs_path($outputDir) . "/";
 	if (not -e $outputDir){
  		InfoWarn("The output directory $outputDir does NOT exist.",'yellow');
@@ -112,7 +117,7 @@ if (defined $outputDir){
 		}
 	}
 }else{
-	$outputDir = File::Spec -> catfile($wk_dir,"qap_Results_for_ExtractSeq_$DateNow");
+	$outputDir = File::Spec -> catfile($wk_dir,"qap_Results_for_ExtractSeqInR_$DateNow");
 	InfoWarn("The output directory is not provided!",'yellow');
 	InfoWarn("Will mkdir \"$outputDir\" and use it as the output directory.",'yellow');
 	
@@ -177,116 +182,180 @@ if (defined $fq2){
 }
 
 ##start the analysis
-my %id;
-open T,"$idFile" or die "Can NOT open read ID file:$idFile:$!";
-while(<T>){
-	chomp;
-	$id{$_} = 1;
+#find the r script
+my $Rscript = File::Spec -> catfile($RealBin, 'Rscripts', 'ExtractSeq.R');
+if (-e $Rscript){
+	#nothing
+}else{
+	InfoError("Rscript $Rscript is missing. Abortting...",'red');
+	exit;
 }
-close T;
 
-##core program
-&extractSeq($fq1,\%id,$outputDir,$format);
-&extractSeq($fq2,\%id,$outputDir,$format) if $pairEnded;
-
-##subprograms goes here
-sub extractSeq {
-	my $fq = shift;
-	my $id = shift;
-	my $outdir = shift;
-	my $format = shift;
-	
+#handle gzipped files
+if (isGzipped($fq1)){
 	my $fqName = basename($fq1);
-	my %idWanted = %$id;
+	my $tmpName = addTagForRawData($fqName, 'ungzipped', 1) . "_" . time();
+	my $tmpout = File::Spec -> catfile($outputDir,$tmpName);
 	
-	Info("Extracting sequences from $fq.");
+	#uncompress
+	Info("Uncompressing gzipped file $fqName");
+	my $cmd = "gunzip -c $fq1 > $tmpout";
+	system($cmd);
+	#runcmd($cmd);
+	$fq1 = $tmpout;
 	
-	##handle gzipped files
-	if (isGzipped($fq)){
-		my $tmpName = addTagForRawData($fqName, 'ungzipped', 1) . "_" . time();
-		my $tmpout = File::Spec -> catfile($outdir,$tmpName);
-		
-		#uncompress
-		Info("Uncompressing gzipped file $fqName");
-		my $cmd = "gunzip -c $fq > $tmpout";
-		system($cmd);
-		#runcmd($cmd);
-		$fq = $tmpout;
-	}
-	
-	#output file name
+	#handle the output file name and file path
 	my $outName = addTagForRawData($fqName, 'extractedSeq', 1);
+	$outName = $sampleLabel . "_" .$outName;
 	$outName =~ s/\.gz$//; #remove .gz suffix is input fastq file is gzipped.
 	
-	my $outFile;
+	#core program
+	my $tmpRInputFile = File::Spec -> catfile($outputDir, $tmpName . ".RInput");
 	if ($format eq 'fastq'){
-		$outFile = File::Spec -> catfile($outdir, $outName);
-	}elsif ($format eq 'fasta'){
-		$outFile = File::Spec -> catfile($outdir, changeFastqSuffix2Fasta($outName));
+		my $outFile = File::Spec -> catfile($outputDir, $outName);
+		
+		#run extraction
+		formatFqIntoColumns($fq1, $tmpRInputFile, 'fastq');
+		$cmd = "Rscript $Rscript -i $tmpRInputFile -d $idFile -o $outFile";
+		runcmd($cmd);
+		Info("Extraction completed for $fqName");
+		
+		#remove tmp files
+		$cmd = "rm -rf $tmpRInputFile $fq1";
+		system($cmd);
 	}else{
-		InfoError("The output file format should be one of \"fastq\" or \"fasta\".","red");
-		exit;
+		my $outFile = File::Spec -> catfile($outputDir, changeFastqSuffix2Fasta($outName));
+		
+		#extraction
+		formatFqIntoColumns($fq1, $tmpRInputFile, 'fasta');
+		my $cmd = "Rscript $Rscript -i $tmpRInputFile -d $idFile -o $outFile";
+		runcmd($cmd);
+		Info("Extraction completed for $fqName");
+		
+		#remove tmp files
+		$cmd = "rm -rf $tmpRInputFile $fq1";
+		system($cmd);
 	}
-	open RES,">$outFile" or die "Can NOT output extracted sequences data to file $outFile:$!\n";
 	
-	#get total line number
-	my $wc = `wc -l $fq`;
-	$wc =~ /^(\d+) /;
-	my $totalLineNum = $1;
-	my $totalSeqNum = int($totalLineNum / 4);
-	my $hashNum = scalar(values(%idWanted));
-	my $estimateTime = log($hashNum) * 10 * ($totalLineNum / 4000000);
-	print(log($hashNum));
-	if ($estimateTime > 5){
-		#nothing
-	}else{
-		$estimateTime = int(rand() * 5) + 2;
-	}
-	my $estimateTimeExp = formatMinutes($estimateTime);
+}else{
+	my $fqName = basename($fq1);
+	my $outName = addTagForRawData($fqName, 'extractedSeq', 1);
+	$outName = $sampleLabel . "_" .$outName;
 	
-	#read in the input fastq file
-	Info("Start to extract, this might take a long time. Please wait patiently. [ETA $estimateTimeExp]");
+	my $tmpRInputFile = File::Spec -> catfile($outputDir, $fqName . ".RInput");
 	if ($format eq 'fastq'){
-		open T,$fq or die "Can NOT open the input fastq file:$!\n";
-		my $i = 1;
-		while(my $line1 = <T>){
-			chomp $line1;
-			chomp (my $line2 = <T>);
-			chomp (my $line3 = <T>);
-			chomp (my $line4 = <T>);
+		my $outFile = File::Spec -> catfile($outputDir, $outName);
 		
-			$line1 =~ /(.*?)\s+/;
-			$id = $1;
-			
-			if (exists $idWanted{$id}){
-					print RES "$line1\n$line2\n$line3\n$line4\n";
-			}
-			InfoProcessBar($i, $totalSeqNum);
-			$i++;
-		}
-		close T;
+		#extraction
+		formatFqIntoColumns($fq1, $tmpRInputFile, 'fastq');
+		my $cmd = "Rscript $Rscript -i $tmpRInputFile -d $idFile -o $outFile";
+		runcmd($cmd);
+		Info("Extraction completed for $fqName");
+		
+		#remove tmp files
+		$cmd = "rm -rf $tmpRInputFile";
+		system($cmd);
 	}else{
-		open T,$fq or die "Can NOT open the input fastq file:$!\n";
-		my $i = 1;
-		while(my $line1 = <T>){
-			chomp $line1;
-			chomp (my $line2 = <T>);
-			chomp (my $line3 = <T>);
-			chomp (my $line4 = <T>);
+		my $outFile = File::Spec -> catfile($outputDir, changeFastqSuffix2Fasta($outName));
 		
-			$line1 =~ /(.*?)\s+/;
-			$id = $1;
-			
-			if (exists $idWanted{$id}){
-					$line1 =~ s/^\@//;
-					print RES ">$line1\n$line2\n";
-			}
-			InfoProcessBar($i, $totalSeqNum);
-			$i++;
-		}
-		close T;
+		#extraction
+		formatFqIntoColumns($fq1, $tmpRInputFile, 'fasta');
+		my $cmd = "Rscript $Rscript -i $tmpRInputFile -d $idFile -o $outFile";
+		runcmd($cmd);
+		Info("Extraction completed for $fqName");
+		
+		#remove tmp files
+		$cmd = "rm -rf $tmpRInputFile";
+		system($cmd);
 	}
 }
+
+
+if($pairEnded){
+	#handle gzipped files
+	if (isGzipped($fq2)){
+		my $fqName = basename($fq2);
+		my $tmpName = addTagForRawData($fqName, 'ungzipped', 1) . "_" . time();
+		my $tmpout = File::Spec -> catfile($outputDir,$tmpName);
+
+		#uncompress
+		Info("Uncompressing gzipped file $fqName");
+		my $cmd = "gunzip -c $fq2 > $tmpout";
+		system($cmd);
+		#runcmd($cmd);
+		$fq2 = $tmpout;
+
+		#handle the output file name and file path
+		my $outName = addTagForRawData($fqName, 'extractedSeq', 1);
+		$outName =~ s/\.gz$//; #remove .gz suffix is input fastq file is gzipped.
+		$outName = $sampleLabel . "_" .$outName;
+		
+		#core program
+		my $tmpRInputFile = File::Spec -> catfile($outputDir, $tmpName . ".RInput");
+		if ($format eq 'fastq'){
+			my $outFile = File::Spec -> catfile($outputDir, $outName);
+
+			#run extraction
+			formatFqIntoColumns($fq2, $tmpRInputFile, 'fastq');
+			$cmd = "Rscript $Rscript -i $tmpRInputFile -d $idFile -o $outFile";
+			runcmd($cmd);
+			Info("Extraction completed for $fqName");
+			
+			#remove tmp files
+			$cmd = "rm -rf $tmpRInputFile $fq2";
+			system($cmd);
+		}else{
+			my $outFile = File::Spec -> catfile($outputDir, changeFastqSuffix2Fasta($outName));
+			
+			#run extraction
+			formatFqIntoColumns($fq2, $tmpRInputFile, 'fasta');
+			$cmd = "Rscript $Rscript -i $tmpRInputFile -d $idFile -o $outFile";
+			runcmd($cmd);
+			Info("Extraction completed for $fqName");
+			
+			#remove tmp files
+			$cmd = "rm -rf $tmpRInputFile $fq2";
+			system($cmd);
+		}
+
+	}else{
+		my $fqName = basename($fq2);
+		my $outName = addTagForRawData($fqName, 'extractedSeq', 1);
+		$outName = $sampleLabel . "_" .$outName;
+		
+		my $tmpRInputFile = File::Spec -> catfile($outputDir, $fqName . ".RInput");
+		if ($format eq 'fastq'){
+			my $outFile = File::Spec -> catfile($outputDir, $outName);
+			
+			#run extraction
+			formatFqIntoColumns($fq2, $tmpRInputFile, 'fastq');
+			my $cmd = "Rscript $Rscript -i $tmpRInputFile -d $idFile -o $outFile";
+			runcmd($cmd);
+			Info("Extraction completed for $fqName");
+			
+			#remove tmp files
+			$cmd = "rm -rf $tmpRInputFile";
+			system($cmd);
+		}else{
+			my $outFile = File::Spec -> catfile($outputDir, changeFastqSuffix2Fasta($outName));
+			
+			#run extraction
+			formatFqIntoColumns($fq2, $tmpRInputFile, 'fasta');
+			my $cmd = "Rscript $Rscript -i $tmpRInputFile -d $idFile -o $outFile";
+			runcmd($cmd);
+			Info("Extraction completed for $fqName");
+			
+			#remove tmp files
+			$cmd = "rm -rf $tmpRInputFile";
+			system($cmd);
+		}
+	}
+
+}else{
+	#nothing
+}
+
+
 
 ##run success
 Info("Program completed!",'green');
@@ -320,15 +389,15 @@ qap -- Quasispecies analysis package
 
 
 
-gap ExtractSeq [options]
+qap ExtractSeqInR [options]
 
 Use --help to see more information.
 
-gap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
+qap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
 
 =head1 DESCRIPTION
 
-This script implements a function for extracting sequences from fastq files with read IDs. The script has B<several> mandatory options that MUST appear last. 
+This script implements a function for extracting sequences from fastq files with read IDs in a fast way by using R. The script has B<several> mandatory options that MUST appear last. 
 
 =head1 OPTIONS
 
@@ -342,9 +411,13 @@ Path to next generation sequencing raw data. REQUIRED for both single-end or pai
 
 Path to next generation sequencing raw data. REQUIRED for both paired-end reads. Both compressed files and uncompressed files are allowed. 
 
-=item --idFile, -i F<FILE> [Required]
+=item --idFile,-i F<FILE> [Required]
 
 Path to the file containing the read IDs by using which the sequences would be extracted. Each ID should be listed per line.
+
+=item --sampleLabel,-s F<STRING> [Required]
+
+The name of the sample. This argument MUST be provided. The output file will be named using sample label.
 
 =item --outFormat, -f F<STRING> [Optional]
 
@@ -352,7 +425,11 @@ The format of program output. The value should be one of 'fastq' or 'fasta'.
 
 =item --outputDir,-o F<FILE> [Optional]
 
-Path of the directory to storage result files. If NOT provided, the program will generate a folder automatically.
+Path of the directory to storage the result data. If NOT provided, the directory of raw data files would be used instead.
+
+=item --threads,-t F<INTEGER> [Optional]
+
+Threads used to run this program. A positive integer is required. Default value is 1.
 
 =item --help,-h
 
@@ -364,7 +441,7 @@ Display this detailed help information.
 
 =over 5
 
-gap ExtractSeq -1 Data1_R1.fq.gz -2 Data1_R2.fq.gz -i readID.txt -f fastq -o ./seq
+qap ExtractSeqInR -1 Data1_R1.fq.gz -2 Data1_R2.fq.gz -i readID.txt -f fastq -o ./seq
 
 =back
 

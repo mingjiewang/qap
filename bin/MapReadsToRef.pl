@@ -7,7 +7,7 @@
 #################################################################################
 ##                                                                             ##
 ##  A software suite designed for virus quasispecies analysis                  ##
-##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/gap/>        ##
+##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/>        ##
 ##                                                                             ##
 ##  Version 1.0                                                                ##
 ##                                                                             ##
@@ -16,7 +16,7 @@
 ##  Organization: Research Laboratory of Clinical Virology, Rui-jin Hospital,  ##
 ##  Shanghai Jiao Tong University, School of Medicine                          ##
 ##                                                                             ##
-##  This file is a subprogram of GAP suite.                                    ##
+##  This file is a subprogram of QAP suite.                                    ##
 ##                                                                             ##
 ##  QAP is a free software; you can redistribute it and/or                     ##
 ##  modify it under the terms of the GNU General Public License                ##
@@ -29,7 +29,7 @@
 ##  GNU General Public License for more details.                               ##
 ##                                                                             ##
 ##  You should have received a copy of the GNU General Public                  ##
-##  License along with ViralFusionSeq; if not, see                             ##
+##  License along with QAP; if not, see                             ##
 ##  <http://www.gnu.org/licenses/>.                                            ##
 ##                                                                             ##
 #################################################################################
@@ -99,12 +99,12 @@ chomp $DateNow;
 GetOptions(
 '1|fastq1|=s'        => \$fq1,
 '2|fastq2|=s'        => \$fq2,
-'r|reference|=s'     => \$ref,
+'r|refSeq|=s'        => \$ref,
 'o|outputDir=s'      => \$outputDir,
 'h|help|'            => \$help,
 't|threads|=s'       => \$threads,
 'f|outFormat|=s'     => \$outFormat,
-'s|sorted|=s'        => \$sortMethod,
+'s|sort|=s'          => \$sortMethod,
 'p|program|=s'       => \$program,
 'l|sampleLabel|=s'   => \$sampleLabel
 );
@@ -118,6 +118,7 @@ if (defined $help){
 
 
 if (defined $outputDir){
+	$outputDir =~ s/\/$//;
 	$outputDir = abs_path($outputDir) . "/";
 	if (not -e $outputDir){
  		InfoWarn("The output directory $outputDir does NOT exist.",'yellow');
@@ -394,7 +395,7 @@ if($threads > 1){
 		}
 		
 
-		# even though BWA_pipeline or Bowtie2_pipeline includes the index step, however index step MUST no go parallel, 
+		# even though BWA_pipeline or Bowtie2_pipeline includes the index step, however index step MUST not go parallel, 
 		# espically different samples are using the same index file. Because it will directly jump to the mapping step
 		# before indexing. So index first.
 		for my $f (@newref){
@@ -540,11 +541,11 @@ qap -- Quasispecies analysis package
 
 
 
-gap MapReadsToRef [options]
+qap MapReadsToRef [options]
 
 Use --help to see more information.
 
-gap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
+qap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
 
 =head1 DESCRIPTION
 
@@ -556,15 +557,11 @@ This script implements a function to map fastq/fasta sequencing data to the refe
 
 =item --fastq1,-1 F<FILE> [Required]
 
-Path to next generation sequencing raw data. REQUIRED for both paired-end reads and single-end reads. Both compressed files and uncompressed files are allowed. 
-
-Several files are allowed and should be seperated by comma, e.g. -1 Data1_R1.fq.gz,Data2_R1.fq.gz,Data3_R1.fq.gz . 
+Path to next generation sequencing raw data. REQUIRED for both paired-end reads and single-end reads. Both compressed files and uncompressed files are allowed. Several files are allowed and should be seperated by comma, e.g. -1 Data1_R1.fq.gz,Data2_R1.fq.gz,Data3_R1.fq.gz . 
 
 =item --fastq2,-2 F<FILE> [Optional]
 
-Path to next generation sequencing raw data. REQUIRED for paired-end reads. Both compressed files and uncompressed files are allowed. 
-
-Several files are allowed and should be seperated by comma, e.g. -2 Data1_R2.fq.gz,Data2_R2.fq.gz,Data3_R2.fq.gz. The number of fastq2 files should equal the number of fastq1 files.
+Path to next generation sequencing raw data. REQUIRED for paired-end reads. Both compressed files and uncompressed files are allowed. Several files are allowed and should be seperated by comma, e.g. -2 Data1_R2.fq.gz,Data2_R2.fq.gz,Data3_R2.fq.gz. The number of fastq2 files should equal the number of fastq1 files.
 
 =item --sampleLabel, -l F<STRING> [Required]
 
@@ -582,7 +579,7 @@ The program used for mapping. Choose one between 'bwa' and 'bowtie2'. The defaul
 
 The format of the output result. Choose one between 'bam' or 'sam'. The default value is 'bam'.
 
-=item --sort,-s F<STRING> [Required]
+=item --sort,-s F<STRING> [Optional]
 
 The way to sort sam/bam output. Choose one between 'pos' and 'name' by with 'pos' means 'sorted by position' and 'name' means 'sorted by read name'. The default value is 'pos'. 
 
@@ -604,7 +601,7 @@ Display this detailed help information.
 
 =over 5
 
-gap MapReadsToRef -1 Data1_R1.fq.gz,Data2_R1.fq.gz,Data3_R1.fq.gz -2 Data1_R2.fq.gz,Data2_R2.fq.gz,Data3_R2.fq.gz -r HBV.fasta -l D1,D2,D3 -s pos -f bam -p bwa -t 5 -o ./timmedSep
+qap MapReadsToRef -1 Data1_R1.fq.gz,Data2_R1.fq.gz,Data3_R1.fq.gz -2 Data1_R2.fq.gz,Data2_R2.fq.gz,Data3_R2.fq.gz -r HBV.fasta -l D1,D2,D3 -s pos -f bam -p bwa -t 5 -o ./timmedSep
 
 =back
 

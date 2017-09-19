@@ -64,9 +64,9 @@ mtext("Heatmap",side = 2,las=1)
 axis(1,seq(1,x.len),labels = dat$Interval,cex=0.2,las=2)
 dev.off()
 
-##tif file
-tiffile = paste(opt$outputFile,".tif",sep="",collapse = '')
-tiff(file = tiffile, width = 15000, height = 7500, res = 800, compression = 'lzw')
+##png file
+pngfile = paste(opt$outputFile,".png",sep="",collapse = '')
+png(file = pngfile, width = 15000, height = 7500, res = 800)
 nf <- layout(matrix(c(1,2),2,1,byrow=TRUE), c(20,20), c(7,3), TRUE)  
 #layout.show(nf)
 

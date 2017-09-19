@@ -38,9 +38,9 @@ x.len=ncol(dat2)
 y.len=nrow(dat2)
 colors = colorpanel(3,low=green, mid = yellow, high=red)
 
-##tif file
-tiffile = paste(opt$output,".tif",sep="",collapse = '')
-tiff(file = tiffile, width = 10000, height = 3000, res = 800, compression = 'lzw')
+##png file
+pngfile = paste(opt$output,".png",sep="",collapse = '')
+png(file = pngfile, width = 10000, height = 3000, res = 800)
 
 par(mar=c(15,15,0,0))
 image(x=1:x.len, y=1:y.len, t(dat2),col = colors,

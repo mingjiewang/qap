@@ -7,7 +7,7 @@
 #################################################################################
 ##                                                                             ##
 ##  A software suite designed for virus quasispecies analysis                  ##
-##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/gap/>        ##
+##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/>        ##
 ##                                                                             ##
 ##  Version 1.0                                                                ##
 ##                                                                             ##
@@ -16,7 +16,7 @@
 ##  Organization: Research Laboratory of Clinical Virology, Rui-jin Hospital,  ##
 ##  Shanghai Jiao Tong University, School of Medicine                          ##
 ##                                                                             ##
-##  This file is a subprogram of GAP suite.                                    ##
+##  This file is a subprogram of QAP suite.                                    ##
 ##                                                                             ##
 ##  QAP is a free software; you can redistribute it and/or                     ##
 ##  modify it under the terms of the GNU General Public License                ##
@@ -29,7 +29,7 @@
 ##  GNU General Public License for more details.                               ##
 ##                                                                             ##
 ##  You should have received a copy of the GNU General Public                  ##
-##  License along with ViralFusionSeq; if not, see                             ##
+##  License along with QAP; if not, see                             ##
 ##  <http://www.gnu.org/licenses/>.                                            ##
 ##                                                                             ##
 #################################################################################
@@ -110,6 +110,7 @@ if (defined $help){
 }
 
 if (defined $outputDir){
+	$outputDir =~ s/\/$//;
 	$outputDir = abs_path($outputDir) . "/";
 	if (not -e $outputDir){
  		InfoWarn("The output directory $outputDir does NOT exist.",'yellow');
@@ -317,11 +318,11 @@ qap -- Quasispecies analysis package
 
 
 
-gap ECnQSR [options]
+qap ECnQSR [options]
 
 Use --help to see more information.
 
-gap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
+qap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
 
 =head1 DESCRIPTION
 
@@ -369,7 +370,7 @@ Display this detailed help information.
 
 =over 5
 
-gap ECnQSR -1 test_R1.fastq -2 test_R2.fastq -r HBV.fasta -p Shorah,ViQuaS -t 5 -o ./qsr
+qap ECnQSR -1 test_R1.fastq -2 test_R2.fastq -r HBV.fasta -p Shorah,ViQuaS -t 5 -o ./qsr
 
 =back
 

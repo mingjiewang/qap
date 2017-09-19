@@ -7,7 +7,7 @@
 #################################################################################
 ##                                                                             ##
 ##  A software suite designed for virus quasispecies analysis                  ##
-##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/gap/>        ##
+##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/>        ##
 ##                                                                             ##
 ##  Version 1.0                                                                ##
 ##                                                                             ##
@@ -16,7 +16,7 @@
 ##  Organization: Research Laboratory of Clinical Virology, Rui-jin Hospital,  ##
 ##  Shanghai Jiao Tong University, School of Medicine                          ##
 ##                                                                             ##
-##  This file is a subprogram of GAP suite.                                    ##
+##  This file is a subprogram of qap suite.                                    ##
 ##                                                                             ##
 ##  QAP is a free software; you can redistribute it and/or                     ##
 ##  modify it under the terms of the GNU General Public License                ##
@@ -42,99 +42,404 @@ use File::Spec;
 use Pod::Usage;
 use lib "$FindBin::Bin/lib";
 use Cwd;
+use Getopt::Long;
 
 ####Use modules in this program####
 use General;
 
+####Get options###
+my $graphic;
+my $help;
 
-####Display welcome information####
-my $who_output = `who -m`;
-my ($user,$ip) = (split " ",$who_output)[0,4];
-my $info = "Welcome ${user}\@${ip}";
-#&Info($info,"yellow");
-#sleep(1);
+GetOptions(
+'g|graphic|graph|gui|'    => \$graphic,
+'h|help|'                 => \$help
+);
 
-#my $wd = getcwd;
-#print "wd:$wd\nbin:$RealBin\n";
+##get workding directory
+my $wk_dir = getcwd;
 
-####Check subprogram input####
-my $subprogram = 'NA';
-if (defined $ARGV[0]){
-	$subprogram = $ARGV[0];
+##start to run program
+if (defined $help){
+	pod2usage(-verbose=>2,-exitval=>1);
 }
-my @all_subprograms = qw/RawDataFiltration BarcodeSplitter TrimBarcode ExtractReadID ExtractSeqByID ExtractSeqByIDInR MapReadsToRef AssembleSeqFromSam ECnQSR MultipleSeqAlign AminoAcidTranslator CutSeqIntoTile CutSeqWithIntervals ConsensusSeq ShannonEntroy SingleBaseComplexity Diversity MFI MutationCaller MutationCallerFromMSA Circos IGV SampleRename/;
-my $flag = grep {$subprogram eq $_;} @all_subprograms;
 
-##display help if subprogram not provided
-if (not $flag){
-#&Info("You are running vip, please select a subprogram");
-#sleep(1);
-
-####Get program version####
-##Read version file
-my $versionFile = File::Spec -> catfile($RealBin,"doc","VERSION");
-die "Version file missing.\n" if not -e $versionFile;
-##Get program version
-my $version = `head -n 1 $versionFile`;
-chomp $version;
-
-####Show help screen####
-my $sepline = '-' x 70;
-print "\n";
-#printcol($sepline,'green');
-#printcol($sepline);
-print(
-qq/Program: qap (Quasispecies analysis Package)
+if(defined $graphic && not defined $help){
+	my $gui_excu = File::Spec -> catfile($RealBin,'bin','JavaScripts','qap.jar');
+	if(not existFile($gui_excu)){
+		InfoError("The program for GUI \<$gui_excu\> is missing. Please check. Exiting...");
+		exit(0);
+	}
+	
+	## handle java args
+	my @java_args;
+	
+	if ($^O =~/darwin/) {
+		# Add the OSX specific options to use a standard OSX menu bar
+		# and set the program name to something sensible.
+					
+		push @java_args, '-Xdock:name=FastQC';
+		push @java_args, "-Xdock:icon=$RealBin/../Resources/seqmonk.icns";
+		push @java_args, '-Dapple.laf.useScreenMenuBar=true';
+	}
+	
+	push @java_args,"-XX:ParallelGCThreads=1";
+	push @java_args, "-Djava.awt.headless=false";
+	push @java_args,"-Xmx2g";
+	
+	my $java_args = join " ",@java_args;
+	my $guiCMD = "java @java_args -jar $gui_excu";
+	system($guiCMD);
+}else{
+	####Display welcome information####
+	#my $who_output = `who -m`;
+	#my ($user,$ip) = (split " ",$who_output)[0,4];
+	#my $info = "Welcome ${user}\@${ip}";
+	#&Info($info,"yellow");
+	#sleep(1);
+	
+	#my $wd = getcwd;
+	#print "wd:$wd\nbin:$RealBin\n";
+	
+	####Check subprogram input####
+	my $subprogram = 'NA';
+	if (defined $ARGV[0]){
+		$subprogram = $ARGV[0];
+	}
+	my @all_subprograms = qw/RawDataQC RawDataFiltration BarcodeSplitter BarcodeTrimmer ExtractReadID ExtractSeq ExtractSeqInR MapReadsToRef RemovePCRDup AssembleSeq ECnQSR TGSpipeline FixCircRef MultipleSeqAlign CutSeqIntoTile CutSeqWithIntervals AminoAcidTranslator ConsensusSeq DominantStrain ShannonEntroy SingleBaseComplexity Diversity MFI MutationCaller MSAMutationCaller PickRobustOTU PickClusterOTU SampleClutering SampleCorrelation SamplePCA OTUBarplot OTUHeatmap OTUNetwork SampleRename Sam2Bam Bam2Sam SortBam Fastq2Fasta Circos IGV /;
+	my $flag = grep {$subprogram eq $_;} @all_subprograms;
+	
+	##display help if subprogram not provided
+	if (not $flag){
+	#&Info("You are running qap, please select a subprogram");
+	#sleep(1);
+	
+	####Get program version####
+	##Read version file
+	my $versionFile = File::Spec -> catfile($RealBin,"doc","VERSION");
+	die "Version file missing.\n" if not -e $versionFile;
+	##Get program version
+	my $version = `head -n 1 $versionFile`;
+	chomp $version;
+	
+	####Show help screen####
+	my $sepline = '-' x 70;
+	print "\n";
+	#printcol($sepline,'green');
+	#printcol($sepline);
+	print(
+	qq/Program: qap (Quasispecies analysis Package)
 Version: $version
 
-Usage: gap <command> [options]
+Usage: qap <command> [options]
 
 /);
-#printcol($sepline);
+	#printcol($sepline);
+	
+	print(
+	qq/Commands:
+-- HTS data manipulation
+      RawDataQC                generate quality control reports for NGS raw data in batch
+      RawDataFiltration        filter NGS raw data with base quality and read length
+      BarcodeSplitter          split raw sequence data according to sample barcoding
+      BarcodeTrimmer           trim barcode in fastq\/fasta files 
+      ExtractReadID            extract read IDs from fastq data
+      ExtractSeq               extract reads from fastq files using read ID
+      MapReadsToRef            map reads to reference and generate SAM\/BAM files 
+      RemovePCRDup             remove PCR duplicates in BAM\/SAM files
+      AssembleSeq              assemble amplicons using read paires in SAM file
+      ECnQSR                   sequencing error correction and quasispecies reconstruction 
+      TGSpipeline              automatic pipeline for TGS data manipulation
 
-print(
-qq/Commands:
-  -- NGS data manipulation
-         RawDataFiltration        filter NGS raw data with base quality and read length
-         BarcodeSplitter          split raw sequence data according to sample barcoding
-         TrimBarcode              trim barcode in fastq\/fasta files 
-         ExtractReadID            extract read IDs from fastq data
-         ExtractSeqByID           extract reads from fastq files using read ID
-         ExtractSeqByIDInR        extract reads from fastq files using read ID in a faster way
-         MapReadsToRef            map reads to reference and generate SAM\/BAM files 
-         AssembleSeqFromSam       assemble amplicons using read paires in SAM file
-         ECnQSR                   sequencing error correction and quasispecies reconstruction 
-         
-  -- QS analysis
-         MultipleSeqAlign         multiple sequence alignment using different algorithms
-         AminoAcidTranslator      translate nucleotides into amino acids 
-         CutSeqIntoTile           cut sequences into tiles for downstream regional analysis
-         CutSeqWithIntervals      cut sequences into fragments with intervals 
-         ConsensusSeq             calculate and visulize consensus sequence in QS spectrum
-         ShannonEntroy            calculate QS Shannon entroy and show spectrum structure
-         SingleBaseComplexity     calculate Shannon entroy at single base resolution
-         Diversity                calculate QS diversity 
-         MFI                      calculate mutation frequency index 
-         MutationCaller           call variants from SAM\/BAM files
-         MutationCallerFromMSA    call variants from multiple sequence alignment files
-         
-  -- Visualization
-         Circos                   show sequence information in CIRCOS plot
-         IGV                      show mapping details using integrative genomics viewer
-         
-  -- Useful tools
-         SampleRename             rename sample files in batch
+-- Sequence manipulation
+      FixCircRef               fix reference sequence for circular virus genome
+      MultipleSeqAlign         multiple sequence alignment using different algorithms
+      CutSeqIntoTile           cut sequences into tiles for downstream regional analysis
+      CutSeqWithIntervals      cut sequences into fragments with intervals 
+      AminoAcidTranslator      translate nucleotides into amino acids 
+      ConsensusSeq             calculate and visulize consensus sequence in QS spectrum
+      
+-- QS analysis
+      DominantStrain           calculate the dominant strain in QS 
+      ShannonEntroy            calculate QS Shannon entroy and show spectrum structure
+      SingleBaseComplexity     calculate Shannon entroy at single base resolution
+      Diversity                calculate QS diversity 
+      MFI                      calculate mutation frequency index 
+      MutationCaller           call variants from SAM\/BAM files
+      MSAMutationCaller        call variants from multiple sequence alignment files
+      
+-- Multiple samples analysis
+      PickRobustOTU            pick OTUs in a robust manner
+      PickClusterOTU           pick OTUs based on sequences clusters
+      SampleClutering          cluster samples based on OTUs abundances
+      SampleCorrelation        calculate pairwise sample correlations
+      SamplePCA                principle components analysis based on OTUs abundance
+      OTUBarplot               draw barplot based on sample OTUs abundance
+      OTUHeatmap               hierarchical clustering based on OTUs abundance
+      OTUNetwork               generate sample-OTU network files based on OTU abundance
+      PhyloTree                construct phylogenetic tree 
+      
+-- Useful tools
+      SampleRename             rename sample files in batch
+      Sam2Bam                  convert SAM file to BAM file
+      Bam2Sam                  convert BAM file to SAM file
+      SortBam                  sort BAM file 
+      Fastq2Fasta              convert fastq files to fasta files
+      
+-- Visualization
+      Circos                   show sequence information in CIRCOS plot
+      IGV                      show mapping details using integrative genomics viewer
 
 /
-);
-#printcol("$sepline\n");
-
-}else{
-	print "\n";
-	my $subprogramPath = File::Spec -> catfile($RealBin,"bin",$subprogram);
-	$subprogramPath .= ".pl";
-	my $argsTosubprogram = join ' ',@ARGV[1..(scalar @ARGV - 1)];
-	system "perl $subprogramPath $argsTosubprogram";
-	#system "perl $subprogramPath ";
+	);
+	#printcol("$sepline\n");
+	
+	}else{
+		print "\n";
+		my $subprogramPath = File::Spec -> catfile($RealBin,"bin",$subprogram);
+		$subprogramPath .= ".pl";
+		my $argsTosubprogram = join ' ',@ARGV[1..(scalar @ARGV - 1)];
+		system "perl $subprogramPath $argsTosubprogram";
+		#system "perl $subprogramPath ";
+	}
 }
+
+
+=pod 
+
+=head1 NAME
+
+qap -- Quasispecies analysis package
+
+=head1 SYNOPSIS
+
+
+       ______       ______       ______
+      / ___  |     / ____ \     |  ___ \
+     / /   | |    / |    | |    | |   \ \
+    | |    | |    | |    |_|    | |    | |
+     \ \___| |    \ |____\ \    | |___/ /
+      \____  |     \_____/\_\   | |____/
+           | |                  | |
+           | |                  | |
+           | |                  | |
+           |_|                  |_|         v1.0
+           
+
+
+
+qap <command> [Options]
+
+Use --help to see more information.
+
+qap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
+
+=head1 DESCRIPTION
+
+QAP (Quasispecies Analysis Package) is a program suite for virus quasispecies high-through put sequencing data analysis. 
+
+Plenty of tools are embeded in QAP and categorised into 6 main functionalities. Type "qap" to explore all the functions.
+
+=head1 OPTIONS
+
+=over 5
+
+=item --graphic,--graph,--gui,-g [Optional]
+
+Run QAP with Graphic User Interface (GUI).
+
+=item --help,-h
+
+Display this detailed help information.
+
+=back 
+
+=head1 HTS data processing
+
+* RawDataQC 
+  
+  [Generate quality control reports for NGS raw data in batch]
+
+* RawDataFiltration 
+
+  [Filter NGS raw data with base quality and read length]
+
+* BarcodeSplitter           
+  
+  [Split raw sequence data according to sample barcoding]
+
+* BarcodeTrimmer     
+      
+  [Trim barcode in fastq\/fasta files]
+
+* ExtractReadID
+
+  [Extract read IDs from fastq data]
+
+* ExtractSeq
+
+  [Extract reads from fastq files using read ID]
+
+* MapReadsToRef
+
+  [Map reads to reference and generate SAM\/BAM files ]
+
+* RemovePCRDup
+
+  [Remove PCR duplicates in BAM\/SAM files]
+
+* AssembleSeq
+
+  [Assemble amplicons using read paires in SAM file]
+
+* ECnQSR
+
+  [Sequencing error correction and quasispecies reconstruction ]
+
+* TGSpipeline
+
+  [Automatic pipeline for TGS data manipulation]
+
+=head1 Sequence manipulation
+
+* FixCircRef
+
+  [Fix reference sequence for circular virus genome]
+
+* MultipleSeqAlign
+
+  [Multiple sequence alignment using different algorithms]
+
+* CutSeqIntoTile
+
+  [Cut sequences into tiles for downstream regional analysis]
+
+* CutSeqWithIntervals
+
+  [Cut sequences into fragments with intervals ]
+
+* AminoAcidTranslator
+
+  [Translate nucleotides into amino acids ]
+
+* ConsensusSeq
+
+  [Calculate and visulize consensus sequence in QS spectrum]
+
+=head1 QS analysis
+
+* DominantStrain
+
+  [Calculate the dominant strain in QS ]
+
+* ShannonEntroy
+
+  [Calculate QS Shannon entroy and show spectrum structure]
+
+* SingleBaseComplexity
+
+  [Calculate Shannon entroy at single base resolution]
+
+* Diversity
+
+  [Calculate QS diversity ]
+
+* MFI
+
+  [Calculate mutation frequency index ]
+
+* MutationCaller
+
+  [Call variants from SAM\/BAM files]
+
+* MSAMutationCaller
+
+  [Call variants from multiple sequence alignment files]
+
+=head1 Multiple samples analysis
+
+* PickRobustOTU
+
+  [Pick OTUs in a robust manner]
+
+* PickClusterOTU
+
+  [Pick OTUs based on sequences clusters]
+
+* SampleClutering
+
+  [Cluster samples based on OTUs abundances]
+
+* SampleCorrelation
+
+  [Calculate pairwise sample correlations]
+
+* SamplePCA
+
+  [Principle components analysis based on OTUs abundance]
+
+* OTUBarplot
+
+  [Draw barplot based on sample OTUs abundance]
+
+* OTUHeatmap
+
+  [Hierarchical clustering based on OTUs abundance]
+
+* OTUNetwork
+
+  [Generate sample-OTU network files based on OTU abundance]
+
+* PhyloTree
+
+  [Construct phylogenetic tree ]
+
+=head1 Useful tools
+
+* SampleRename
+
+  [Rename sample files in batch]
+
+* Sam2Bam
+
+  [Convert SAM file to BAM file]
+
+* Bam2Sam
+
+  [Convert BAM file to SAM file]
+
+* SortBam
+
+  [Sort BAM file ]
+
+* Fastq2Fasta
+
+  [Convert fastq files to fasta files]
+
+=head1 Visualization
+
+* Circos
+
+  [Show sequence information in CIRCOS plot]
+
+* IGV
+
+  [Show mapping details using integrative genomics viewer]
+
+=head1 EXAMPLE
+
+qap TGSpipeline -i test.fastq -r HBV.fasta -o ./result 
+
+=over 5
+
+=back
+
+=head1 AUTHOR
+
+Mingjie Dr.Wang I<huzai@sjtu.edu.cn>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2017, Mingjie Wang. All rights reserved.
+
 

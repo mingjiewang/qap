@@ -35,14 +35,19 @@ pdffile = paste(opt$outputDir,"/pdf/",opt$sampleLabel,".pdf",sep="",collapse = '
 pdf(file = pdffile,width = 30, height = 5)
 ggplot(dat,aes(x=Start.Position,y=Shannon))+
   geom_bar(stat="identity",position="identity", fill=dat$Color)+
-  scale_x_continuous(breaks=seq(0, max(dat$End.Position), 10))  
+  scale_x_continuous(breaks=seq(0, max(dat$End.Position), 10))+
+  theme(axis.text.x = element_text(angle=45))
 dev.off()
 
-#tif
-tiffile = paste(opt$outputDir,"/tif/",opt$sampleLabel,".tif",sep="",collapse = '')
-tiff(file = tiffile, width = 6000, height = 1000, res = 800, compression = 'lzw')
+#png
+pngfile = paste(opt$outputDir,"/png/",opt$sampleLabel,".png",sep="",collapse = '')
+png(file = pngfile, width = 6000, height = 1000, res = 800)
 ggplot(dat,aes(x=Start.Position,y=Shannon))+
   geom_bar(stat="identity",position="identity", fill=dat$Color)+
-  scale_x_continuous(breaks=seq(0, max(dat$End.Position), 10))  
+  scale_x_continuous(breaks=seq(0, max(dat$End.Position), 10))+
+  theme(axis.text.x = element_text(size = 3,angle=45))+
+  theme(axis.title.x = element_text(size = 10))+
+  theme(axis.text.y = element_text(size = 6))+
+  theme(axis.title.y = element_text(size = 10))
 dev.off()
 

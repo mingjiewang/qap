@@ -7,7 +7,7 @@
 #################################################################################
 ##                                                                             ##
 ##  A software suite designed for virus quasispecies analysis                  ##
-##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/gap/>        ##
+##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/>        ##
 ##                                                                             ##
 ##  Version 1.0                                                                ##
 ##                                                                             ##
@@ -16,7 +16,7 @@
 ##  Organization: Research Laboratory of Clinical Virology, Rui-jin Hospital,  ##
 ##  Shanghai Jiao Tong University, School of Medicine                          ##
 ##                                                                             ##
-##  This file is a subprogram of GAP suite.                                    ##
+##  This file is a subprogram of QAP suite.                                    ##
 ##                                                                             ##
 ##  QAP is a free software; you can redistribute it and/or                     ##
 ##  modify it under the terms of the GNU General Public License                ##
@@ -29,7 +29,7 @@
 ##  GNU General Public License for more details.                               ##
 ##                                                                             ##
 ##  You should have received a copy of the GNU General Public                  ##
-##  License along with ViralFusionSeq; if not, see                             ##
+##  License along with QAP; if not, see                                        ##
 ##  <http://www.gnu.org/licenses/>.                                            ##
 ##                                                                             ##
 #################################################################################
@@ -114,6 +114,7 @@ if (defined $help){
 }
 
 if (defined $outputDir){
+	$outputDir =~ s/\/$//;
 	$outputDir = abs_path($outputDir) . "/";
 	if (not -e $outputDir){
  		InfoWarn("The output directory $outputDir does NOT exist.",'yellow');
@@ -456,6 +457,9 @@ while (my $line1 = <T>){
 		}
 		my $overlapLength = $seq1Count + $seq2Count - $seqCountToCut - abs($interval1);
 		my $contig1 = substr $seq1Cut, 0, length($seq1Cut) - $overlapLength; #unoverlapped region of seq1
+		if($overlapLength > length($seq2Cut)){
+			next;
+		}
 		my $contig2 = substr $seq2Cut, $overlapLength, length($seq2Cut) - $overlapLength; #unonverlapped region of seq2
 		
 		my $seq1Overlap = substr $seq1Cut, length($seq1Cut) - $overlapLength, $overlapLength;
@@ -483,6 +487,9 @@ while (my $line1 = <T>){
 		}
 		my $overlapLength = $seq2Count + $seq1Count - $seqCountToCut - abs($interval1);
 		my $contig2 = substr $seq2Cut, 0, length($seq2Cut) - $overlapLength; #unoverlapped region of seq1
+		if($overlapLength > length($seq1Cut)){
+			next;
+		}
 		my $contig1 = substr $seq1Cut, $overlapLength, length($seq1Cut) - $overlapLength; #unonverlapped region of seq2
 		
 		my $seq2Overlap = substr $seq2Cut, length($seq2Cut) - $overlapLength, $overlapLength;
@@ -718,11 +725,11 @@ qap -- Quasispecies analysis package
 
 
 
-gap AssembleSeq [options]
+qap AssembleSeq [options]
 
 Use --help to see more information.
 
-gap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
+qap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
 
 =head1 DESCRIPTION
 
@@ -750,13 +757,9 @@ The intervals of amplicons. Providing a bed file of amplified intervals is highl
 
 More information about bed formats, please refer to [http://www.ensembl.org/info/website/upload/bed.html]. Either one of --bedFile or --ampliconNumber MUST be provided.
 
-=item --withIns,-s F<BOOLEAN> [Optional]
+=item --withIns,-s F<INTEGER> [Optional]
 
-Whether the output fasta file should include sequences with insertions. Choose between '1'(disgard sequences with insertions) or 
-
-'2'(keep sequences with insertions but cut the insertion sites).
-
-Default value if '2'.
+Whether the output fasta file should include sequences with insertions. Choose between '1'(disgard sequences with insertions) or '2'(keep sequences with insertions but cut the insertion sites). Default value if '2'.
 
 =item --threads,-t F<INTEGER> [Optional]
 
@@ -772,7 +775,7 @@ Display this detailed help information.
 
 =over 5
 
-gap AssembleSeq -i test.sam - -p nnt -t 10 -o ./shannon
+qap AssembleSeq -i test.sam -n 10 -t 10 -o ./seq
 
 =back
 

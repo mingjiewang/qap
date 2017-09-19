@@ -10,27 +10,40 @@ use File::Basename;
 use List::Util qw/min max/;
 use FindBin qw/$RealBin/;
 use File::Spec;
+use POSIX qw/strftime/;
 
 $| = 1; 
 
 use vars qw ($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 our $VERSION         = 1.00;
 our @ISA             = qw (Exporter);
-our @EXPORT          = qw ($DEBUG_MODE DelDup  GetSeqFromFasta ParseSamFlag RevCom ProcessBar InfoProcessBar
-CheckProgram CheckFile CheckFolder CheckPositiveInt Info InfoError InfoWarn InfoDie InfoPlain 
-printcol runcmd SplitBigFile CutArray runMultipleThreads runMultipleThreadsWith8Args runMultipleThreadsWith7Args runMultipleThreadsWith6Args runMultipleThreadsWith5Args runMultipleThreadsWith4Args runMultipleThreadsWith3Args runMultipleThreadsWith2Args Fastq2Fasta CutLine mix existFile 
-addTagForRawData addTagForFasta isGzipped check3EqualNums changeFastqSuffix2Fasta formatMinutes formatFqIntoColumns removeFastaSuffix removeFastqSuffix removeSamBamSuffix getFileSize checkMultipleEqualNums getSystemInfo
-extractSeqFromFasta extractSeqFromFastq formatFastaToTwoLineMode checkSeqLen formatFastaForRInput makedir isInArray removeBamSuffix removeSamSuffix removeSamBamSuffix2 convert2Rinput getCommonString CheckSeqNum) ;
-our @EXPORT_OK       = qw ($DEBUG_MODE DelDup  GetSeqFromFasta ParseSamFlag RevCom ProcessBar InfoProcessBar
-CheckProgram CheckFile CheckFolder CheckPositiveInt Info InfoError InfoWarn InfoDie InfoPlain 
-printcol runcmd SplitBigFile CutArray runMultipleThreads runMultipleThreadsWith8Args runMultipleThreadsWith7Args runMultipleThreadsWith6Args runMultipleThreadsWith5Args runMultipleThreadsWith4Args runMultipleThreadsWith3Args runMultipleThreadsWith2Args Fastq2Fasta CutLine mix existFile 
-addTagForRawData addTagForFasta isGzipped check3EqualNums changeFastqSuffix2Fasta formatMinutes formatFqIntoColumns removeFastaSuffix removeFastqSuffix removeSamBamSuffix getFileSize checkMultipleEqualNums getSystemInfo
-extractSeqFromFasta extractSeqFromFastq formatFastaToTwoLineMode checkSeqLen formatFastaForRInput makedir isInArray removeBamSuffix removeSamSuffix removeSamBamSuffix2 convert2Rinput getCommonString CheckSeqNum);
-our %EXPORT_TAGS     = ( DEFAULT => [qw (&DelDup  &GetSeqFromFasta &ParseSamFlag &RevCom &ProcessBar &InfoProcessBar
-&CheckProgram &CheckFile &CheckFolder &CheckPositiveInt &Info &InfoError &InfoWarn &InfoDie &InfoPlain 
-&printcol &runcmd &SplitBigFile &CutArray &runMultipleThreads &runMultipleThreadsWith8Args &runMultipleThreadsWith7Args &runMultipleThreadsWith6Args &runMultipleThreadsWith5Args &runMultipleThreadsWith4Args &runMultipleThreadsWith3Args &runMultipleThreadsWith2Args &Fastq2Fasta &CutLine &mix &existFile 
-&addTagForRawData &addTagForFasta &isGzipped &check3EqualNums &changeFastqSuffix2Fasta &formatMinutes &formatFqIntoColumns &removeFastaSuffix &removeFastqSuffix &removeSamBamSuffix &getFileSize &checkMultipleEqualNums &getSystemInfo
-&extractSeqFromFasta &extractSeqFromFastq &formatFastaToTwoLineMode &checkSeqLen &formatFastaForRInput &makedir &isInArray &removeBamSuffix &removeSamSuffix &removeSamBamSuffix2 &convert2Rinput &getCommonString &CheckSeqNum) ] );
+our @EXPORT          = qw ($DEBUG_MODE DelDup  GetSeqFromFasta ParseSamFlag RevCom ProcessBar InfoProcessBar windows2linux
+CheckProgram CheckFile CheckFolder CheckPositiveInt CheckDouble Info InfoError InfoWarn InfoDie InfoPlain 
+printcol runcmd SplitBigFile CutArray runMultipleThreads runMultipleThreadsWith10Args runMultipleThreadsWith9Args runMultipleThreadsWith8Args runMultipleThreadsWith7Args 
+runMultipleThreadsWith6Args runMultipleThreadsWith5Args runMultipleThreadsWith4Args runMultipleThreadsWith3Args 
+runMultipleThreadsWith2Args Fastq2Fasta CutLine mix existFile addTagForRawData addTagForFasta isGzipped 
+check3EqualNums changeFastqSuffix2Fasta formatMinutes formatFqIntoColumns removeFastaSuffix removeFastqSuffix 
+removeSamBamSuffix getFileSize checkMultipleEqualNums getSystemInfo extractSeqFromFasta extractSeqFromFastq 
+formatFastaToTwoLineMode checkSeqLen formatFastaForRInput makedir isInArray removeBamSuffix removeSamSuffix 
+removeSamBamSuffix2 convert2Rinput getCommonString CheckSeqNum getEleWithMaxFreq removeSuffix checkAbundance removeAllSuffix) ;
+our @EXPORT_OK       = qw ($DEBUG_MODE DelDup  GetSeqFromFasta ParseSamFlag RevCom ProcessBar InfoProcessBar windows2linux
+CheckProgram CheckFile CheckFolder CheckPositiveInt CheckDouble Info InfoError InfoWarn InfoDie InfoPlain 
+printcol runcmd SplitBigFile CutArray runMultipleThreads runMultipleThreadsWith10Args runMultipleThreadsWith9Args runMultipleThreadsWith8Args runMultipleThreadsWith7Args 
+runMultipleThreadsWith6Args runMultipleThreadsWith5Args runMultipleThreadsWith4Args runMultipleThreadsWith3Args 
+runMultipleThreadsWith2Args Fastq2Fasta CutLine mix existFile addTagForRawData addTagForFasta isGzipped 
+check3EqualNums changeFastqSuffix2Fasta formatMinutes formatFqIntoColumns removeFastaSuffix removeFastqSuffix 
+removeSamBamSuffix getFileSize checkMultipleEqualNums getSystemInfo extractSeqFromFasta extractSeqFromFastq 
+formatFastaToTwoLineMode checkSeqLen formatFastaForRInput makedir isInArray removeBamSuffix removeSamSuffix 
+removeSamBamSuffix2 convert2Rinput getCommonString CheckSeqNum getEleWithMaxFreq removeSuffix checkAbundance removeAllSuffix);
+our %EXPORT_TAGS     = ( DEFAULT => [qw (&DelDup  &GetSeqFromFasta &ParseSamFlag &RevCom &ProcessBar &InfoProcessBar &windows2linux
+&CheckProgram &CheckFile &CheckFolder &CheckPositiveInt &CheckDouble &Info &InfoError &InfoWarn &InfoDie &InfoPlain 
+&printcol &runcmd &SplitBigFile &CutArray &runMultipleThreads &runMultipleThreadsWith10Args &runMultipleThreadsWith9Args &runMultipleThreadsWith8Args &runMultipleThreadsWith7Args 
+&runMultipleThreadsWith6Args &runMultipleThreadsWith5Args &runMultipleThreadsWith4Args &runMultipleThreadsWith3Args 
+&runMultipleThreadsWith2Args &Fastq2Fasta &CutLine &mix &existFile &addTagForRawData &addTagForFasta &isGzipped 
+&check3EqualNums &changeFastqSuffix2Fasta &formatMinutes &formatFqIntoColumns &removeFastaSuffix &removeFastqSuffix 
+&removeSamBamSuffix &getFileSize &checkMultipleEqualNums &getSystemInfo &extractSeqFromFasta &extractSeqFromFastq 
+&formatFastaToTwoLineMode &checkSeqLen &formatFastaForRInput &makedir &isInArray &removeBamSuffix &removeSamSuffix 
+&removeSamBamSuffix2 &convert2Rinput &getCommonString &CheckSeqNum &getEleWithMaxFreq &removeSuffix &checkAbundance &removeAllSuffix) ] );
 
 ##Debug mode prints more information while running 
 our $DEBUG_MODE = 1;
@@ -222,13 +235,23 @@ sub CheckPositiveInt {
 	return 1;
 }
 
+sub CheckDouble {
+	my $value = @_;
+	if ($value =~ /[^\.0-9]/){
+		return 0;
+	}
+	
+	return 1;
+}
+
 sub Info {
     my ($info,$color) = @_;
     if (!defined $color){
         $color = "white";
     }
 
-    chomp (my $date = `date`);
+    #chomp (my $date = `date`);
+	my $date = strftime("%Y-%m-%d %A %H:%M:%S %p %Z", localtime);
     
     #color ref
     my %ColorShell = ("black"     => 30,
@@ -254,7 +277,8 @@ sub InfoError {
         $color = "red";
     }
 
-    chomp (my $date = `date`);
+    #chomp (my $date = `date`);
+	my $date = strftime("%Y-%m-%d %A %H:%M:%S %p %Z", localtime);
     
     #color ref
     my %ColorShell = ("black"     => 30,
@@ -280,7 +304,8 @@ sub InfoWarn {
         $color = "yellow";
     }
 
-    chomp (my $date = `date`);
+    #chomp (my $date = `date`);
+	my $date = strftime("%Y-%m-%d %A %H:%M:%S %p %Z", localtime);
     
     #color ref
     my %ColorShell = ("black"     => 30,
@@ -306,7 +331,8 @@ sub InfoDie {
         $color = "white";
     }
 
-    chomp (my $date = `date`);
+    #chomp (my $date = `date`);
+	my $date = strftime("%Y-%m-%d %A %H:%M:%S %p %Z", localtime);
     
     #color ref
     my %ColorShell = ("black"     => 30,
@@ -329,7 +355,9 @@ sub InfoDie {
 
 sub InfoPlain {
 	my $info = shift;
-	chomp (my $date = `date`);
+	#chomp (my $date = `date`);
+	my $date = strftime("%Y-%m-%d %A %H:%M:%S %p %Z", localtime);
+	
     print "INFO    \@ \[${date}\]: $info\n";
 }
 
@@ -425,6 +453,65 @@ sub runMultipleThreads {
 		my @threads = ();
 		for my $args (@$SmallArray){
 			my $thr = threads -> create($program,$args);
+			push @threads,$thr;
+		}
+
+		for my $tmp (@threads){
+			$tmp -> join();
+		}
+	}
+}
+
+sub runMultipleThreadsWith10Args{
+	my ($program,$bigArray1,$bigArray2,$bigArray3,$bigArray4,$bigArray5,$bigArray6,$bigArray7,$bigArray8,$bigArray9,$bigArray10,$threadsNum) = @_; #$bigArray is the array of input args
+	
+	my $index = [0 .. scalar(@$bigArray1) - 1];
+	my $SplitIndex = &CutArray($index, $threadsNum);
+	
+	for my $SmallArray (@$SplitIndex){
+		my @threads = ();
+		for my $j (@$SmallArray){
+			my $arg1 = $bigArray1 -> [$j];
+			my $arg2 = $bigArray2 -> [$j];
+			my $arg3 = $bigArray3 -> [$j];
+			my $arg4 = $bigArray4 -> [$j];
+			my $arg5 = $bigArray5 -> [$j];
+			my $arg6 = $bigArray6 -> [$j];
+			my $arg7 = $bigArray7 -> [$j];
+			my $arg8 = $bigArray8 -> [$j];
+			my $arg9 = $bigArray9-> [$j];
+			my $arg10 = $bigArray10 -> [$j];
+			
+			my $thr = threads -> create($program,$arg1,$arg2,$arg3,$arg4,$arg5,$arg6,$arg7,$arg8,$arg9,$arg10);
+			push @threads,$thr;
+		}
+
+		for my $tmp (@threads){
+			$tmp -> join();
+		}
+	}
+}
+
+sub runMultipleThreadsWith9Args{
+	my ($program,$bigArray1,$bigArray2,$bigArray3,$bigArray4,$bigArray5,$bigArray6,$bigArray7,$bigArray8,$bigArray9,$threadsNum) = @_; #$bigArray is the array of input args
+	
+	my $index = [0 .. scalar(@$bigArray1) - 1];
+	my $SplitIndex = &CutArray($index, $threadsNum);
+	
+	for my $SmallArray (@$SplitIndex){
+		my @threads = ();
+		for my $j (@$SmallArray){
+			my $arg1 = $bigArray1 -> [$j];
+			my $arg2 = $bigArray2 -> [$j];
+			my $arg3 = $bigArray3 -> [$j];
+			my $arg4 = $bigArray4 -> [$j];
+			my $arg5 = $bigArray5 -> [$j];
+			my $arg6 = $bigArray6 -> [$j];
+			my $arg7 = $bigArray7 -> [$j];
+			my $arg8 = $bigArray8 -> [$j];
+			my $arg9 = $bigArray9 -> [$j];
+			
+			my $thr = threads -> create($program,$arg1,$arg2,$arg3,$arg4,$arg5,$arg6,$arg7,$arg8,$arg9);
 			push @threads,$thr;
 		}
 
@@ -864,6 +951,7 @@ sub removeFastaSuffix {
 		$newName = $oldName =~ s/\.fsa\.gz$//r;
 	}else{
 		InfoError("The suffix of $oldName should be one of \".fasta/.fasta.gz/.fas/.fas.gz/.fa/.fa.gz/.fsa/.fsa.gz\".");
+		#return $oldName;
 		exit;
 	}
 	
@@ -1043,6 +1131,7 @@ sub formatFastaToTwoLineMode {
 			print TMP "\n$_\n";
 		}else{
 			$_ = uc($_);
+			$_ =~ s/[^A-Z\-\*]//g;
 			print TMP "$_";
 		}
 	}
@@ -1273,10 +1362,100 @@ sub windows2linux {
 	}
 	
 	my $cmd = "sed -i \'s\/\\r\/\/g\' $file ";
-	system($cmd);
+	runcmd($cmd);
 	
 	return 1;
 }
+
+sub getEleWithMaxFreq {
+	my $arr = shift;
+	
+	my @arr = @$arr;
+	my %hash;
+	for my $e (@arr){
+		$hash{$e}++;
+	}
+	
+	my @sort;
+	for my $k (sort {$hash{$b} <=> $hash{$a}} keys %hash){
+		push @sort,$k;
+	}
+	
+	return $sort[0];
+	
+}
+
+sub removeSuffix {
+	my $name = shift;
+	
+	$name =~ s/(.*)\..*?//;
+	
+	return $1;
+}
+
+sub checkAbundance{
+	my $file = shift;
+	my $outfile = shift;
+	
+	my $outdir = dirname($outfile);
+	
+	my $outMsg = "Sequence abundance not detected";
+	my $abundFlag = 0;
+	
+	my $outAbundanceFile = File::Spec -> catfile($outdir, removeFastaSuffix(basename($file)) . ".abund");
+	open RES,">$outAbundanceFile" or die "Can not output to file $outAbundanceFile:$!";
+	print RES "seqID\tcount\n";
+	
+	open OUTSEQ,">$outfile" or die "Can not output to file $outfile:$!";
+	
+	open T,$file or die "Cannot open file $file:$!";
+	my $seqCount;
+	while(my $line1 = <T>){
+		chomp $line1;
+		chomp (my $line2 = <T>);
+		
+		if($line1 =~ /^>/){
+			if($line1 =~ /^>(.*?);size=(\d+)/i){
+				print RES "$1\t$2\n";
+				$abundFlag++;
+			}else{
+				my $id = $line1 =~ s/^>//r; 
+				print RES "$id\t1\n";
+			}
+			$line1 =~ s/;size=.*//;
+			print OUTSEQ "$line1\n$line2\n";
+		}else{
+			InfoError("Fasta file $file is wrong formatted. Please check.");
+			exit(0);
+		}
+		
+		$seqCount++;
+	}
+	
+	if($abundFlag > 0 and $abundFlag < $seqCount){
+		$outMsg = "Sequence abundance partly detected and saved";
+	}elsif($abundFlag == $seqCount){
+		$outMsg = "Sequence abundance fully detected and saved";
+	}else{
+		$outMsg = "Sequence abundance not detected and created";
+	}
+	
+	return ($outMsg,$outAbundanceFile);
+}
+
+sub removeAllSuffix {
+    my $name = shift;
+
+    my $newname = basename($name);
+    while($newname =~ /\..*$/){
+        $newname =~ s/\..*$//;
+    }   
+    
+    my $outname = File::Spec -> catfile(dirname($name), $newname);
+    
+    return $outname;
+}
+
 
 1;
 

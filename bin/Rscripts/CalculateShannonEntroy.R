@@ -51,8 +51,8 @@ if(opt$photos == '1'){
   barplot(gra,horiz = T,beside = F, axes = F, col = color, border = F, 
           main=paste("Population Structure for", opt$sampleLabel))
   dev.off()
-  #tif file
-  tiff(filename = paste(opt$sampleLabel, ".tif", collapse = '',sep=''), width = 5000, height = 2000, res = 500, compression = 'lzw')
+  #png file
+  png(filename = paste(opt$sampleLabel, ".png", collapse = '',sep=''), width = 5000, height = 2000, res = 500)
   barplot(gra,horiz = T,beside = F, axes = F, col = color, border = F, 
           main=paste("Population Structure for", opt$sampleLabel))
   dev.off()

@@ -7,7 +7,7 @@
 #################################################################################
 ##                                                                             ##
 ##  A software suite designed for virus quasispecies analysis                  ##
-##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/gap/>        ##
+##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/>        ##
 ##                                                                             ##
 ##  Version 1.0                                                                ##
 ##                                                                             ##
@@ -16,7 +16,7 @@
 ##  Organization: Research Laboratory of Clinical Virology, Rui-jin Hospital,  ##
 ##  Shanghai Jiao Tong University, School of Medicine                          ##
 ##                                                                             ##
-##  This file is a subprogram of GAP suite.                                    ##
+##  This file is a subprogram of qap suite.                                    ##
 ##                                                                             ##
 ##  QAP is a free software; you can redistribute it and/or                     ##
 ##  modify it under the terms of the GNU General Public License                ##
@@ -29,7 +29,7 @@
 ##  GNU General Public License for more details.                               ##
 ##                                                                             ##
 ##  You should have received a copy of the GNU General Public                  ##
-##  License along with ViralFusionSeq; if not, see                             ##
+##  License along with QAP; if not, see                             ##
 ##  <http://www.gnu.org/licenses/>.                                            ##
 ##                                                                             ##
 #################################################################################
@@ -106,6 +106,7 @@ if (defined $help){
 }
 
 if (defined $outputDir){
+	$outputDir =~ s/\/$//;
 	$outputDir = abs_path($outputDir) . "/";
 	if (not -e $outputDir){
  		InfoWarn("The output directory $outputDir does NOT exist.",'yellow');
@@ -126,7 +127,7 @@ if (defined $outputDir){
 	$outputDir = File::Spec -> catfile($wk_dir,"qap_Results_for_AminoAcidTranslator_$DateNow");
 	InfoWarn("The output directory is not provided!",'yellow');
 	InfoWarn("Will mkdir \"$outputDir\" and use it as the output directory.",'yellow');
-	
+
 	if (!-e "$outputDir"){
 		my $cmd = "mkdir -p $outputDir";
 		system($cmd);
@@ -155,40 +156,40 @@ my $numberOfFiles = 0;
 my @inputfiles;
 if(defined $suffix){
 	@inputfiles = glob ("${inputDir}/*.${suffix}");
-	
+
 	$numberOfFiles = scalar(@inputfiles);
-	
+
 	if ($numberOfFiles == 0){
 		InfoError("There are NOT any files in $inputDir with suffix \'.${suffix}\'. Please check again.");
 		exit;
 	}
-	
+
 	Info("Find $numberOfFiles files.");
 	my $i = 1;
 	for my $f (@inputfiles){
 		printf "[%02d] $f\n",$i;
 		$i++;
 	}
-	
+
 }else{
 	InfoWarn("The suffix is not provided. The program will try to read in every file in $inputDir");
-	
+
 	@inputfiles = glob ("${inputDir}/*.*");
 	
 	$numberOfFiles = scalar(@inputfiles);
-	
+
 	if ($numberOfFiles == 0){
 		InfoError("There are NOT any files in $inputDir with suffix \'.${suffix}\'. Please check again.");
 		exit;
 	}
-	
+
 	Info("Find $numberOfFiles files.");
 	my $i = 1;
 	for my $f (@inputfiles){
 		printf "[%02d] $f\n",$i;
 		$i++;
 	}
-	
+
 }
 
 if (defined $threads){
@@ -201,7 +202,7 @@ if (defined $threads){
 	}else{
 		InfoError("Threads number wrong!",'red');
 		InfoError("Please provide a threads number between 0 - $threads_max that this server could support.");
-		
+
 		pod2usage(-verbose=>2,-exitval=>1);
 		exit;
 	}
@@ -213,39 +214,39 @@ if (defined $threads){
 ##core program starts here
 if($threads > 1){
 	Info("Start translating using multipe threads. Please wait...");
-	
+
 	my @outfiles;
 	for my $f (@inputfiles){
 		my $outfile = File::Spec -> catfile($outputDir, removeFastaSuffix(basename($f)) . ".aa.fasta");
 		push @outfiles,$outfile;
 	}
-	
+
 	&runMultipleThreadsWith2Args(\&translateFileWithInfo, \@inputfiles, \@outfiles, $threads);
 }else{
 	Info("Start translating using single thread. Please wait...");
-	
-	# we have to sort the inputfiles by basename length, and translate them one by one. 
+
+	# we have to sort the inputfiles by basename length, and translate them one by one.
 	# Otherwise, the progress bar will hit a bug and leave a mark of the previous inputfile name.
-	
-	# sorting 
+
+	# sorting
 	my %fastaNameLen;
 	for my $f (@inputfiles){
 		my $filename = basename($f);
 		$fastaNameLen{$f} = length($filename);
 	}
-	
+
 	my @inputfilesSortByNameLength = sort {$fastaNameLen{$a} <=> $fastaNameLen{$b}} keys %fastaNameLen;
-	
+
 	# translation
 	my $i = 1;
 	for my $f (@inputfilesSortByNameLength){
 		my $outfile = File::Spec -> catfile($outputDir, removeFastaSuffix(basename($f)) . ".aa.fasta");
-		
+
 		my $seqID = basename($f);
 		&ProcessBarForAATranslator($i, $numberOfFiles, $seqID);
-		
+
 		&translateFile($f, $outfile);
-		
+
 		$i++;
 	}
 }
@@ -257,35 +258,35 @@ sub ProcessBarForAATranslator {
 	my $i = $_[0] || return 0;
 	my $n = $_[1] || return 0;
 	my $seqID = $_[2] || return 0;
-	
+
 	chomp (my $date = `date`);
-    
-    #output               
+
+    #output
 	print "\rINFO    : Progress [ ".("=" x int(($i/$n)*50)).(" " x (50 - int(($i/$n)*50)))." ] ";
 	printf("%4.2f%%",$i/$n*100);
 	print " ($seqID)";
-	
+
 	local $| = 0;
 }
 
 sub translateFile {
 	my $fastafile = shift;
 	my $outfile = shift;
-	
+
 	# reformat input fasta file into 2 line format
 	my $fastafile2 = File::Spec -> catfile($outputDir, removeFastaSuffix(basename($fastafile)) . ".refmt.fasta" );
 
 	formatFastaToTwoLineMode($fastafile, $fastafile2);
-	
+
 	# output file handle
 	open RES,">$outfile" or die "Can NOT output to file $outfile:$!\n";
-	
+
 	# read in file
 	open T,$fastafile2 or die "Can NOT open fasta file $fastafile2:$!\n";
 	while(my $line1 = <T>){
 		chomp $line1;
 		chomp (my $line2 = <T>);
-		
+
 		if ($line1 =~ /^>/){
 			print RES "$line1\n";
 		}else{
@@ -293,16 +294,16 @@ sub translateFile {
 			#exit;
 			return 0; # Stop translating for current file and keep running the program
 		}
-		
+
 		my $seqID = $line1 =~ s/^>//r;
-		
+
 		my $aa = translation($line2, $seqID);
-		
+
 		print RES "$aa\n";
 	}
 	close T;
 	close RES;
-	
+
 	# remove refomat fasta file
 	my $cmd = "rm -rf $fastafile2";
 	system($cmd);
@@ -311,24 +312,24 @@ sub translateFile {
 sub translateFileWithInfo {
 	my $fastafile = shift;
 	my $outfile = shift;
-	
+
 	# update status
 	Info("Start to translate $fastafile.");
-	
+
 	# reformat input fasta file into 2 line format
 	my $fastafile2 = File::Spec -> catfile($outputDir, removeFastaSuffix(basename($fastafile)) . ".refmt.fasta" );
 
 	formatFastaToTwoLineMode($fastafile, $fastafile2);
-	
+
 	# output file handle
 	open RES,">$outfile" or die "Can NOT output to file $outfile:$!\n";
-	
+
 	# read in file
 	open T,$fastafile2 or die "Can NOT open fasta file $fastafile2:$!\n";
 	while(my $line1 = <T>){
 		chomp $line1;
 		chomp (my $line2 = <T>);
-		
+
 		if ($line1 =~ /^>/){
 			print RES "$line1\n";
 		}else{
@@ -336,16 +337,16 @@ sub translateFileWithInfo {
 			#exit;
 			return 0; # Stop translating for current file and keep running the program
 		}
-		
+
 		my $seqID = $line1 =~ s/^>//r;
-		
+
 		my $aa = translation($line2, $seqID);
-		
+
 		print RES "$aa\n";
 	}
 	close T;
 	close RES;
-	
+
 	# remove refomat fasta file
 	my $cmd = "rm -rf $fastafile2";
 	system($cmd);
@@ -363,7 +364,7 @@ Info("Program completed!",'green');
 ####---------------------------####
 
 
-=pod 
+=pod
 
 =head1 NAME
 
@@ -382,19 +383,19 @@ qap -- Quasispecies analysis package
            | |                  | |
            | |                  | |
            |_|                  |_|         v1.0
-           
 
 
 
-gap AminoAcidTranslator [options]
+
+qap AminoAcidTranslator [options]
 
 Use --help to see more information.
 
-gap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
+qap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
 
 =head1 DESCRIPTION
 
-This script implements a function for translating nucleotide sequences into amino acid (protein) sequences in batch. The script has B<several> mandatory options that MUST appear last. 
+This script implements a function for translating nucleotide sequences into amino acid (protein) sequences in batch. The script has B<several> mandatory options that MUST appear last.
 
 =head1 OPTIONS
 
@@ -426,7 +427,7 @@ Display this detailed help information.
 
 =over 5
 
-gap AminoAcidTranslator -i ./seq -t 10 -s fasta -o ./aa
+qap AminoAcidTranslator -i ./seq -t 10 -s fasta -o ./aa
 
 =back
 
@@ -437,5 +438,3 @@ Mingjie Dr.Wang I<huzai@sjtu.edu.cn>
 =head1 COPYRIGHT
 
 Copyright (C) 2017, Mingjie Wang. All rights reserved.
-
-

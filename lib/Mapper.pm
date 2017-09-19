@@ -476,7 +476,7 @@ sub blatPipeline {
 	#run blat
 	Info("Locating the position of sequences using BLAT");
 	my $psl = File::Spec -> catfile($outputdir,removeFastaSuffix(basename($input)) . ".psl");
-	my $cmd = "blat $ref $input $psl";
+	my $cmd = "$blatProgram $ref $input $psl";
 	system($cmd);
 	
 	#parse blat output

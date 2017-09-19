@@ -7,7 +7,7 @@
 #################################################################################
 ##                                                                             ##
 ##  A software suite designed for virus quasispecies analysis                  ##
-##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/gap/>        ##
+##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/>        ##
 ##                                                                             ##
 ##  Version 1.0                                                                ##
 ##                                                                             ##
@@ -16,7 +16,7 @@
 ##  Organization: Research Laboratory of Clinical Virology, Rui-jin Hospital,  ##
 ##  Shanghai Jiao Tong University, School of Medicine                          ##
 ##                                                                             ##
-##  This file is a subprogram of GAP suite.                                    ##
+##  This file is a subprogram of QAP suite.                                    ##
 ##                                                                             ##
 ##  QAP is a free software; you can redistribute it and/or                     ##
 ##  modify it under the terms of the GNU General Public License                ##
@@ -29,7 +29,7 @@
 ##  GNU General Public License for more details.                               ##
 ##                                                                             ##
 ##  You should have received a copy of the GNU General Public                  ##
-##  License along with ViralFusionSeq; if not, see                             ##
+##  License along with QAP; if not, see                             ##
 ##  <http://www.gnu.org/licenses/>.                                            ##
 ##                                                                             ##
 #################################################################################
@@ -112,6 +112,7 @@ if (defined $help){
 
 
 if (defined $outputDir){
+	$outputDir =~ s/\/$//;
 	$outputDir = abs_path($outputDir) . "/";
 	if (not -e $outputDir){
  		InfoWarn("The output directory $outputDir does NOT exist.",'yellow');
@@ -372,7 +373,7 @@ sub trimmer {
 		$inputFile = $tmpout;
 
 		#start to trim
-		if($pos eq 'bos'){
+		if(uc($pos) eq 'BOS'){
 			my $startpos = $len + 1;
 			$cmd = "$fastx_trim -f $startpos -i $inputFile -o $outputFile";
 			runcmd($cmd);
@@ -386,7 +387,7 @@ sub trimmer {
 		system($cmd);
 	}else{
 		#start to trim
-		if($pos eq 'bos'){
+		if(uc($pos) eq 'BOS'){
 			my $startpos = $len + 1;
 			my $cmd = "$fastx_trim -f $startpos -i $inputFile -o $outputFile";
 			runcmd($cmd);
@@ -433,11 +434,11 @@ qap -- Quasispecies analysis package
 
 
 
-gap BarcodeTrimmer [options]
+qap BarcodeTrimmer [options]
 
 Use --help to see more information.
 
-gap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
+qap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
 
 =head1 DESCRIPTION
 
@@ -461,7 +462,7 @@ Several files are allowed and should be seperated by comma, e.g. -2 Data1_R2.fq.
 
 =item --fasta,-f F<File> [Optional]
 
-Path of fasta files to be trimmed. One of --fastq1 or --fastq MUST be provided. Both compressed files and uncompressed files are allowed. 
+Path of fasta files to be trimmed. One of --fastq1 or --fasta MUST be provided. Both compressed files and uncompressed files are allowed. 
 
 Several files are allowed and should be seperated by comma, e.g. -f Data1.fasta.gz,Data2.fasta.gz,Data3.fasta.gz. 
 
@@ -493,7 +494,7 @@ Display this detailed help information.
 
 =over 5
 
-gap BarcodeTrimmer -1 Data1_R1.fq.gz,Data2_R1.fq.gz,Data3_R1.fq.gz -2 Data1_R2.fq.gz,Data2_R2.fq.gz,Data3_R2.fq.gz -l 8 -p bos -t 2 -o ./timmedSep
+qap BarcodeTrimmer -1 Data1_R1.fq.gz,Data2_R1.fq.gz,Data3_R1.fq.gz -2 Data1_R2.fq.gz,Data2_R2.fq.gz,Data3_R2.fq.gz -l 8 -p bos -t 2 -o ./timmedSep
 
 =back
 

@@ -70,6 +70,8 @@ sub predicthaplo_pipeline {
 	print T "% configuration file for the Virushaplotyper\n";
 	print T "% prefix\n";
 	print T "${samplename}_\n";
+	print T "% filename of reference sequence (FASTA)\n";
+	print T "$ref\n";
 	print T "% do_visualize (1 = true, 0 = false)\n";
 	print T "1\n";
 	print T "% filname of the aligned reads (sam format)\n";
@@ -100,7 +102,7 @@ sub predicthaplo_pipeline {
 	print T "25\n";
 	print T "%min_overlap_factor (reads must have an overlap with the local reconstruction window of at least this factor times the window size)\n";
 	print T "0.85\n";
-	print T "local_window_size_factor (size of  local reconstruction window relative to the median of the read lengths)\n";
+	print T "%local_window_size_factor (size of  local reconstruction window relative to the median of the read lengths)\n";
 	print T "0.7\n";
 	print T "% max number of clusters (in the truncated Dirichlet process)\n";
 	print T "25\n";
@@ -110,7 +112,7 @@ sub predicthaplo_pipeline {
 	print T "1\n";
 	
 	my $cmd = "$predicthaplo_excu $configfile";
-	runcmd($cmd,0);
+	runcmd($cmd,1);
 
 	chdir $RealBin or die "Can NOT chdir to $RealBin:$!";
 }

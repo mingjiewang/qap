@@ -7,7 +7,7 @@
 #################################################################################
 ##                                                                             ##
 ##  A software suite designed for virus quasispecies analysis                  ##
-##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/gap/>        ##
+##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/>        ##
 ##                                                                             ##
 ##  Version 1.0                                                                ##
 ##                                                                             ##
@@ -16,7 +16,7 @@
 ##  Organization: Research Laboratory of Clinical Virology, Rui-jin Hospital,  ##
 ##  Shanghai Jiao Tong University, School of Medicine                          ##
 ##                                                                             ##
-##  This file is a subprogram of GAP suite.                                    ##
+##  This file is a subprogram of QAP suite.                                    ##
 ##                                                                             ##
 ##  QAP is a free software; you can redistribute it and/or                     ##
 ##  modify it under the terms of the GNU General Public License                ##
@@ -29,7 +29,7 @@
 ##  GNU General Public License for more details.                               ##
 ##                                                                             ##
 ##  You should have received a copy of the GNU General Public                  ##
-##  License along with ViralFusionSeq; if not, see                             ##
+##  License along with QAP; if not, see                             ##
 ##  <http://www.gnu.org/licenses/>.                                            ##
 ##                                                                             ##
 #################################################################################
@@ -107,6 +107,7 @@ if (defined $help){
 }
 
 if (defined $outputDir){
+	$outputDir =~ s/\/$//;
 	$outputDir = abs_path($outputDir) . "/";
 	if (not -e $outputDir){
  		InfoWarn("The output directory $outputDir does NOT exist.",'yellow');
@@ -225,6 +226,10 @@ if(defined $seqType){
 		pod2usage(-verbose=>2,-exitval=>1);
 		exit;
 	}
+}else{
+	InfoError("-p/--seqType MUST be defined.");
+	pod2usage(-verbose=>2,-exitval=>1);
+	exit;
 }
 
 
@@ -416,7 +421,7 @@ if ($threads > 1){
 		
 		for my $f(@inputfiles){
 			my $outname = removeFastaSuffix(basename($f));
-			my $outfile = File::Spec -> catfile($outputDir, "${outname}_distanceAA.txt");
+			my $outfile = File::Spec -> catfile($outputDir, "${outname}_distanceNT.txt");
 			
 			my $res = &extractRes($outfile);
 			print RES "$outname\t$res\n";
@@ -595,11 +600,11 @@ qap -- Quasispecies analysis package
 
 
 
-gap Diversity [options]
+qap Diversity [options]
 
 Use --help to see more information.
 
-gap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
+qap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
 
 =head1 DESCRIPTION
 
@@ -643,7 +648,7 @@ Display this detailed help information.
 
 =over 5
 
-gap Diversity -i ./seq -s fas -p nnt -t 10 -o ./shannon
+qap Diversity -i ./seq -s fas -p nnt -t 10 -o ./shannon
 
 =back
 

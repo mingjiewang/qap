@@ -7,7 +7,7 @@
 #################################################################################
 ##                                                                             ##
 ##  A software suite designed for virus quasispecies analysis                  ##
-##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/gap/>        ##
+##  See our website: <http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/>        ##
 ##                                                                             ##
 ##  Version 1.0                                                                ##
 ##                                                                             ##
@@ -16,7 +16,7 @@
 ##  Organization: Research Laboratory of Clinical Virology, Rui-jin Hospital,  ##
 ##  Shanghai Jiao Tong University, School of Medicine                          ##
 ##                                                                             ##
-##  This file is a subprogram of GAP suite.                                    ##
+##  This file is a subprogram of QAP suite.                                    ##
 ##                                                                             ##
 ##  QAP is a free software; you can redistribute it and/or                     ##
 ##  modify it under the terms of the GNU General Public License                ##
@@ -29,7 +29,7 @@
 ##  GNU General Public License for more details.                               ##
 ##                                                                             ##
 ##  You should have received a copy of the GNU General Public                  ##
-##  License along with ViralFusionSeq; if not, see                             ##
+##  License along with QAP; if not, see                             ##
 ##  <http://www.gnu.org/licenses/>.                                            ##
 ##                                                                             ##
 #################################################################################
@@ -76,6 +76,7 @@ if ($threads_usable) {
 ##get workding directory
 my $wk_dir = getcwd;
 my $mainBin;
+
 if ($RealBin =~ /(.*)\/bin/){
 	$mainBin = $1;
 }
@@ -86,16 +87,23 @@ my $inputfile;
 my $outputDir;
 my $threads;
 my $ref;
+my $minlen;
+my $maxlen;
+my $errorcorrect;
+
 
 my $DateNow = `date +"%Y%m%d_%Hh%Mm%Ss"`;
 chomp $DateNow;
 
 GetOptions(
-'i|inputFq|=s'       => \$inputfile,
+'i|inputFastq|=s'    => \$inputfile,
 'o|outputDir|=s'     => \$outputDir,
 'h|help|'            => \$help,
 't|threads|=s'       => \$threads,
-'r|refSeq|=s'        => \$ref
+'r|refSeq|=s'        => \$ref,
+'minLen|=s'          => \$minlen,
+'maxLen|=s'          => \$maxlen,
+'errorCorrect|=s'    => \$errorcorrect
 );
 
 
@@ -105,6 +113,7 @@ if (defined $help){
 }
 
 if (defined $outputDir){
+	$outputDir =~ s/\/$//;
 	$outputDir = abs_path($outputDir) . "/";
 	if (not -e $outputDir){
  		InfoWarn("The output directory $outputDir does NOT exist.",'yellow');
@@ -125,7 +134,7 @@ if (defined $outputDir){
 	}else{
 		InfoError("Mkdir Failed! $outputDir already exists!","red");
 		InfoError("Please specify another output directory using option -o/--outputDir\n");
-		pod2usage(-verbose=>2,-exitval=>1);
+		pod2usage(-verbose=>1,-exitval=>1);
 		exit;
 	}
 
@@ -142,12 +151,47 @@ if (defined $threads){
 		InfoError("Threads number wrong!",'red');
 		InfoError("Please provide a threads number between 0 - $threads_max that this server could support.");
 		
-		pod2usage(-verbose=>2,-exitval=>1);
+		pod2usage(-verbose=>1,-exitval=>1);
 		exit;
 	}
 }else{
 	$threads = 1;#if -t not provided, default is NOT use theads;
 }
+
+if(defined $minlen){
+	if(CheckPositiveInt($minlen)){
+		#nothing
+	}else{
+		InfoError("Minimum read length should be a positive integer.");
+		pod2usage(-verbose=>1,-exitval=>1);
+		exit;
+	}
+}else{
+	$minlen = 0;
+}
+
+if(defined $maxlen){
+	if(CheckPositiveInt($maxlen)){
+		#nothing
+	}else{
+		InfoError("Maximum read length should be a positive integer.");
+		pod2usage(-verbose=>1,-exitval=>1);
+		exit;
+	}
+}else{
+	$maxlen = 100000000000000000000;
+}
+
+if(defined $errorcorrect){
+	if($errorcorrect =~ /[yn]/i){
+		#nothing
+	}else{
+		InfoError("For error correction, please choose between \'--errorCorrect Y\' or \'--errorCorrect N\'.");
+	}
+}else{
+	$errorcorrect = 'N';
+}
+
 
 my @fqfiles;
 if (defined $inputfile){
@@ -160,11 +204,14 @@ if (defined $inputfile){
 		}else{
 			my $pathtmp = abs_path($tmp);
 			push @fqfiles,$pathtmp;
+			
+			my $cmd = "sed -i \'s\/ \/_\/g\' $pathtmp";
+			system($cmd);
 		}
 	}
 }else{
 	InfoError("Input fastq files MUST be provided!",'red');
-	pod2usage(-verbose=>2,-exitval=>1);
+	pod2usage(-verbose=>1,-exitval=>1);
 	exit;
 }
 
@@ -258,14 +305,14 @@ if(scalar(@ref) == 1){
 
 ##check blast
 my $DEBUG_MODE = 1;
-my $makeblastdb_excu = File::Spec -> catfile($mainBin,'3rdPartyTools','blast','makeblastdb');
+my $makeblastdb_excu = File::Spec -> catfile($RealBin,'3rdPartyTools','blast','makeblastdb');
 if(CheckProgram($makeblastdb_excu, __FILE__, __LINE__, $DEBUG_MODE)){
 	#keep running
 }else{
 	InfoError("The program $makeblastdb_excu does NOT exist. Exiting...");
 	exit;
 }
-my $blastn_excu = File::Spec -> catfile($mainBin,'3rdPartyTools','blast','blastn');
+my $blastn_excu = File::Spec -> catfile($RealBin,'3rdPartyTools','blast','blastn');
 if(CheckProgram($blastn_excu, __FILE__, __LINE__, $DEBUG_MODE)){
 	#keep running
 }else{
@@ -274,7 +321,7 @@ if(CheckProgram($blastn_excu, __FILE__, __LINE__, $DEBUG_MODE)){
 }
 
 ##check fq2fa
-my $fq2fa_excu = File::Spec -> catfile($mainBin,'3rdPartyTools','fastx_toolkit','fq2fa');
+my $fq2fa_excu = File::Spec -> catfile($RealBin,'3rdPartyTools','fastx_toolkit','fq2fa');
 if(CheckProgram($fq2fa_excu, __FILE__, __LINE__, $DEBUG_MODE)){
 	#keep running
 }else{
@@ -282,6 +329,32 @@ if(CheckProgram($fq2fa_excu, __FILE__, __LINE__, $DEBUG_MODE)){
 	exit;
 }
 
+##check map tools
+#check bowtie2
+my $bowtie2Program = File::Spec -> catfile($RealBin,'3rdPartyTools','bowtie2','bowtie2');
+if(CheckProgram($bowtie2Program, __FILE__, __LINE__, $DEBUG_MODE)){
+	#keep running
+}else{
+	InfoError("The program $bowtie2Program does NOT exist. Exiting...");
+	exit;
+}
+#check samtools
+my $samtoolsProgram = File::Spec -> catfile($RealBin,'3rdPartyTools','samtools','samtools');
+if(CheckProgram($samtoolsProgram, __FILE__, __LINE__, $DEBUG_MODE)){
+	#keep running
+}else{
+	InfoError("The program $samtoolsProgram does NOT exist. Exiting...");
+	exit;
+}
+
+##check shorah
+my $shorah_excu = File::Spec -> catfile($RealBin,'3rdPartyTools','qsr','Shorah','shorah.py');
+if(CheckFile($shorah_excu, __FILE__, __LINE__, $DEBUG_MODE)){
+	#keep running
+}else{
+	InfoError("The program $shorah_excu does NOT exist. Exiting...");
+	exit;
+}
 
 ##fastq 2 fasta
 my $fastadir = File::Spec -> catfile($tmpdir,'fasta');
@@ -297,8 +370,12 @@ for my $fq (@newfqfiles){
 	my $fasta = removeFastqSuffix($fq) . ".fasta";
 	my $cmd = "$fq2fa_excu -in $fq -out $fasta";
 	runcmd($cmd);
-		
-	push @fastafiles,$fasta;
+	
+	move($fasta,$fastadir);
+	$fasta = File::Spec -> catfile($fastadir,basename($fasta));
+	my $fasta_fil = File::Spec -> catfile($fastadir, removeFastaSuffix(basename($fasta)) . ".fil.fasta");
+	&lenthFilter($fasta,$fasta_fil,$minlen,$maxlen);
+	push @fastafiles,$fasta_fil;
 }
 
 
@@ -340,8 +417,104 @@ for my $f (@fastafiles){
 
 runMultipleThreadsWith5Args(\&qsrFromBlastout, \@newref, \@fastafiles, \@blastout1, \@blastout2, \@outputfile, $threads);
 
+##error correction
+if($errorcorrect =~ /y/i){
+	Info("Start to run error correction.");
+	
+	my $correctdir = File::Spec -> catfile($tmpdir,'correction');
+	makedir($correctdir);
+	
+	my @bowtie2_excu;
+	my @samtools_excu;
+	my @shorah_excu;
+	my @outdir;
+	my @bam;
+	my @realbin;
+	for my $f (@fastafiles){
+		push @bowtie2_excu,$bowtie2Program;
+		push @samtools_excu,$samtoolsProgram;
+		push @outdir,$correctdir;
+		my $bam = File::Spec -> catfile($correctdir,removeFastaSuffix(basename($f)). ".rebuild.PosSorted.bam");
+		push @bam,$bam;
+		push @shorah_excu,$shorah_excu;
+		push @realbin,$RealBin;
+	}
+	
+	runMultipleThreadsWith6Args(\&generateBam,\@outputfile,\@newref,\@bowtie2_excu,\@samtools_excu,\@outdir,\@eachthreads, $threads);
+	runMultipleThreadsWith4Args(\&correction,\@bam,\@newref,\@shorah_excu,\@realbin,$threads);
+}
+
 
 ##sub programs starts here
+sub generateBam {
+	my $fasta = shift;
+	my $ref = shift;
+	my $bowtie2_excu = shift;
+	my $samtools_excu = shift;
+	my $outdir = shift;
+	my $threads = shift;
+	
+	my $outsam = File::Spec -> catfile($outdir,removeFastaSuffix(basename($fasta)) . ".sam" );
+	
+	##map
+	#my($Bowtie2_excu,$ref,$fa,$sam,$threads) = @_;
+	Bowtie2_pipeline_fasta($bowtie2_excu,$ref,$fasta,$outsam,$threads);
+	
+	##sam2bam
+	#my ($samtools_excu, $samfile, $sortMethod, $clear_sam, $threads) = @_;
+	sam2SortedAndIndexedBam($samtools_excu,$outsam,'Pos',0,$threads);
+	
+	my $outbam = $outsam =~ s/\.sam$/.PosSorted.bam/r;
+}
+
+sub correction {
+	my $bam = shift;
+	my $ref = shift;
+	my $shorah_excu = shift;
+	my $realbin = shift;
+	
+	Info("Error correction for $bam");
+	
+	my $dir = dirname($bam);
+	#run shorah
+	chdir($dir) or die "Can not chdir to $dir:$!";;
+	my $cmd = "$shorah_excu --bam $bam --fasta $ref";
+	runcmd($cmd);
+	chdir($realbin) or die "Can not chdir to $realbin:$!";
+	
+}
+
+sub lenthFilter {
+	my $input = shift;
+	my $output = shift;
+	my $min = shift;
+	my $max = shift;
+	
+	Info("Runing length filtratin for $input");
+	
+	open OUT,">$output" or die "Can not output to $output:$!";
+	
+	open T,$input or die "Can not open $input:$!";
+	my $i;
+	my $k;
+	while(my $line1 = <T>){
+		chomp $line1;
+		chomp (my $line2 = <T>);
+		
+		my $len = length($line2);
+		if($len >= $min and $len <= $max){
+			print OUT "$line1\n$line2\n";
+			$k++;
+		}
+		
+		$i++;
+	}	
+	close T;
+	close OUT;
+	
+	Info("Total $k / $i reads passed read length filtration.");
+}
+
 sub qsrFromBlastout {
 	my $refseqFile = shift;
 	my $seqFile = shift;
@@ -393,14 +566,29 @@ sub qsrFromBlastout {
 			for my $subsubline (@subline){
 				#print "--$subsubline--\n";
 				if ($subsubline =~ /Query  /){
-					$subsubline = substr $subsubline,13,60;
+					my $tmp = substr $subsubline,12,60;
+					if($tmp =~ /^ /){
+						$subsubline = substr $subsubline,13,60;
+					}else{
+						$subsubline = $tmp;
+					}
 					$subsubline =~ s/  \d+$//;
 					$query .= $subsubline;
 				}elsif($subsubline =~ /\|\|/){
-					$subsubline = substr $subsubline,13,60;
+					my $tmp = substr $subsubline,12,60;
+					if($tmp =~ /^ /){
+						$subsubline = substr $subsubline,13,60;
+					}else{
+						$subsubline = $tmp;
+					}
 					$hyphen .= $subsubline;
 				}elsif($subsubline =~ /Sbjct  /){
-					$subsubline = substr $subsubline,13,60;
+					my $tmp = substr $subsubline,12,60;
+					if($tmp =~ /^ /){
+						$subsubline = substr $subsubline,13,60;
+					}else{
+						$subsubline = $tmp;
+					}
 					$subsubline =~ s/  \d+$//;
 					$subject .= $subsubline;
 				}else{
@@ -434,12 +622,26 @@ sub qsrFromBlastout {
 		my @queryMod;
 		for my $i (1..scalar(@query)){
 			my $letterQuery = $query[$i - 1];
+			my $letterQueryPrevious1 = $query[$i - 1];
+			my $letterQueryNext1 = $query[$i];
 			my $letterSubj = $subj[$i - 1];
+			my $letterSubjPrevious1 = $subj[$i - 2];
+			my $letterSubjPrevious2 = $subj[$i - 3];
+			my $letterSubjNext1 = $subj[$i];
+			my $letterSubjNext2 = $subj[$i + 1];
 			
 			if ($letterQuery ne '-' && $letterSubj ne '-'){
 				push @queryMod,$letterQuery;
-			}elsif($letterQuery eq '-' && $letterSubj ne '-'){
-				push @queryMod,$letterSubj;
+			}elsif($letterQuery eq '-' && $letterSubj ne '-'){ #possible deletion 
+				if($letterSubj eq $letterSubjPrevious1 && $letterSubj eq $letterSubjPrevious2){ ##homopolyer
+					push @queryMod,$letterSubj;
+				}elsif($letterSubj eq $letterSubjNext1 && $letterSubj eq $letterSubjNext2){ ##homopolyer
+					push @queryMod,$letterSubj
+				}elsif($letterQueryNext1 eq '-' or $letterQueryPrevious1 eq '-'){
+					push @queryMod,$letterSubj;
+				}else{
+					push @queryMod,$letterQuery;
+				}
 			}elsif($letterQuery ne '-' && $letterSubj eq '-'){
 				#doing nothing;	
 			}else{
@@ -465,18 +667,21 @@ sub qsrFromBlastout {
 	
 	open T,$seqFile or die "Can NOT open $seqFile:$!";
 	my %seq;
+	my @seqid;
 	while (my $line1 = <T>) {
 		chomp $line1;
 		chomp (my $line2 = <T>);
 		
 		my $seqname = $line1 =~ s/^>//r;
+		$seqname =~ s/\s/-/g;
+		push @seqid,$seqname;
 		$seq{$seqname} = $line2;
 		
 	}
 	close T;
 	
 	open T,$blastfile1 or die "Can NOT open $blastfile1:$!";
-	
+
 	my %newseq;
 	for my $id (keys %seq){
 		$newseq{$id} = $refseq;
@@ -494,21 +699,17 @@ sub qsrFromBlastout {
 			#print ">>$seqName<<\n";
 			#print "$newseq{$seqName}\n";
 			$newseq{$seqName} =~ s/ //g;
-			if (substr $newseq{$seqName},$targetStart - 1, $sublen, $seqMod[$n]){
-				#nothing;
-			}
+			substr $newseq{$seqName},$targetStart - 1, $sublen, $seqMod[$n];
 			#print "$seqName:substr $newseq{$seqName},$targetStart - 1, $sublen, $seqMod[$n]\n";
 
 		}elsif($targetStart > $targetEnd){
 			my $sublen = $targetStart - $targetEnd + 1;
-			my $subseq = &rc($seqMod[$n]);
+			my $subseq = &RevCom($seqMod[$n]);
 			#print "$seqName\n";
 			#print "$newseq{$seqName}\n";
 			$newseq{$seqName} =~ s/ //g;
-			if (substr $newseq{$seqName},$targetEnd - 1, $sublen, $subseq){
-				#nothing;
-			}
-				#print "$seqName:substr $newseq{$seqName},$targetEnd - 1, $sublen, $subseq\n";
+			substr $newseq{$seqName},$targetEnd - 1, $sublen, $subseq;
+			#print "$seqName:substr $newseq{$seqName},$targetEnd - 1, $sublen, $subseq\n";
 			
 		}else{
 			Info("Error! Start position equals End position at LINE $n in $blastfile1");
@@ -519,11 +720,13 @@ sub qsrFromBlastout {
 	close T;
 	
 	open RES,">$outputfile" or die "Can not output to $outputfile:$!";
-	for my $id (keys %newseq){
+	for my $id (@seqid){
 		$newseq{$id} =~ s/ //g;
 		print RES ">$id\n$newseq{$id}\n";
 	}
 	close RES;
+	
+	Info("Quasispecies reconstruction for $seqFile completed.");
 }
 
 ##run success
@@ -558,11 +761,11 @@ qap -- Quasispecies analysis package
 
 
 
-gap TGSpipeline [options]
+qap TGSpipeline [options]
 
 Use --help to see more information.
 
-gap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
+qap is still in development. If you have encounted any problem in usage, please feel no hesitation to cotact us.
 
 =head1 DESCRIPTION
 
@@ -572,9 +775,21 @@ This script implements a function to pre-process raw read files from PacBio thir
 
 =over 5
 
-=item --inputFq,-i F<FILE> [Required]
+=item --inputFastq,-i F<FILE> [Required]
 
 Path to input BAM/SAM file which is required. You can also provide multiple files and seperate them by comma, e.g. -i test1.fastq,test2.fastq
+
+=item --minLen F<INTEGER> [Optional]
+
+Minimum read length. To get a more reliable result of rebuilded quasispecies spectrum, a range of sequences is better to be provided.
+
+=item --maxLen F<INTEGER> [Optional]
+
+Maximum read length.
+
+=item --errorCorrect F<STRING> [Optional]
+
+As the relative high sequencing error rate of TGS, a error correction step is provided by this program. Please choose between Y (for 'yes') or N (for 'no'). The default value is 'N' to shorten run time.
 
 =item --refSeq,-r F<File> [Required]
 
@@ -598,7 +813,7 @@ Display this detailed help information.
 
 =over 5
 
-gap TGSpipeline -i test1.fastq,test2.fastq -r hbv1.fasta,hbv2.fasta,hbv3.fasta -t 5 -o ./tgs
+qap TGSpipeline -i test1.fastq,test2.fastq -r hbv1.fasta,hbv2.fasta,hbv3.fasta -t 5 -o ./tgs
 
 =back
 
