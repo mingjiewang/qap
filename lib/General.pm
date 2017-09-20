@@ -251,7 +251,7 @@ sub Info {
     }
 
     #chomp (my $date = `date`);
-	my $date = strftime("%Y-%m-%d %A %H:%M:%S %p %Z", localtime);
+	my $date = strftime("%Y-%m-%d %H:%M:%S %Z", localtime);
     
     #color ref
     my %ColorShell = ("black"     => 30,
@@ -268,7 +268,7 @@ sub Info {
     }
     #output               
     print "INFO    \@ \[${date}\]: ";
-    system "echo -e \"\e[0;${outcolor};1m${info}\e[m\" ";
+    system "echo \"\e[0;${outcolor};1m${info}\e[m\" ";
 }
 
 sub InfoError {
@@ -278,7 +278,7 @@ sub InfoError {
     }
 
     #chomp (my $date = `date`);
-	my $date = strftime("%Y-%m-%d %A %H:%M:%S %p %Z", localtime);
+	my $date = strftime("%Y-%m-%d %H:%M:%S %Z", localtime);
     
     #color ref
     my %ColorShell = ("black"     => 30,
@@ -295,7 +295,7 @@ sub InfoError {
     }
     #output               
     print "ERROR   \@ \[${date}\]: ";
-    system "echo -e \"\e[0;${outcolor};1m${info}\e[m\" ";
+    system "echo \"\e[0;${outcolor};1m${info}\e[m\" ";
 }
 
 sub InfoWarn {
@@ -305,7 +305,7 @@ sub InfoWarn {
     }
 
     #chomp (my $date = `date`);
-	my $date = strftime("%Y-%m-%d %A %H:%M:%S %p %Z", localtime);
+	my $date = strftime("%Y-%m-%d %H:%M:%S %Z", localtime);
     
     #color ref
     my %ColorShell = ("black"     => 30,
@@ -322,7 +322,7 @@ sub InfoWarn {
     }
     #output               
     print "WARNING \@ \[${date}\]: ";
-    system "echo -e \"\e[0;${outcolor};1m${info}\e[m\" ";
+    system "echo \"\e[0;${outcolor};1m${info}\e[m\" ";
 }
 
 sub InfoDie {
@@ -332,7 +332,7 @@ sub InfoDie {
     }
 
     #chomp (my $date = `date`);
-	my $date = strftime("%Y-%m-%d %A %H:%M:%S %p %Z", localtime);
+	my $date = strftime("%Y-%m-%d %H:%M:%S %Z", localtime);
     
     #color ref
     my %ColorShell = ("black"     => 30,
@@ -349,14 +349,14 @@ sub InfoDie {
     }
     #output               
     print "Error   \@ \[${date}\]: ";
-    system "echo -e \"\e[0;${outcolor};1m${info}\e[m\" ";
+    system "echo \"\e[0;${outcolor};1m${info}\e[m\" ";
     die "Aborting Misson$!\n";
 }
 
 sub InfoPlain {
 	my $info = shift;
 	#chomp (my $date = `date`);
-	my $date = strftime("%Y-%m-%d %A %H:%M:%S %p %Z", localtime);
+	my $date = strftime("%Y-%m-%d %H:%M:%S %Z", localtime);
 	
     print "INFO    \@ \[${date}\]: $info\n";
 }
@@ -381,7 +381,7 @@ sub printcol {
         $outcolor = $ColorShell{$color};
     }
     #output               
-    system "echo -e \"\e[0;${outcolor};1m${info}\e[m\" ";
+    system "echo \"\e[0;${outcolor};1m${info}\e[m\" ";
 }
 
 sub runcmd {

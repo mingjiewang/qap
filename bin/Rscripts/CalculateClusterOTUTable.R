@@ -12,7 +12,9 @@ option_list <- list(
   make_option(c("-o","--outputFile"),
               help="output result file"),
   make_option(c("-r","--sampleRatio"),
-              help="Discard strains shown in less than this sample ratio")
+              help="Discard strains shown in less than this sample ratio"),
+  make_option(c("-c","--cutoff"),
+              help="sequence count cutoff")
 )
 # get command line options, if help option encountered print help and exit,
 # otherwise if options not found on command line then set defaults, 
@@ -46,9 +48,10 @@ otu.seq = as.data.frame(otu.seq)
 write.table(otu.seq,str_replace(opt$outputFile,"OTUTable.txt","OTUSeq.txt"),quote=F,row.names = F,col.names = T,sep="\t")
 
 ## filter zero
-count.not.zero <- function(x) ( sum(x != 0) )
+count.not.zero <- function(x) ( sum(x >= as.numeric(opt$cutoff)) )
 otu.notZeroCount <- apply(otu,1,count.not.zero)  # 1 according row ;2 according col
 index <- otu.notZeroCount >= ceiling(ncol(otu) * as.numeric(opt$sampleRatio))
+
 #index <- otu.notZeroCount >= ceiling(ncol(otu) * 0.3)
 otu.fil = otu[index,]
 otu.fil = as.data.frame(otu.fil)

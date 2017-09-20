@@ -271,10 +271,10 @@ if ($out3 =~ /R version (\d+)\.(\d+)\.(\d+)/){
 	my $version = $2;
 	my $subversion = $3;
 	
-	if ($mainversion == 3 and $version >= 1){
+	if ($mainversion == 3 and $version >= 3){
 		Info("R version ${mainversion}\.${version}\.${subversion}.........PASS",'green');
 	}else{
-		InfoError("R >3.1.x is required. Please (re)install R software.");
+		InfoError("R >3.3.x is required. Please (re)install R software.");
 		quit();
 	}
 }else{
@@ -303,7 +303,7 @@ close T;
 
 my $out4 = join '',@out4;
 
-if ($out4 =~ /java version \"(\d+)\.(\d+)\.(\d+)_\d+\"/){
+if ($out4 =~ /version \"(\d+)\.(\d+)\.(\d+)_\d+\"/){
 	my $mainversion = $1;
 	my $version = $2;
 	my $subversion = $3;
@@ -311,7 +311,7 @@ if ($out4 =~ /java version \"(\d+)\.(\d+)\.(\d+)_\d+\"/){
 	if ($version >= 6){
 		Info("Java version ${mainversion}\.${version}\.${subversion}.........PASS",'green');
 	}else{
-		InfoError("Java Runtime Environment (JRE) >1.6.x is required. Please (re)install Java.");
+		InfoError("Java Runtime Environment (JRE) >1.8.x is required. Please (re)install Java.");
 		quit();
 	}
 }else{
@@ -792,7 +792,12 @@ if ($out15 =~ /-in \<inputfile\>/){
 #Perl4::CoreLibs  to successful run perl scripts compile on perl4 
 
 ##check R packages
-#bioconductor:Biostrings ; base:gplots RColorBrewer ggplot2 seqinr optparse plyr xlsx
+#bioconductor:Biostrings ; 
+#base:gplots RColorBrewer ggplot2 seqinr optparse plyr xlsx stringr scatterplot3d devtools ggpubr ape
+#github:ggbiplot
+###library(devtools)
+###install_github("vqv/ggbiplot")
+
 
 ##check Biopython
 #pip install Biopython
@@ -804,7 +809,11 @@ if ($out15 =~ /-in \<inputfile\>/){
 
 ##check shorah-master and other qsr programs
 
-#check igv
+##check igv
+
+##check circos modules 
+
+##check makeblastdb,blastn
 
 ##get cmd file ready to run
 print AUTO $autoInstallCMD;

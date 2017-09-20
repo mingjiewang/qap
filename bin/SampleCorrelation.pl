@@ -94,7 +94,7 @@ GetOptions(
 'i|inputFile|=s'     => \$inputFile,
 'o|outputDir|=s'     => \$outputDir,
 'h|help|'            => \$help,
-'c|heatColor|=s'     => \$heatColor,
+'c|color|=s'         => \$heatColor,
 'l|withLabel|=s'     => \$withLabel,
 'b|corTable|=s'      => \$corTable
 );
@@ -256,7 +256,7 @@ This script implements a function to calculate correlations among sampels and dr
 
 Path to OTU table to be read in. A normalized OTU count table is preferred.
 
-=item --heatColor,-c F<STRING> [Optional]
+=item --color,-c F<STRING> [Optional]
 
 Color used to draw heatmap. Choose between 'BlueRed', 'GreenRed', or 'PinkRed'. Default value is 'BlueRed'.
 

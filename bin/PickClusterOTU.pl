@@ -86,6 +86,7 @@ my $outputDir;
 my $threads;
 my $suffix;
 my $ratio;
+my $cutoff;
 
 my $DateNow = `date +"%Y%m%d_%Hh%Mm%Ss"`;
 chomp $DateNow;
@@ -96,6 +97,7 @@ GetOptions(
 'h|help|'            => \$help,
 't|threads|=s'       => \$threads,
 'r|ratio|=s'         => \$ratio,
+'c|cutoff|=s'        => \$cutoff,
 's|suffix|=s'        => \$suffix
 );
 
@@ -135,16 +137,30 @@ if (defined $outputDir){
 
 if (defined $threads){
 	my $check_threads_positive = &CheckPositiveInt($threads);
-	my $threads_max = `grep 'processor' /proc/cpuinfo | sort -u | wc -l`;
-	chomp $threads_max;
+	my $threads_max;
+	if(existFile("/proc/cpuinfo")){
+		$threads_max = `grep 'processor' /proc/cpuinfo | sort -u | wc -l`;
+		chomp $threads_max;
+		$threads_max =~ s/\s//g;
+	}else{
+		my $mac_threads = `sysctl hw.logicalcpu`;
+		chomp $mac_threads;
+		$mac_threads =~ s/.*\://;
+		$mac_threads =~ s/\s//g;
+		if($mac_threads >= 2){
+			$threads_max = $mac_threads;
+		}else{
+			$threads_max = 2;
+		}
+	}
 
 	if ($check_threads_positive && $threads <= $threads_max){
 		#threads provided by user is ok, doing nothing
 	}else{
 		InfoError("Threads number wrong!",'red');
 		InfoError("Please provide a threads number between 0 - $threads_max that this server could support.");
-		
-		pod2usage(-verbose=>0,-exitval=>1);
+
+		pod2usage(-verbose=>2,-exitval=>1);
 		exit;
 	}
 }else{
@@ -176,6 +192,18 @@ if(defined $ratio){
 	}
 }else{
 	$ratio = 0.2;
+}
+
+if(defined $cutoff){
+	if(CheckPositiveInt($cutoff) or $cutoff ==0){
+		#nothing
+	}else{
+		InfoError("--cutoff/-c should be defined with integer lager than or equal to 0.");
+		pod2usage(-verbose=>0,-exitval=>1);
+		exit;	
+	}
+}else{
+	$cutoff = 2;
 }
 
 my $numberOfFiles = 0;
@@ -278,7 +306,7 @@ for my $f (@inputfiles){
 	open T,$f2line or die "Can NOT open file $f:$!";
 	my $f_withDel = File::Spec -> catfile($tmpDir,$id . ".withDel.fasta");
 	open DEL,">$f_withDel" or die "Can NOT output to $f_withDel:$!";	
-	my $f_withoutDel = File::Spec -> catfile($tmpDir, $id. "withoutDel.fasta");
+	my $f_withoutDel = File::Spec -> catfile($tmpDir, $id . "withoutDel.fasta");
 	open NODELEACH,">$f_withoutDel" or die "Can NOT output to $f_withoutDel:$!";
 	push @f_withoutDel,$f_withoutDel;
 	
@@ -332,17 +360,16 @@ for my $f (@f_withoutDel){
 		chomp (my $line2 = <T>);
 		
 		if($line1 =~ /\[(.*?)\]\[\-\]\[.*?\]_(\d+)/){
-			$otuNum++;
-			print OUT ">$1-OTU${otuNum};size=$2\n";
-			print OUT "$line2\n";
+			if($2 >= $cutoff){
+				$otuNum++;
+				print OUT ">$1-OTU${otuNum};size=$2\n";
+				print OUT "$line2\n";
+			}
 		}
 	}
 	close OUT;
 	close T;
 }
-
-
-
 
 #run cluster
 Info("Running Swarm for sequence cluster.");
@@ -389,7 +416,7 @@ if(! existFile($rscript)){
 #generate OTU table
 Info("Generating OTU table");
 my $finalOut = File::Spec -> catfile($outputDir,"OTUTable.txt");
-$cmd = "Rscript $rscript --inputFile $rinput --outputFile $finalOut --sampleRatio $ratio";
+$cmd = "Rscript $rscript --inputFile $rinput --outputFile $finalOut --sampleRatio $ratio --cutoff $cutoff";
 runcmd($cmd);
 
 
@@ -455,6 +482,10 @@ Path of the directory to storage result files. If NOT provided, the program will
 =item --ratio,-r F<DOUBLE> [Optional]
 
 Ratio of samples with specific OTUs among all sampels. Default value is 0.2.
+
+=item --cutoff,-c F<INTEGER> [Optional]
+
+Cutoff value of minimum count number of identical sequences for each strain. If not defined, -c is set to 2. 
 
 =item --threads,-t F<INTEGER> [Optional]
 

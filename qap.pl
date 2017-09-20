@@ -42,55 +42,67 @@ use File::Spec;
 use Pod::Usage;
 use lib "$FindBin::Bin/lib";
 use Cwd;
-use Getopt::Long;
 
 ####Use modules in this program####
 use General;
-
-####Get options###
-my $graphic;
-my $help;
-
-GetOptions(
-'g|graphic|graph|gui|'    => \$graphic,
-'h|help|'                 => \$help
-);
 
 ##get workding directory
 my $wk_dir = getcwd;
 
 ##start to run program
-if (defined $help){
-	pod2usage(-verbose=>2,-exitval=>1);
-}
+my @all_subprograms = qw/RawDataQC RawDataFiltration BarcodeSplitter BarcodeTrimmer ExtractReadID ExtractSeq ExtractSeqInR MapReadsToRef RemovePCRDup AssembleSeq ECnQSR TGSpipeline FixCircRef MultipleSeqAlign CutSeqIntoTile CutSeqWithIntervals AminoAcidTranslator ConsensusSeq DominantStrain ShannonEntroy SingleBaseComplexity Diversity MFI MutationCaller MSAMutationCaller PickRobustOTU PickClusterOTU SampleClutering SampleCorrelation SamplePCA OTUBarplot OTUHeatmap OTUNetwork SampleRename Sam2Bam Bam2Sam SortBam Fastq2Fasta Circos IGV /;
 
-if(defined $graphic && not defined $help){
-	my $gui_excu = File::Spec -> catfile($RealBin,'bin','JavaScripts','qap.jar');
-	if(not existFile($gui_excu)){
-		InfoError("The program for GUI \<$gui_excu\> is missing. Please check. Exiting...");
+if(not isSubprogramProvided(\@all_subprograms,\@ARGV)){
+	my $help;
+	if(isInARGV("-h",\@ARGV) or isInARGV("--help",\@ARGV)){
+		pod2usage(-verbose=>2,-exitval=>1);
+		$help = 1;
+	}
+	
+	my $graphic;
+	if(isInARGV("-g",\@ARGV) or isInARGV("--graphic",\@ARGV) or isInARGV("--graph",\@ARGV) or isInARGV("--gui",\@ARGV)){
+		$graphic = 1;
+	}
+	
+	if(scalar(@ARGV) > 0 and not defined $help and not defined $graphic){
+		InfoError("Incorrect input arguments detected. You can try \'qap -h\' to see more details.");
 		exit(0);
 	}
 	
-	## handle java args
-	my @java_args;
+	if(defined $graphic && not defined $help){
+		Info("Opening Graphic User Interface for QAP ... ...");
+		
+		my $gui_excu = File::Spec -> catfile($RealBin,'bin','JavaScripts','qap.jar');
+		if(not existFile($gui_excu)){
+			InfoError("The program for GUI \<$gui_excu\> is missing. Please check. Exiting...");
+			exit(0);
+		}
+		
+		## handle java args
+		my @java_args;
+		
+		if ($^O =~/darwin/) {
+			# Add the OSX specific options to use a standard OSX menu bar
+			# and set the program name to something sensible.
+						
+			push @java_args, '-Xdock:name=FastQC';
+			push @java_args, "-Xdock:icon=$RealBin/../Resources/seqmonk.icns";
+			push @java_args, '-Dapple.laf.useScreenMenuBar=true';
+		}
+		
+		push @java_args,"-XX:ParallelGCThreads=1";
+		push @java_args, "-Djava.awt.headless=false";
+		push @java_args,"-Xmx2g";
+		
+		my $java_args = join " ",@java_args;
+		my $guiCMD = "java @java_args -jar $gui_excu";
+		system($guiCMD);
 	
-	if ($^O =~/darwin/) {
-		# Add the OSX specific options to use a standard OSX menu bar
-		# and set the program name to something sensible.
-					
-		push @java_args, '-Xdock:name=FastQC';
-		push @java_args, "-Xdock:icon=$RealBin/../Resources/seqmonk.icns";
-		push @java_args, '-Dapple.laf.useScreenMenuBar=true';
 	}
-	
-	push @java_args,"-XX:ParallelGCThreads=1";
-	push @java_args, "-Djava.awt.headless=false";
-	push @java_args,"-Xmx2g";
-	
-	my $java_args = join " ",@java_args;
-	my $guiCMD = "java @java_args -jar $gui_excu";
-	system($guiCMD);
-}else{
+}
+
+
+if(isSubprogramProvided(\@all_subprograms,\@ARGV) or scalar(@ARGV) == 0){
 	####Display welcome information####
 	#my $who_output = `who -m`;
 	#my ($user,$ip) = (split " ",$who_output)[0,4];
@@ -106,8 +118,8 @@ if(defined $graphic && not defined $help){
 	if (defined $ARGV[0]){
 		$subprogram = $ARGV[0];
 	}
-	my @all_subprograms = qw/RawDataQC RawDataFiltration BarcodeSplitter BarcodeTrimmer ExtractReadID ExtractSeq ExtractSeqInR MapReadsToRef RemovePCRDup AssembleSeq ECnQSR TGSpipeline FixCircRef MultipleSeqAlign CutSeqIntoTile CutSeqWithIntervals AminoAcidTranslator ConsensusSeq DominantStrain ShannonEntroy SingleBaseComplexity Diversity MFI MutationCaller MSAMutationCaller PickRobustOTU PickClusterOTU SampleClutering SampleCorrelation SamplePCA OTUBarplot OTUHeatmap OTUNetwork SampleRename Sam2Bam Bam2Sam SortBam Fastq2Fasta Circos IGV /;
-	my $flag = grep {$subprogram eq $_;} @all_subprograms;
+	
+	my $flag = grep {$subprogram =~ /$_/i;} @all_subprograms;
 	
 	##display help if subprogram not provided
 	if (not $flag){
@@ -204,6 +216,41 @@ Usage: qap <command> [options]
 	}
 }
 
+
+sub isSubprogramProvided {
+	my $program = shift;
+	my $arg = shift;
+	
+	my @program = @$program;
+	my @arg = @$arg;
+	
+	for my $p (@program){
+		for my $a (@arg){
+			if($p =~ /$a/i){
+				return 1;
+			}
+		}
+	}
+	
+	return 0;
+}
+
+sub isInARGV {
+	my $arg = shift;
+	my $ARGV = shift;
+	
+	my @args = @$ARGV;
+	
+	for my $a (@args){
+		if($a eq $arg){
+			return 1;
+		}
+	}
+	
+	return 0;
+}
+
+#########------------##########
 
 =pod 
 

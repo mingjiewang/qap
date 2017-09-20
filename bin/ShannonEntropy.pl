@@ -72,6 +72,7 @@ my $outputDir;
 my $format;
 my $suffix;
 my $graphs;
+my $threads;
 
 my $DateNow = `date +"%Y%m%d_%Hh%Mm%Ss"`;
 chomp $DateNow;
@@ -82,7 +83,8 @@ GetOptions(
 'f|format|=s'       => \$format,     
 'o|outputDir|=s'    => \$outputDir,
 'g|graphic|=s'      => \$graphs,
-'h|help|'           => \$help
+'h|help|'           => \$help,
+'t|threads|=s'      => \$threads
 );
 
 
@@ -152,6 +154,37 @@ if(defined $graphs){
 	InfoWarn("-g/--graphs not specified, using false as default.");
 }
 
+if (defined $threads){
+	my $check_threads_positive = &CheckPositiveInt($threads);
+	my $threads_max;
+	if(existFile("/proc/cpuinfo")){
+		$threads_max = `grep 'processor' /proc/cpuinfo | sort -u | wc -l`;
+		chomp $threads_max;
+		$threads_max =~ s/\s//g;
+	}else{
+		my $mac_threads = `sysctl hw.logicalcpu`;
+		chomp $mac_threads;
+		$mac_threads =~ s/.*\://;
+		$mac_threads =~ s/\s//g;
+		if($mac_threads >= 2){
+			$threads_max = $mac_threads;
+		}else{
+			$threads_max = 2;
+		}
+	}
+
+	if ($check_threads_positive && $threads <= $threads_max){
+		#threads provided by user is ok, doing nothing
+	}else{
+		InfoError("Threads number wrong!",'red');
+		InfoError("Please provide a threads number between 0 - $threads_max that this server could support.");
+
+		pod2usage(-verbose=>2,-exitval=>1);
+		exit;
+	}
+}else{
+	$threads = 1;#if -t not provided, default is NOT use theads;
+}
 
 my $numberOfFiles = 0;
 my @inputfiles;
@@ -231,6 +264,7 @@ print RES "Sample\tValue\n";
 #run sub program
 my $i = 1;
 for my $f (@inputfiles){
+	
 	&shannon($f, $format, $rscript, $resfile, $drawgraph);
 	
 	#process bar

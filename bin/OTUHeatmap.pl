@@ -95,7 +95,7 @@ GetOptions(
 'o|outputDir|=s'     => \$outputDir,
 'h|help|'            => \$help,
 'g|group|=s'         => \$group,
-'c|heatColor|=s'     => \$heatColor,
+'c|color|=s'         => \$heatColor,
 'd|colorDegree|=s'   => \$colorDegree
 );
 
@@ -253,7 +253,7 @@ Path to OTU table to be read in. A normalized OTU count table is preferred.
 
 Classification information for each sample. The order of given groups should be same with samples in OTU table. Please seperate each sample by comma, e.g. -g case,case,case,control,control,control.
 
-=item --heatColor,-c F<STRING> [Optional]
+=item --color,-c F<STRING> [Optional]
 
 Color used to draw heatmap. Choose between 'BlueRed' and 'GreenRed'. Default value is 'BlueRed'.
 

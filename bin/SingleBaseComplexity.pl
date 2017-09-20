@@ -202,15 +202,29 @@ sleep(1);
 
 if (defined $threads){
 	my $check_threads_positive = &CheckPositiveInt($threads);
-	my $threads_max = `grep 'processor' /proc/cpuinfo | sort -u | wc -l`;
-	chomp $threads_max;
+	my $threads_max;
+	if(existFile("/proc/cpuinfo")){
+		$threads_max = `grep 'processor' /proc/cpuinfo | sort -u | wc -l`;
+		chomp $threads_max;
+		$threads_max =~ s/\s//g;
+	}else{
+		my $mac_threads = `sysctl hw.logicalcpu`;
+		chomp $mac_threads;
+		$mac_threads =~ s/.*\://;
+		$mac_threads =~ s/\s//g;
+		if($mac_threads >= 2){
+			$threads_max = $mac_threads;
+		}else{
+			$threads_max = 2;
+		}
+	}
 
 	if ($check_threads_positive && $threads <= $threads_max){
 		#threads provided by user is ok, doing nothing
 	}else{
 		InfoError("Threads number wrong!",'red');
 		InfoError("Please provide a threads number between 0 - $threads_max that this server could support.");
-		
+
 		pod2usage(-verbose=>2,-exitval=>1);
 		exit;
 	}
