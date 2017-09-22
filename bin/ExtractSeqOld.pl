@@ -55,7 +55,7 @@ use General;
 
 ##Show welcome
 print "You are now running subprogram: ";
-printcol ("ShannonEntropy","green");
+printcol ("ExtractSeq","green");
 print "\n";
 
 ##get workding directory
@@ -67,31 +67,32 @@ if ($RealBin =~ /(.*)\/bin/){
 
 ####define command line arguments
 my $help;
-my $inputDir;
+my $fq1;
+my $fq2;
 my $outputDir;
+my $pairEnded = 0;
+my $idFile;
 my $format;
-my $suffix;
-my $graphs;
-my $threads;
 
 my $DateNow = `date +"%Y%m%d_%Hh%Mm%Ss"`;
 chomp $DateNow;
 
 GetOptions(
-'i|inputDir|=s'     => \$inputDir,
-'s|suffix|=s'       => \$suffix,
-'f|format|=s'       => \$format,     
-'o|outputDir|=s'    => \$outputDir,
-'g|graphic|=s'      => \$graphs,
-'h|help|'           => \$help,
-'t|threads|=s'      => \$threads
+'1|fastq1|=s'      => \$fq1,
+'2|fastq2|=s'      => \$fq2,
+'o|outputDir=s'    => \$outputDir,
+'h|help|'          => \$help,
+'i|idFile|=s'       => \$idFile,
+'f|outFormat|=s'    => \$format
 );
+
 
 
 ##check command line arguments
 if (defined $help){
 	pod2usage(-verbose=>2,-exitval=>1);
 }
+
 
 if (defined $outputDir){
 	$outputDir =~ s/\/$//;
@@ -112,7 +113,7 @@ if (defined $outputDir){
 		}
 	}
 }else{
-	$outputDir = File::Spec -> catfile($wk_dir,"qap_Results_for_ShannonEntropy_$DateNow");
+	$outputDir = File::Spec -> catfile($wk_dir,"qap_Results_for_ExtractSeq_$DateNow");
 	InfoWarn("The output directory is not provided!",'yellow');
 	InfoWarn("Will mkdir \"$outputDir\" and use it as the output directory.",'yellow');
 	
@@ -128,217 +129,167 @@ if (defined $outputDir){
 
 }
 
-if(defined $inputDir){
-	$inputDir = abs_path($inputDir) . "/";
-	if (not -e $inputDir){
-		InfoError("Input directory $inputDir does NOT exist! Please check again.");
-		exit;
-	}
-}else{
-	InfoError("Input directory MUST be specified with -i/--inputDir\n");
-	pod2usage(-verbose=>0,-exitval=>1);
-	exit;
-}
-
-my $drawgraph = 0;
-if(defined $graphs){
-	if($graphs =~ /t/i){
-		$drawgraph = 1;
-	}elsif($graphs =~ /f/i){
-		$drawgraph = 0
-	}else{
-		InfoError("Please specify whether draw graphs or not using -g/--graphs with \'T(true)\' or \'F(false)\'.");
-	}
-}else{
-	$drawgraph = 0;
-	InfoWarn("-g/--graphs not specified, using false as default.");
-}
-
-if (defined $threads){
-	my $check_threads_positive = &CheckPositiveInt($threads);
-	my $threads_max;
-	if(CheckFile("/proc/cpuinfo")){
-		$threads_max = `grep 'processor' /proc/cpuinfo | sort -u | wc -l`;
-		chomp $threads_max;
-		$threads_max =~ s/\s//g;
-	}else{
-		my $mac_threads = `sysctl hw.logicalcpu`;
-		chomp $mac_threads;
-		$mac_threads =~ s/.*\://;
-		$mac_threads =~ s/\s//g;
-		if($mac_threads >= 2){
-			$threads_max = $mac_threads;
-		}else{
-			$threads_max = 2;
-		}
-	}
-
-	if ($check_threads_positive && $threads <= $threads_max){
-		#threads provided by user is ok, doing nothing
-	}else{
-		InfoError("Threads number wrong!",'red');
-		InfoError("Please provide a threads number between 0 - $threads_max that this server could support.");
-
-		pod2usage(-verbose=>2,-exitval=>1);
-		exit;
-	}
-}else{
-	$threads = 1;#if -t not provided, default is NOT use theads;
-}
-
-my $numberOfFiles = 0;
-my @inputfiles;
-if(defined $suffix){
-	@inputfiles = glob ("${inputDir}/*.${suffix}");
-	
-	$numberOfFiles = scalar(@inputfiles);
-	
-	if ($numberOfFiles == 0){
-		InfoError("There are NOT any files in $inputDir with suffix \'.${suffix}\'. Please check again.");
-		exit;
-	}
-	
-	Info("Find $numberOfFiles files.");
-	my $i = 1;
-	for my $f (@inputfiles){
-		printf "[%02d] $f\n",$i;
-		$i++;
-	}
-	
-}else{
-	InfoWarn("The suffix is not provided. The program will try to read in every file in $inputDir");
-	
-	@inputfiles = glob ("${inputDir}/*.*");
-	
-	$numberOfFiles = scalar(@inputfiles);
-	
-	if ($numberOfFiles == 0){
-		InfoError("There are NOT any files in $inputDir with suffix \'.${suffix}\'. Please check again.");
-		exit;
-	}
-	
-	Info("Find $numberOfFiles files.");
-	my $i = 1;
-	for my $f (@inputfiles){
-		printf "[%02d] $f\n",$i;
-		$i++;
-	}
-	
-}
-
 if (defined $format){
-	if(uc($format) eq 'FASTA' or uc($format) eq 'FASTQ'){
+	if ($format eq 'fastq' || $format eq 'fasta'){
 		#nothing
 	}else{
-		InfoError("The file format MUST be one of \'fasta\' or \'fastq\'.");
+		InfoError("The output file format should be one of \"fastq\" or \"fasta\".","red");
+		exit;
+	}
+}else{
+	$format = "fastq";
+	Info("Output format is not provided. Using \"fastq\" as default.");
+}
+
+if (defined $idFile){
+	if (not -e $idFile){
+		InfoError("Input read ID file $idFile does NOT exist!",'red');
 		pod2usage(-verbose=>0,-exitval=>1);
 		exit;
 	}
+	$idFile = abs_path($idFile);
 }else{
-	InfoError("The file format MUST be specified using -f/--format.");
-	pod2usage(-verbose=>0,-exitval=>1);
+	InfoError("Input read ID file must be provided!",'red');
+	pod2usage(-verbose=>1,-exitval=>1);
 	exit;
 }
 
-
-##the core program starts here
-Info("Start calculating...");
-sleep(1);
-
-#check r script 
-my $rscript = File::Spec -> catfile($mainBin, 'bin', 'Rscripts', 'CalculateShannonEntropy.R');
-if (-e $rscript){
-	#nothing
-}else{
-	InfoError("Rscript $rscript is missing. Abortting...",'red');
-	exit;
-}
-
-#output file
-my $inputDirName = basename($inputDir);
-my $resfileName = "ShannonEntropy" . "_" . $inputDirName . ".txt";
-my $resfile = File::Spec -> catfile($outputDir, $resfileName);
-open RES,">>$resfile" or die "Cannot output to $resfile:$!";
-print RES "Sample\tValue\n";
-
-#run sub program
-my $i = 1;
-for my $f (@inputfiles){
-	
-	&shannon($f, $format, $rscript, $resfile, $drawgraph);
-	
-	#process bar
-	InfoProcessBar($i, $numberOfFiles);
-	$i++;
-}
-
-
-
-
-
-sub shannon {
-	my $file = shift;
-	my $format = shift;
-	my $rscript = shift;
-	my $resfile = shift;
-	my $drawgraph = shift;
-	
-	my $fileName = basename($file);
-	
-	my $rInputfile = $file . "." . time() . ".RInput";
-	
-	my $rRunLogFile = File::Spec -> catfile($outputDir, "${fileName}.RLog");
-	
-	if (uc($format) eq 'FASTA'){
-		$fileName = removeFastaSuffix($fileName);
-		
-		#extract seq
-		extractSeqFromFasta($file, $rInputfile);
-		
-		#calculate
-		my $cmd = "Rscript $rscript -i $rInputfile -o $resfile -l $fileName -p $drawgraph > $rRunLogFile";
-		system($cmd);
-	}elsif(uc($format) eq 'FASTQ'){
-		$fileName = removeFastqSuffix($fileName);
-		
-		#extract seq
-		extractSeqFromFastq($file, $rInputfile);
-		
-		#calculate
-		my $cmd = "Rscript $rscript -i $rInputfile -o $resfile -l $fileName -p $drawgraph > $rRunLogFile";
-		system($cmd);
-	}else{
-		InfoError("The formar MUST be \'fasta\' or \'fastq\'.");
+if (defined $fq1){
+	if (not -e $fq1){
+		InfoError("Input fastq1 file $fq1 does NOT exist!",'red');
+		pod2usage(-verbose=>0,-exitval=>1);
 		exit;
 	}
-	
-	#remove tmp data file
-	my $inputFolder = dirname($file);
-	my $cmd = "rm -rf $inputFolder/${fileName}*.RInput";
-	system($cmd);
-	
-	$cmd = "rm -rf $rRunLogFile";
-	system($cmd);
-	
-	#handle figure output
-	if($wk_dir eq $outputDir){
-		#nothing
-	}else{
-		#mv tif and pdf to outputDir
-		my $png = File::Spec -> catfile($wk_dir, "${fileName}.png");
-		$cmd = "mv $png $outputDir";
-		system($cmd);
-		
-		my $pdf = File::Spec -> catfile($wk_dir, "${fileName}.pdf");
-		$cmd = "mv $pdf $outputDir";
-		system($cmd);
-	}
-	
+	$fq1 = abs_path($fq1);
+}else{
+	InfoError("Input fastq1 file must be provided!",'red');
+	pod2usage(-verbose=>1,-exitval=>1);
+	exit;
 }
 
+if (defined $fq2){
+	if (not -e $fq2){
+		InfoError("Input fastq2 file $fq2 does NOT exist!",'red');
+		pod2usage(-verbose=>0,-exitval=>1);
+		exit;
+	}
+	$fq2 = abs_path($fq2);
+	$pairEnded = 1;
+}
+
+##start the analysis
+my %id;
+open T,"$idFile" or die "Can NOT open read ID file:$idFile:$!";
+while(<T>){
+	chomp;
+	$id{$_} = 1;
+}
+close T;
+
+##core program
+&extractSeq($fq1,\%id,$outputDir,$format);
+&extractSeq($fq2,\%id,$outputDir,$format) if $pairEnded;
+
+##subprograms goes here
+sub extractSeq {
+	my $fq = shift;
+	my $id = shift;
+	my $outdir = shift;
+	my $format = shift;
+	
+	my $fqName = basename($fq1);
+	my %idWanted = %$id;
+	
+	Info("Extracting sequences from $fq.");
+	
+	##handle gzipped files
+	if (isGzipped($fq)){
+		my $tmpName = addTagForRawData($fqName, 'ungzipped', 1) . "_" . time();
+		my $tmpout = File::Spec -> catfile($outdir,$tmpName);
+		
+		#uncompress
+		Info("Uncompressing gzipped file $fqName");
+		my $cmd = "gunzip -c $fq > $tmpout";
+		system($cmd);
+		#runcmd($cmd);
+		$fq = $tmpout;
+	}
+	
+	#output file name
+	my $outName = addTagForRawData($fqName, 'extractedSeq', 1);
+	$outName =~ s/\.gz$//; #remove .gz suffix is input fastq file is gzipped.
+	
+	my $outFile;
+	if ($format eq 'fastq'){
+		$outFile = File::Spec -> catfile($outdir, $outName);
+	}elsif ($format eq 'fasta'){
+		$outFile = File::Spec -> catfile($outdir, changeFastqSuffix2Fasta($outName));
+	}else{
+		InfoError("The output file format should be one of \"fastq\" or \"fasta\".","red");
+		exit;
+	}
+	open RES,">$outFile" or die "Can NOT output extracted sequences data to file $outFile:$!\n";
+	
+	#get total line number
+	my $wc = `wc -l $fq`;
+	$wc =~ /^(\d+) /;
+	my $totalLineNum = $1;
+	my $totalSeqNum = int($totalLineNum / 4);
+	my $hashNum = scalar(values(%idWanted));
+	my $estimateTime = log($hashNum) * 10 * ($totalLineNum / 4000000);
+	print(log($hashNum));
+	if ($estimateTime > 5){
+		#nothing
+	}else{
+		$estimateTime = int(rand() * 5) + 2;
+	}
+	my $estimateTimeExp = formatMinutes($estimateTime);
+	
+	#read in the input fastq file
+	Info("Start to extract, this might take a long time. Please wait patiently. [ETA $estimateTimeExp]");
+	if ($format eq 'fastq'){
+		open T,$fq or die "Can NOT open the input fastq file:$!\n";
+		my $i = 1;
+		while(my $line1 = <T>){
+			chomp $line1;
+			chomp (my $line2 = <T>);
+			chomp (my $line3 = <T>);
+			chomp (my $line4 = <T>);
+		
+			$line1 =~ /(.*?)\s+/;
+			$id = $1;
+			
+			if (exists $idWanted{$id}){
+					print RES "$line1\n$line2\n$line3\n$line4\n";
+			}
+			InfoProcessBar($i, $totalSeqNum);
+			$i++;
+		}
+		close T;
+	}else{
+		open T,$fq or die "Can NOT open the input fastq file:$!\n";
+		my $i = 1;
+		while(my $line1 = <T>){
+			chomp $line1;
+			chomp (my $line2 = <T>);
+			chomp (my $line3 = <T>);
+			chomp (my $line4 = <T>);
+		
+			$line1 =~ /(.*?)\s+/;
+			$id = $1;
+			
+			if (exists $idWanted{$id}){
+					$line1 =~ s/^\@//;
+					print RES ">$line1\n$line2\n";
+			}
+			InfoProcessBar($i, $totalSeqNum);
+			$i++;
+		}
+		close T;
+	}
+}
 
 ##run success
-print("\n");
 Info("Program completed!",'green');
 
 
@@ -370,7 +321,7 @@ qap -- Quasispecies analysis package
 
 
 
-qap ShannonEntropy [options]
+qap ExtractSeq [options]
 
 Use --help to see more information.
 
@@ -378,27 +329,27 @@ qap is still in development. If you have encounted any problem in usage, please 
 
 =head1 DESCRIPTION
 
-This script implements a function for calculating Shannon entroy in batch. The script has B<several> mandatory options that MUST appear last. 
+This script implements a function for extracting sequences from fastq files with read IDs. The script has B<several> mandatory options that MUST appear last. 
 
 =head1 OPTIONS
 
 =over 5
 
-=item --inputDir,-i F<FILE> [Required]
+=item --fastq1,-1 F<FILE> [Required]
 
-Path to directory contaning all the files to be read in.
+Path to next generation sequencing raw data. REQUIRED for both single-end or paired-end reads. Both compressed files and uncompressed files are allowed. 
 
-=item --suffix,-s F<STRING> [Optional]
+=item --fastq2,-2 F<FILE> [Optional]
 
-Suffix of the files to be read in. If suffix is not provided, all the files in input directory will be read in.
+Path to next generation sequencing raw data. REQUIRED for both paired-end reads. Both compressed files and uncompressed files are allowed. 
 
-=item --format,-f F<STRING> [Required]
+=item --idFile, -i F<FILE> [Required]
 
-The format of the files to be calculated. Should be one of 'fasta' or 'fastq'.
+Path to the file containing the read IDs by using which the sequences would be extracted. Each ID should be listed per line.
 
-=item --graphs,-g F<BOOLEAN> [Optional]
+=item --outFormat, -f F<STRING> [Optional]
 
-Whether draw graphs or not for illustrating virus quansispecies population structure. T for true and F for false. Using F as default.
+The format of program output. The value should be one of 'fastq' or 'fasta'.
 
 =item --outputDir,-o F<FILE> [Optional]
 
@@ -414,7 +365,7 @@ Display this detailed help information.
 
 =over 5
 
-qap ShannonEntropy -i ./seq -f fasta -s fas -g T -o ./shannon
+qap ExtractSeq -1 Data1_R1.fq.gz -2 Data1_R2.fq.gz -i readID.txt -f fastq -o ./seq
 
 =back
 
