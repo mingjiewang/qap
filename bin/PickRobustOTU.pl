@@ -336,6 +336,7 @@ if(! existFile($rscript)){
 #generate OTU table
 Info("Generating OTU table");
 my $finalOut = File::Spec -> catfile($outputDir,"OTUTable.txt");
+ 
 my $cmd = "Rscript $rscript --inputFile $rinput --outputFile $finalOut --sampleRatio $ratio";
 runcmd($cmd);
 

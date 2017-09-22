@@ -247,7 +247,7 @@ sub CheckDouble {
 sub Info {
     my ($info,$color) = @_;
     if (!defined $color){
-        $color = "white";
+        $color = "turquoise";
     }
 
     #chomp (my $date = `date`);
@@ -269,6 +269,7 @@ sub Info {
     #output               
     print "INFO    \@ \[${date}\]: ";
     system "echo \"\e[0;${outcolor};1m${info}\e[m\" ";
+    #print "\\u001B[0;${outcolor}m${info}";
 }
 
 sub InfoError {
