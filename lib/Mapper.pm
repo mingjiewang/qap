@@ -333,12 +333,21 @@ sub isSamFile {
 	my $file = shift;
 	
 	my $filename = basename($file);
-	if ($filename =~ /\.sam$/){
+	#if ($filename =~ /\.sam$/){
+	#	return 1;
+	#}else{
+	#	InfoWarn("The suffix of sam file $file should be \".sam\". ");
+	#	return 0;
+	#}
+	
+	my $fileInfo = `file $file`;
+	chomp $fileInfo;
+	
+	if ($fileInfo =~ /ASCII text/i and $filename =~ /\.sam$/){
 		return 1;
-	}else{
-		InfoWarn("The suffix of sam file $file should be \".sam\". ");
-		return 0;
 	}
+	
+	return 0;
 	
 }
 
@@ -346,12 +355,22 @@ sub isBamFile {
 	my $file = shift;
 	
 	my $filename = basename($file);
-	if ($filename =~ /\.bam$/){
+	#if ($filename =~ /\.bam$/){
+	#	return 1;
+	#}else{
+	#	InfoWarn("The suffix of bam file $file should be \".bam\". ");
+	#	return 0;
+	#}
+	
+	my $fileInfo = `file $file`;
+	chomp $fileInfo;
+	
+	if ($fileInfo =~ /compressed data/i and $filename =~ /\.bam$/){
 		return 1;
-	}else{
-		InfoWarn("The suffix of bam file $file should be \".bam\". ");
-		return 0;
 	}
+	
+	return 0;
+	
 	
 }
 

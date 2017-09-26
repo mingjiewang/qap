@@ -45,7 +45,7 @@ use Pod::Usage;
 use lib "$FindBin::Bin/../lib";
 use Cwd qw/getcwd abs_path/;
 use File::Basename;
-
+use File::Copy;
 
 ####Use modules in this program####
 use General;
@@ -90,6 +90,8 @@ my $outputDir;
 my $threads;
 my $ref;
 my $program;
+my $bamfile;
+my $samfile;
 
 my $DateNow = `date +"%Y%m%d_%Hh%Mm%Ss"`;
 chomp $DateNow;
@@ -97,7 +99,9 @@ chomp $DateNow;
 GetOptions(
 '1|fastq1|=s'        => \$fq1,
 '2|fastq2|=s'        => \$fq2,
-'r|reference|=s'     => \$ref,
+'b|bamFile|=s'       => \$bamfile,
+'s|samFile|=s'       => \$samfile,
+'r|refSeq|=s'        => \$ref,
 'o|outputDir|=s'     => \$outputDir,
 'p|program|=s'       => \$program,
 'h|help|'            => \$help,
@@ -177,10 +181,6 @@ if (defined $fq1){
 		InfoError("Fastq1 file $fq1 does NOT exits.");
 		exit(0);
 	}
-}else{
-	InfoError("Fastq1 file MUST be provided using --fastq1/-1.");
-	pod2usage(-verbose=>1,-exitval=>1);
-	exit;
 }
 
 if (defined $fq2){
@@ -189,9 +189,73 @@ if (defined $fq2){
 		exit(0);
 	}
 }else{
-	InfoError("Fastq2 file MUST be provided using --fastq2/-2.");
+	if(defined $fq1){
+		InfoError("Fastq2 file MUST be provided using --fastq2/-2.");
+		pod2usage(-verbose=>1,-exitval=>1);
+		exit;
+	}
+}
+
+if(defined $bamfile){
+	if(defined $fq1 or defined $samfile){
+		InfoError("Only one of --fastq1/2 or --bamFile/--samFile should be defined.");
+		pod2usage(-verbose=>1,-exitval=>1);
+		exit;	
+	}else{
+		if(existFile($bamfile) ){
+			if(isBamFile($bamfile)){
+				#nothing
+			}else{
+				InfoError("Input BAM file $bamfile is incorrect formatted.");
+				exit(0);
+			}
+		}else{
+			InfoError("BAM file $bamfile does not exist or NOT accessible.");
+			exit(0);
+		}
+	}
+}
+
+if(defined $samfile){
+	if(defined $fq1 or defined $bamfile){
+		InfoError("Only one of --fastq1/2, --bamFile, and --samFile should be defined.");
+		pod2usage(-verbose=>1,-exitval=>1);
+		exit;	
+	}else{
+		if(existFile($samfile) ){
+			if(isSamFile($samfile)){
+				#nothing
+			}else{
+				InfoError("Input SAM file $samfile is incorrect formatted.");
+				exit(0);
+			}
+		}else{
+			InfoError("SAM file $samfile does not exist or NOT accessible.");
+			exit(0);
+		}
+	}
+}
+
+my $isFileInput = (defined $fq1 && defined $fq2) || defined $bamfile || defined $samfile;
+if($isFileInput){
+	#nothing
+}else{
+	InfoError("One of --fastq1/2, --bamFile, and --samFile MUST be defined.");
 	pod2usage(-verbose=>1,-exitval=>1);
 	exit;
+}
+
+if(!defined $fq1){
+	$fq1 = "null";
+}
+if(!defined $fq2){
+	$fq2 = "null";
+}
+if(!defined $bamfile){
+	$bamfile = "null";
+}
+if(!defined $samfile){
+	$samfile = "null";
 }
 
 if(defined $ref){
@@ -254,6 +318,14 @@ if(CheckProgram($bwa_excu, __FILE__, __LINE__, $DEBUG_MODE)){
 	InfoError("The program $bwa_excu does NOT exist. Exiting...");
 	exit;
 }
+#check bowtie2
+my $bowtie2_excu = File::Spec -> catfile($RealBin,'3rdPartyTools','bowtie2','bowtie2');
+if(CheckProgram($bowtie2_excu, __FILE__, __LINE__, $DEBUG_MODE)){
+	#keep running
+}else{
+	InfoError("The program $bowtie2_excu does NOT exist. Exiting...");
+	exit;
+}
 #check fq2fa
 my $fq2fa_excu = File::Spec -> catfile($RealBin,'3rdPartyTools','fastx_toolkit','fq2fa');
 if(CheckProgram($fq2fa_excu, __FILE__, __LINE__, $DEBUG_MODE)){
@@ -295,9 +367,173 @@ if(not CheckFolder($viquas_excu_dir)){
 	exit(0);
 }
 
-##start to run
-for my $p (@program){
-	qsr_pipeline($fq1,$fq2,$ref,$outputDir,$p,$threads,$fq2fa_excu,$samtools_excu,$bwa_excu,$shorah_excu,$predicthaplo_excu,$qure_excu_dir,$viquas_excu_dir);
+#manipulate files
+$ref = abs_path($ref);
+$fq1 = abs_path($fq1) if $fq1 ne "null";
+$fq2 = abs_path($fq2) if $fq2 ne "null";
+$bamfile = abs_path($bamfile) if $bamfile ne "null";
+$samfile = abs_path($samfile) if $samfile ne "null";
+
+##manipulate data input
+my $tmpdir = File::Spec -> catfile($outputDir,'tmp');
+makedir($tmpdir);
+
+if($fq1 ne "null"){
+	my $fq1new = File::Spec -> catfile($tmpdir,removeFastqSuffix(basename($fq1)) . ".fastq");
+	copy($fq1,$fq1new) if (not -e $fq1new);
+	my $fq2new = File::Spec -> catfile($tmpdir,removeFastqSuffix(basename($fq2)) . ".fastq");
+	copy($fq2,$fq2new) if (not -e $fq2new);
+	
+	my $sampleName = getCommonString(basename($fq1),basename($fq2));
+	$sampleName =~ s/[_\.R]+$//i;
+	
+	#generate fasta file
+	my $fasta1 = File::Spec -> catfile($tmpdir, removeFastqSuffix(basename($fq1)) . ".fasta");
+	system("gunzip $fq1new") if (isGzipped($fq1new));
+	my $cmd = "$fq2fa_excu -in $fq1 -out $fasta1";
+	runcmd($cmd) if (not existFile($fasta1));
+	
+	my $fasta2 = File::Spec -> catfile($tmpdir, removeFastqSuffix(basename($fq2)) . ".fasta");
+	system("gunzip $fq2new") if (isGzipped($fq2new));
+	$cmd = "$fq2fa_excu -in $fq2 -out $fasta2";
+	runcmd($cmd) if (not existFile($fasta2));
+	
+	my $fastafile = File::Spec -> catfile($tmpdir, $sampleName . ".merge.fasta");
+	system("cat $fasta1 $fasta2 > $fastafile") if (not existFile($fastafile));
+	
+	#generate sam/bam file
+	my $sam = File::Spec -> catfile($tmpdir,$sampleName . ".sam");
+	Bowtie2_pipeline($bowtie2_excu,$ref,$fq1,$fq2,$sam,$threads) if (not existFile($sam));	
+	
+	my $bamfile = $sam =~ s/\.sam$/.PosSorted.bam/r;
+	sam2SortedAndIndexedBam($samtools_excu,$sam,'Pos',0,$threads) if (not existFile($bamfile));
+	
+	my $bam_namesorted = $sam =~ s/\.sam$/.NameSorted.bam/r;
+	sam2SortedAndIndexedBam($samtools_excu,$sam,'Name',0,$threads) if (not existFile($bam_namesorted));
+	
+	my $samfile = $bam_namesorted =~ s/\.bam$/.sam/r;
+	bam2sam($samtools_excu,$bam_namesorted,$threads) if (not existFile($samfile));
+	
+	##format fasta file
+	my $newref = File::Spec -> catfile($tmpdir, removeFastaSuffix(basename($ref)) . ".2line.fasta");
+	formatFastaToTwoLineMode($ref,$newref);
+	
+	##start to run
+	for my $p (@program){
+		qsr_pipeline($fq1new,$fq2new,$fastafile,$bamfile, $samfile, $newref,$outputDir,$p,$threads,$shorah_excu,$predicthaplo_excu,$qure_excu_dir,$viquas_excu_dir);
+	}
+	
+}elsif($bamfile ne "null"){
+	my $bamfile_new = File::Spec -> catfile($tmpdir, removeBamSuffix(basename($bamfile)) . ".bam");
+	copy($bamfile, $bamfile_new) if (not existFile($bamfile_new));
+	$bamfile = $bamfile_new;
+	
+	#generate sam/bam file
+	my $bamfile_PosSort = $bamfile =~ s/\.bam$/.PosSorted.bam/r;
+	sortAndIndexBam($samtools_excu,$bamfile,'Pos',0,$threads) if (not existFile($bamfile_PosSort));
+	
+	my $bamfile_NameSorted = $bamfile =~ s/\.bam$/.NameSorted.bam/r;
+	sortAndIndexBam($samtools_excu,$bamfile,'Name',0,$threads) if (not existFile($bamfile_NameSorted));
+	
+	my $samfile = $bamfile_NameSorted =~ s/\.bam$/.sam/r;
+	bam2sam($samtools_excu,$bamfile_NameSorted,$threads) if (not existFile($samfile));
+	
+	#generate fastq files
+	my $fq1new = File::Spec -> catfile($tmpdir,removeAllSuffix(basename($bamfile)) . "_R1.fq");
+	my $fq2new = File::Spec -> catfile($tmpdir,removeAllSuffix(basename($bamfile)) . "_R2.fq");
+	#check picard
+	my $picard_excu = File::Spec -> catfile($RealBin,'3rdPartyTools','caller','picard.jar');
+	if(existFile($picard_excu)){
+		#keep running
+	}else{
+		InfoError("The program $picard_excu does NOT exist. Exiting...");
+		exit;
+	}
+	my $cmd = "java -jar $picard_excu SamToFastq INPUT=$bamfile FASTQ=$fq1new SECOND_END_FASTQ=$fq2new";
+	runcmd($cmd);
+	
+	my $sampleName = getCommonString(basename($fq1new),basename($fq2new));
+	$sampleName =~ s/[_\.R]+$//i;
+	
+	#generate fasta file
+	my $fasta1 = File::Spec -> catfile($tmpdir, removeFastqSuffix(basename($fq1new)) . ".fasta");
+	system("gunzip $fq1new") if (isGzipped($fq1new));
+	$cmd = "$fq2fa_excu -in $fq1new -out $fasta1";
+	runcmd($cmd) if (not existFile($fasta1));
+	
+	my $fasta2 = File::Spec -> catfile($tmpdir, removeFastqSuffix(basename($fq2new)) . ".fasta");
+	system("gunzip $fq2new") if (isGzipped($fq2new));
+	$cmd = "$fq2fa_excu -in $fq2new -out $fasta2";
+	runcmd($cmd) if (not existFile($fasta2));
+	
+	my $fastafile = File::Spec -> catfile($tmpdir, $sampleName . ".merge.fasta");
+	system("cat $fasta1 $fasta2 > $fastafile") if (not existFile($fastafile));
+	
+	##format fasta file
+	my $newref = File::Spec -> catfile($tmpdir, removeFastaSuffix(basename($ref)) . ".2line.fasta");
+	formatFastaToTwoLineMode($ref,$newref);
+	
+	##start to run
+	for my $p (@program){
+		qsr_pipeline($fq1new,$fq2new,$fastafile,$bamfile_PosSort, $samfile, $newref,$outputDir,$p,$threads,$shorah_excu,$predicthaplo_excu,$qure_excu_dir,$viquas_excu_dir);
+	}
+}elsif($samfile ne "null"){
+	my $samfile_new = File::Spec -> catfile($tmpdir, removeSamSuffix(basename($samfile)) . ".sam");
+	copy($samfile, $samfile_new) if (not existFile($samfile_new));
+	$samfile = $samfile_new;
+	
+	#generate sam/bam file
+	my $bamfile_PosSort = $samfile =~ s/\.sam$/.PosSorted.bam/r;
+	sam2SortedAndIndexedBam($samtools_excu,$samfile,'Pos',0,$threads) if (not existFile($bamfile_PosSort));
+	
+	my $bamfile_NameSorted = $bamfile_PosSort =~ s/\.bam$/.NameSorted.bam/r;
+	sortAndIndexBam($samtools_excu,$bamfile_PosSort,'Name',0,$threads) if (not existFile($bamfile_NameSorted));
+	
+	my $samfile = $bamfile_NameSorted =~ s/\.bam$/.sam/r;
+	bam2sam($samtools_excu,$bamfile_NameSorted,$threads) if (not existFile($samfile));
+	
+	#generate fastq files
+	my $fq1new = File::Spec -> catfile($tmpdir,removeAllSuffix(basename($bamfile_PosSort)) . "_R1.fq");
+	my $fq2new = File::Spec -> catfile($tmpdir,removeAllSuffix(basename($bamfile_PosSort)) . "_R2.fq");
+	#check picard
+	my $picard_excu = File::Spec -> catfile($RealBin,'3rdPartyTools','caller','picard.jar');
+	if(existFile($picard_excu)){
+		#keep running
+	}else{
+		InfoError("The program $picard_excu does NOT exist. Exiting...");
+		exit;
+	}
+	my $cmd = "java -jar $picard_excu SamToFastq INPUT=$bamfile_PosSort FASTQ=$fq1new SECOND_END_FASTQ=$fq2new";
+	runcmd($cmd);
+	
+	my $sampleName = getCommonString(basename($fq1new),basename($fq2new));
+	$sampleName =~ s/[_\.R]+$//i;
+	
+	#generate fasta file
+	my $fasta1 = File::Spec -> catfile($tmpdir, removeFastqSuffix(basename($fq1new)) . ".fasta");
+	system("gunzip $fq1new") if (isGzipped($fq1new));
+	$cmd = "$fq2fa_excu -in $fq1new -out $fasta1";
+	runcmd($cmd) if (not existFile($fasta1));
+	
+	my $fasta2 = File::Spec -> catfile($tmpdir, removeFastqSuffix(basename($fq2new)) . ".fasta");
+	system("gunzip $fq2new") if (isGzipped($fq2new));
+	$cmd = "$fq2fa_excu -in $fq2new -out $fasta2";
+	runcmd($cmd) if (not existFile($fasta2));
+	
+	my $fastafile = File::Spec -> catfile($tmpdir, $sampleName . ".merge.fasta");
+	system("cat $fasta1 $fasta2 > $fastafile") if (not existFile($fastafile));
+	
+	##format fasta file
+	my $newref = File::Spec -> catfile($tmpdir, removeFastaSuffix(basename($ref)) . ".2line.fasta");
+	formatFastaToTwoLineMode($ref,$newref);
+	
+	##start to run
+	for my $p (@program){
+		qsr_pipeline($fq1new,$fq2new,$fastafile,$bamfile_PosSort, $samfile, $newref,$outputDir,$p,$threads,$shorah_excu,$predicthaplo_excu,$qure_excu_dir,$viquas_excu_dir);
+	}
+}else{
+	InfoError("Something wrong with input arguments. Exiting...");
+	exit(0);
 }
 
 ##run success
@@ -346,13 +582,21 @@ This script implements a function for sequencing error correction (EC) and quasi
 
 =over 5
 
-=item --fastq1,-1 F<FILE> [Required]
+=item --fastq1,-1 F<FILE> [Optional]
 
 Path to next generation sequencing raw data. REQUIRED for both paired-end reads and single-end reads. Both compressed files and uncompressed files are allowed. 
 
-=item --fastq2,-2 F<FILE> [Required]
+=item --fastq2,-2 F<FILE> [Optional]
 
 Path to next generation sequencing raw data. REQUIRED for paired-end reads. Both compressed files and uncompressed files are allowed. 
+
+=item --bamFile,-b F<FILE> [Optional]
+
+Path to the input BAM file. 
+
+=item --samFile,-s F<FILE> [Optional]
+
+Path to the input SAM file. One of input fastq or BAM or SAM file must be provided.
 
 =item --refSeq,-r F<File> [Required]
 

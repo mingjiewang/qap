@@ -394,20 +394,20 @@ sub runcmd {
 	if ($flag){
 		if (ref $cmd){
 			for my $tmpcmd (@$cmd){
-				&Info($tmpcmd);
+				&Info($tmpcmd,"white");
 				system $tmpcmd;
 			}
 		}else{
-			&Info($cmd);
+			&Info($cmd,"white");
 			system ($cmd);
 		}
 	}else{
 		if (ref $cmd){
 			for my $tmpcmd (@$cmd){
-				&Info($tmpcmd);
+				&Info($tmpcmd,"white");
 			}
 		}else{
-			&Info($cmd);
+			&Info($cmd,"white");
 		}
 	}
 }

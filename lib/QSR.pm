@@ -46,7 +46,7 @@ sub shorah_pipeline {
 	chdir $outdir or die "Can NOT chdir to $outdir:$!";
 	
 	my $cmd = "python $shorah_excu -b $bamfile -f $ref";
-	runcmd($cmd,0);
+	runcmd($cmd,1);
 	
 	chdir $RealBin or die "Can NOT chdir to $RealBin:$!";
 }
@@ -126,7 +126,7 @@ sub qure_pipeline {
 	chdir $outdir or die "Can NOT chdir to $outdir:$!";
 	
 	my $cmd = "java -classpath $qure_excu -Xmx10g QuRe $fastafile $reffile";
-	runcmd($cmd,0);
+	runcmd($cmd,1);
 	
 	chdir $RealBin or die "Can NOT chdir to $RealBin:$!";
 }
@@ -139,7 +139,7 @@ sub viquas_pipeline {
 	chdir $viquas_dir or die "Can NOT chdir to $viquas_dir:$!";
 	
 	my $cmd = "Rscript ViQuaS.R $ref $bamfile";
-	runcmd($cmd,0);
+	runcmd($cmd,1);
 	
 	chdir $RealBin or die "Can NOT chdir to $RealBin:$!";
 }
@@ -147,64 +147,27 @@ sub viquas_pipeline {
 sub qsr_pipeline {
 	my $fq1 = shift;
 	my $fq2 = shift;
+	my $fasta = shift;
+	my $bamfile = shift;
+	my $samfile = shift;
 	my $ref = shift;
 	my $outdir = shift;
 	my $program = shift;
 	my $threads = shift;
-	my $fq2fa_excu = shift;
-	my $samtools_excu = shift;
-	my $bwa_excu = shift;
 	my $shorah_excu = shift;
 	my $predicthaplo_excu = shift;
 	my $qure_excu_dir = shift;
 	my $viquas_excu_dir = shift;
 	
 	$ref = abs_path($ref);
-	$fq1 = abs_path($fq1);
-	$fq2 = abs_path($fq2);
-	
-	##manipulate data input
-	my $tmpdir = File::Spec -> catfile($outdir,'tmp');
-	makedir($tmpdir);
-	
-	my $fq1new = File::Spec -> catfile($tmpdir,basename($fq1));
-	copy($fq1,$tmpdir) if (not -e $fq1new);
-	my $fq2new = File::Spec -> catfile($tmpdir,basename($fq2));
-	copy($fq2,$tmpdir) if (not -e $fq2new);
+	$fq1 = abs_path($fq1) if $fq1 ne "null";
+	$fq2 = abs_path($fq2) if $fq2 ne "null";
+	$fasta = abs_path($fasta);
+	$bamfile = abs_path($bamfile) if $bamfile ne "null";
+	$samfile = abs_path($samfile) if $samfile ne "null";
 	
 	my $sampleName = getCommonString(basename($fq1),basename($fq2));
 	$sampleName =~ s/[_\.R]+$//i;
-	
-	#generate fasta file
-	my $fasta1 = File::Spec -> catfile($tmpdir, removeFastqSuffix(basename($fq1)) . ".fasta");
-	system("gunzip $fq1new") if (isGzipped($fq1new));
-	my $cmd = "$fq2fa_excu -in $fq1 -out $fasta1";
-	runcmd($cmd) if (not existFile($fasta1));
-	
-	my $fasta2 = File::Spec -> catfile($tmpdir, removeFastqSuffix(basename($fq2)) . ".fasta");
-	system("gunzip $fq2new") if (isGzipped($fq2new));
-	$cmd = "$fq2fa_excu -in $fq2 -out $fasta2";
-	runcmd($cmd) if (not existFile($fasta2));
-	
-	my $fastafile = File::Spec -> catfile($tmpdir, $sampleName . ".merge.fasta");
-	system("cat $fasta1 $fasta2 > $fastafile") if (not existFile($fastafile));
-
-	#generate sam/bam file
-	my $sam = File::Spec -> catfile($tmpdir,$sampleName . ".sam");
-	BWA_pipeline($bwa_excu,$ref,$fq1,$fq2,$sam,$threads) if (not existFile($sam));	
-	
-	my $bamfile = $sam =~ s/\.sam$/.PosSorted.bam/r;
-	sam2SortedAndIndexedBam($samtools_excu,$sam,'Pos',0,$threads) if (not existFile($bamfile));
-	
-	my $bam_namesorted = $sam =~ s/\.sam$/.NameSorted.bam/r;
-	sam2SortedAndIndexedBam($samtools_excu,$sam,'Name',0,$threads) if (not existFile($bam_namesorted));
-	
-	my $samfile = $bam_namesorted =~ s/\.bam$/.sam/r;
-	bam2sam($samtools_excu,$bam_namesorted,$threads) if (not existFile($samfile));
-	
-	##format fasta file
-	my $newref = File::Spec -> catfile($tmpdir, removeFastaSuffix(basename($ref)) . ".2line.fasta");
-	formatFastaToTwoLineMode($ref,$newref);
 	
 	#start to run qsr
 	if (uc($program) eq 'SHORAH'){
@@ -212,7 +175,7 @@ sub qsr_pipeline {
 		makedir($shorah_dir);
 		
 		Info("Running Shorah for ECnQSR");
-		shorah_pipeline($shorah_excu,$bamfile,$newref,$shorah_dir);
+		shorah_pipeline($shorah_excu,$bamfile,$ref,$shorah_dir);
 		
 	}elsif(uc($program) eq 'PREDICTHAPLO'){
 		my $predicthaplo_dir = File::Spec -> catfile($outdir,'PredictHaplo');
@@ -226,10 +189,10 @@ sub qsr_pipeline {
 		makedir($qure_dir);
 		
 		##copy input file to out dir
-		my $qurefastafile = File::Spec -> catfile($qure_dir,basename($fastafile));
-		copy($fastafile,$qure_dir);
-		my $qurereffile = File::Spec -> catfile($qure_dir,basename($newref));
-		copy($newref,$qure_dir);
+		my $qurefastafile = File::Spec -> catfile($qure_dir,basename($fasta));
+		copy($fasta,$qure_dir);
+		my $qurereffile = File::Spec -> catfile($qure_dir,basename($ref));
+		copy($ref,$qure_dir);
 		
 		Info("Running QuRe for ECnQSR");
 		qure_pipeline($qure_excu_dir, $qurefastafile, $qurereffile, $qure_dir);
@@ -241,8 +204,8 @@ sub qsr_pipeline {
 		#copy input file to out dir 
 		my $viquas_bam = File::Spec -> catfile($viquas_dir,basename($bamfile));
 		copy($bamfile,$viquas_dir);
-		my $viquas_ref = File::Spec -> catfile($viquas_dir,basename($newref));
-		copy($newref,$viquas_dir);
+		my $viquas_ref = File::Spec -> catfile($viquas_dir,basename($ref));
+		copy($ref,$viquas_dir);
 		
 		#copy source code to out dir
 		system("cp -r $viquas_excu_dir/* $viquas_dir");
