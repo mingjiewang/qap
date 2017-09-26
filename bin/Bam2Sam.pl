@@ -56,7 +56,7 @@ use Mapper;
 
 ##Show welcome
 print "You are now running subprogram: ";
-printcol ("BarcodeSplitter","green");
+printcol ("Bam2Sam","green");
 print "\n";
 
 ##get workding directory
@@ -87,14 +87,15 @@ if (defined $help){
 	pod2usage(-verbose=>2,-exitval=>1);
 }
 
-my $tmpdir = File::Spec -> catfile("/home/webusers/tmp/","qap_bam2sam_" . time());
-makedir($tmpdir);
 
 if(defined $inputFile){
 	if(existFile($inputFile)){
-		my $newfile = File::Spec -> catfile($tmpdir,basename($inputFile). ".bam");
-		copy($inputFile,$newfile);
-		$inputFile = $newfile;
+		if(isBamFile($inputFile)){
+			$inputFile = abs_path($inputFile);
+		}else{
+			InfoError("Input file should be a valid BAM file.");
+			exit;
+		}
 	}else{
 		InfoError("Input file $inputFile does NOT exist.");
 		exit;
@@ -105,7 +106,13 @@ if(defined $inputFile){
 	exit;
 }
 
-if(not defined($outputFile)){
+if(defined($outputFile)){
+	if($outputFile !~ /^\//){
+		$outputFile = File::Spec -> catfile($wk_dir, $outputFile);
+	}
+	my $outdir = dirname($outputFile);
+	makedir($outdir);
+}else{
 	InfoError("Output file MUST be defined.");
 	pod2usage(-verbose=>1,-exitval=>1);
 	exit;
@@ -159,9 +166,6 @@ bam2newsam($samtools_excu,$inputFile,$outputFile,$threads);
 
 ##run success
 Info("Program completed!",'green');
-
-##remove output dir
-system("rm -rf $tmpdir");
 
 ####---------------------------####
 ####The program ends here

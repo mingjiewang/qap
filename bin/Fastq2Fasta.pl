@@ -55,7 +55,7 @@ use General;
 
 ##Show welcome
 print "You are now running subprogram: ";
-printcol ("BarcodeSplitter","green");
+printcol ("Fastq2Fasta","green");
 print "\n";
 
 ##get workding directory
@@ -86,14 +86,10 @@ if (defined $help){
 	pod2usage(-verbose=>2,-exitval=>1);
 }
 
-my $tmpdir = File::Spec -> catfile("/home/webusers/tmp/","qap_fq2fa_" . time());
-makedir($tmpdir);
 
 if(defined $inputFile){
 	if(existFile($inputFile)){
-		my $newfile = File::Spec -> catfile($tmpdir,basename($inputFile). ".fastq");
-		copy($inputFile,$newfile);
-		$inputFile = $newfile;
+		$inputFile = abs_path($inputFile);
 	}else{
 		InfoError("Input file $inputFile does NOT exist.");
 		exit;
@@ -104,7 +100,13 @@ if(defined $inputFile){
 	exit;
 }
 
-if(not defined($outputFile)){
+if(defined($outputFile)){
+	if($outputFile !~ /^\//){
+		$outputFile = File::Spec -> catfile($wk_dir, $outputFile);
+	}
+	my $outdir = dirname($outputFile);
+	makedir($outdir);
+}else{
 	InfoError("Output file MUST be defined.");
 	pod2usage(-verbose=>1,-exitval=>1);
 	exit;
@@ -163,8 +165,6 @@ copy($outfa,$outputFile);
 ##run success
 Info("Program completed!",'green');
 
-##remove output dir
-system("rm -rf $tmpdir");
 
 ####---------------------------####
 ####The program ends here

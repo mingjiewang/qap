@@ -271,24 +271,6 @@ if(defined $ref){
 	exit;
 }
 
-if (defined $threads){
-	my $check_threads_positive = &CheckPositiveInt($threads);
-	my $threads_max = `grep 'processor' /proc/cpuinfo | sort -u | wc -l`;
-	chomp $threads_max;
-
-	if ($check_threads_positive && $threads <= $threads_max){
-		#threads provided by user is ok, doing nothing
-	}else{
-		InfoError("Threads number wrong!",'red');
-		InfoError("Please provide a threads number between 0 - $threads_max that this server could support.");
-		
-		pod2usage(-verbose=>2,-exitval=>1);
-		exit;
-	}
-}else{
-	$threads = 1;#if -t not provided, default is NOT use theads;
-}
-
 my @program;
 if (defined $program){
 	my @tmp = split ',',$program;
