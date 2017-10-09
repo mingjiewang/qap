@@ -170,16 +170,16 @@ sub CheckProgram {
 	my ($program, $srcname, $subline, $debug) = @_;
 	if (!-e $program) {
 		 if (1) {
-			 printf STDERR "Debug:  Called from \'%s\' at line \'%u\'...\n", $srcname, $subline;
+			 printf STDERR "DEBUG:  Called from \'%s\' at line \'%u\'...\n", $srcname, $subline;
 		}
-		printf STDERR "Error:  The path \'%s\' does not exist!\n", $program;
+		printf STDERR "ERROR:  The path \'%s\' does not exist!\n", $program;
 		return 0;
 	}
 	if (!-x $program) {
 		if ($debug) {
-			printf STDERR "Debug:  Called from \'%s\' at line \'%u\'...\n", $srcname, $subline;
+			printf STDERR "DEBUG:  Called from \'%s\' at line \'%u\'...\n", $srcname, $subline;
 		}
-		printf STDERR "Error:  The path \'%s\' is not an executable program!\n", $program;
+		printf STDERR "ERROR:  The path \'%s\' is not an executable program!\n", $program;
 		return 0;
 	}
 	return 1;
@@ -189,16 +189,16 @@ sub CheckFile {
 	my ($filename, $srcname, $subline, $debug) = @_;
 	if (!-e $filename) {
 		if (1) {
-			printf STDERR "Debug:  Called from \'%s\' at line \'%u\'...\n", $srcname, $subline;
+			printf STDERR "DEBUG:  Called from \'%s\' at line \'%u\'...\n", $srcname, $subline;
 		}
-		printf STDERR "Error:  The path \'%s\' does not exist!\n", $filename;
+		printf STDERR "ERROR:  The path \'%s\' does not exist!\n", $filename;
 		return 0;
 	}
 	if (!-f $filename) {
 		if ($debug) {
-			printf STDERR "Debug:  Called from \'%s\' at line \'%u\'...\n", $srcname, $subline;
+			printf STDERR "DEBUG:  Called from \'%s\' at line \'%u\'...\n", $srcname, $subline;
 		}
-		printf STDERR "Error:  The file \'%s\' does not exist!\n", $filename;
+		printf STDERR "ERROR:  The file \'%s\' does not exist!\n", $filename;
 		return 0;
 	}
 	return 1;
@@ -208,16 +208,16 @@ sub CheckFolder {
 	my ($filename, $srcname, $subline, $debug) = @_;
 	if (!-e $filename) {
 		if (1) {
-			printf STDERR "Debug:  Called from \'%s\' at line \'%u\'...\n", $srcname, $subline;
+			printf STDERR "DEBUG:  Called from \'%s\' at line \'%u\'...\n", $srcname, $subline;
 		}
-		printf STDERR "Error:  The path \'%s\' does not exist!\n", $filename;
+		printf STDERR "ERROR:  The path \'%s\' does not exist!\n", $filename;
 		return 0;
 	}
 	if (!-d $filename) {
 		if ($debug) {
-			printf STDERR "Debug:  Called from \'%s\' at line \'%u\'...\n", $srcname, $subline;
+			printf STDERR "DEBUG:  Called from \'%s\' at line \'%u\'...\n", $srcname, $subline;
 		}
-		printf STDERR "Error:  The file \'%s\' does not exist!\n", $filename;
+		printf STDERR "ERROR:  The file \'%s\' does not exist!\n", $filename;
 		return 0;
 	}
 	return 1;
@@ -381,8 +381,9 @@ sub printcol {
     if (defined $ColorShell{$color}){
         $outcolor = $ColorShell{$color};
     }
-    #output               
-    system "echo \"\e[0;${outcolor};1m${info}\e[m\" ";
+    #output
+    print " ";    
+    system "echo \"\e[0;${outcolor};1m${info}\e[m\" ";           
 }
 
 sub runcmd {
