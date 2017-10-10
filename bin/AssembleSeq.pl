@@ -45,7 +45,7 @@ use lib "$FindBin::Bin/../lib";
 use Cwd qw/getcwd abs_path/;
 use File::Basename;
 use List::Util qw/max min/;
-
+use File::Copy;
 
 ####Use modules in this program####
 use General;
@@ -377,7 +377,9 @@ my $numberOfTotalRP = 0;
 my $numberOfPassFiltrationRP = 0;
 while (my $line1 = <T>){
 	chomp $line1;
+	my $FH_pos1 = tell(T);
 	chomp (my $line2 = <T>);
+	my $FH_pos2 = tell(T);
 	
 	$numberOfTotalRP++;
 	
@@ -387,17 +389,28 @@ while (my $line1 = <T>){
 	my ($id2,$ref2,$pos2,$matExp2,$interval2,$seq2,$qual2) = @arr2[0,2,3,5,8,9,10];
 	
 	#check whether input is right
-	if($numberOfWrongID >= 50){
-		InfoError("Something MUST be wrong with the SAM file $samfile_sort_nohead. Please check.");
+	if($numberOfWrongID >= $numberOfTotalRP * 0.1){
+		InfoError("Something MUST be wrong with the SAM file $samfile_sort_nohead. Maybe the file is not sorted by read name. Please check.");
 		exit(0);
 	}
 	
 	#check if $id1 eq $id2
 	if($id1 eq $id2){
-		#next, nothing wrong
+		# add the LINE count, nothing else to do
+		$i += 2;
+		$k += 2;
 	}else{
 		InfoWarn("The sequence ID in LINE $i and LINE $k are different. Please Check.");
 		$numberOfWrongID++;
+		
+		# set find handle read position to previous line
+		seek(T,$FH_pos1,0);
+		
+		# add the LINE count
+		$i++;
+		$k++;
+		
+		next;
 	}
 	
 	#filter
@@ -482,7 +495,9 @@ while (my $line1 = <T>){
 		my $qual2Overlap = substr $qual2Cut, 0, $overlapLength;
 		
 		#get overlap region 
-		my $overlapSeq = &assembleSeqBaseOnQual($id1, $seq1Overlap, $seq2Overlap, $qual1Overlap, $qual2Overlap);
+		my $overlapSeq = "N";
+		$overlapSeq = &assembleSeqBaseOnQual($id1, $seq1Overlap, $seq2Overlap, $qual1Overlap, $qual2Overlap);
+		next if $overlapSeq =~ /N/;
 		
 		my $assembledSeq = $contig1 . $overlapSeq . $contig2;
 		#print "$seq1Overlap\n$seq2Overlap\n\n";
@@ -512,7 +527,9 @@ while (my $line1 = <T>){
 		my $qual1Overlap = substr $qual1Cut, 0, $overlapLength;
 		
 		#get overlap region 
-		my $overlapSeq = &assembleSeqBaseOnQual($id1, $seq2Overlap, $seq1Overlap, $qual2Overlap, $qual1Overlap);
+		my $overlapSeq = "N";
+		$overlapSeq = &assembleSeqBaseOnQual($id1, $seq1Overlap, $seq2Overlap, $qual1Overlap, $qual2Overlap);
+		next if $overlapSeq =~ /N/;
 		
 		my $assembledSeq = $contig2 . $overlapSeq . $contig1;
 		#print "$seq2Overlap\n$seq1Overlap\n\n";
@@ -524,11 +541,6 @@ while (my $line1 = <T>){
 		#print "$id1\t $interval1\t $id2\t $interval2\n";
 	}
 	
-	
-	
-	#the counter
-	$i += 2;
-	$k += 2;
 	
 	#handle file handle
 	close RES;
@@ -550,23 +562,110 @@ for my $f (glob "$outputDir/*.fasta"){
 my @filesSortedBySize = sort {$fileSize{$b} <=> $fileSize{$a}} keys %fileSize; #sort the fasta files by file size from large to small
 my @wantedFiles = @filesSortedBySize[0..$ampliconNumber - 1];
 
+
 #mkdir tmp data file
 my $tmpDir = File::Spec -> catfile($outputDir, 'tmpData');
 mkdir $tmpDir or die "Can NOT mkdir $tmpDir:$!";
 
 #move all data to tmp folder
 for my $f (glob "$outputDir/*.*"){
-	system("mv $f $tmpDir");
+	#system("mv $f $tmpDir");
+	move($f,$tmpDir);
 }
 
-#get wanted files
+#mkdir tmp2 data dir
+my $tmpDir2 = File::Spec -> catfile($tmpDir, 'tmp');
+makedir($tmpDir2);
+
+#get wanted files to tmp dir
 for my $f (@wantedFiles){
 	my $tmpFilePath = File::Spec -> catfile(dirname($f), 'tmpData', basename($f));
-	system("cp $tmpFilePath $outputDir");
+	my $tmpFilePath2 = File::Spec -> catfile(dirname($f), 'tmpData', 'tmp', basename($f));
+	#system("cp $tmpFilePath $outputDir");
+	copy($tmpFilePath, $tmpFilePath2);
+	
+	my $len = getMostSeqLen($tmpFilePath2, $tmpDir2);
+	my $tmpFilePath2WithLen = removeFastaSuffix($tmpFilePath2) . ".lenFilter.fasta";
+	extractSeqWithLen($tmpFilePath2, $len, $tmpFilePath2WithLen);
+	my $csFile = removeFastaSuffix($tmpFilePath2WithLen) . ".cs.fasta";
+	my $cs = &getConsensusSeq($tmpFilePath2WithLen, $csFile);
+	
+	&formatToEqualLen($tmpFilePath2, $f, $len, $cs);
 }
 
 
 ##sub program starts here
+sub getConsensusSeq {
+	my $inputfile = shift;
+	my $outputfile = shift;
+	
+	my $rinputName = removeFastaSuffix(basename($inputfile)) . ".RInput";
+	my $rinput = File::Spec -> catfile(dirname($outputfile), $rinputName);
+	open R,">$rinput" or die "Can NOT output to $rinput:$!\n";
+	
+	open T,"$inputfile" or die "Can NOT open $inputfile:$!\n";
+	while(my $line1 = <T>){
+		chomp $line1;
+		chomp (my $line2 = <T>);
+		
+		print R "$line2\n";
+	}
+	close T;
+	close R;
+	
+	#get cs
+	#check rscript
+	my $rscript = File::Spec -> catfile($mainBin,'bin','Rscripts','CalculateCS.R');
+	if (existFile($rscript)){
+		#nothing
+	}else{
+		InfoError("R script $rscript is missing. Please check.");
+		InfoError("Aborting...");
+		exit(0);
+	}
+	my $fileLabel = removeFastaSuffix(basename($inputfile));
+	my $cmd = "Rscript $rscript -i $rinput -o $outputfile -l $fileLabel";
+	system($cmd);
+	
+	open C,"$outputfile" or die "Can not open $outputfile:$!";
+	my $dump = <C>;
+	chomp (my $cs = <C>);
+	close C;
+	
+	return $cs;
+}
+
+sub formatToEqualLen{
+	my $file = shift;
+	my $outfile = shift;
+	my $len = shift;
+	my $cs = shift;
+	
+	open T,$file or die "Can not open file $file:$!";
+	open OUT,">$outfile" or die "Can not output to file $outfile:$!";
+	
+	while(my $line1 = <T>){
+		chomp $line1;
+		chomp (my $line2 = <T>);
+		
+		if (length($line2) == $len){
+			print OUT "$line1\n$line2\n";
+		}elsif(length($line2) > $len){
+			my $outseq = substr $line2,0,$len;
+			print OUT "$line1\n$outseq\n";
+		}elsif(length($line2) < $len){
+			my $outseq = $line2 . substr($cs,length($line2),$len - length($line2));
+			print OUT "$line1\n$outseq\n";
+		}else{
+			InfoError("Something wrong with sequence [$line1] in $file");
+		}
+		
+	}
+	close T;
+	close OUT;
+	
+}
+
 sub getMin {
 	my $arr = shift;
 	

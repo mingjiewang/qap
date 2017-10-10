@@ -25,7 +25,8 @@ runMultipleThreadsWith2Args Fastq2Fasta CutLine mix existFile addTagForRawData a
 check3EqualNums changeFastqSuffix2Fasta formatMinutes formatFqIntoColumns removeFastaSuffix removeFastqSuffix 
 removeSamBamSuffix getFileSize checkMultipleEqualNums getSystemInfo extractSeqFromFasta extractSeqFromFastq 
 formatFastaToTwoLineMode checkSeqLen formatFastaForRInput makedir isInArray removeBamSuffix removeSamSuffix 
-removeSamBamSuffix2 convert2Rinput getCommonString CheckSeqNum getEleWithMaxFreq removeSuffix checkAbundance removeAllSuffix) ;
+removeSamBamSuffix2 convert2Rinput getCommonString CheckSeqNum getEleWithMaxFreq removeSuffix checkAbundance removeAllSuffix 
+getMostSeqLen extractSeqWithLen ) ;
 our @EXPORT_OK       = qw ($DEBUG_MODE DelDup  GetSeqFromFasta ParseSamFlag RevCom ProcessBar InfoProcessBar windows2linux
 CheckProgram CheckFile CheckFolder CheckPositiveInt CheckDouble Info InfoError InfoWarn InfoDie InfoPlain 
 printcol runcmd SplitBigFile CutArray runMultipleThreads runMultipleThreadsWith10Args runMultipleThreadsWith9Args runMultipleThreadsWith8Args runMultipleThreadsWith7Args 
@@ -34,7 +35,8 @@ runMultipleThreadsWith2Args Fastq2Fasta CutLine mix existFile addTagForRawData a
 check3EqualNums changeFastqSuffix2Fasta formatMinutes formatFqIntoColumns removeFastaSuffix removeFastqSuffix 
 removeSamBamSuffix getFileSize checkMultipleEqualNums getSystemInfo extractSeqFromFasta extractSeqFromFastq 
 formatFastaToTwoLineMode checkSeqLen formatFastaForRInput makedir isInArray removeBamSuffix removeSamSuffix 
-removeSamBamSuffix2 convert2Rinput getCommonString CheckSeqNum getEleWithMaxFreq removeSuffix checkAbundance removeAllSuffix);
+removeSamBamSuffix2 convert2Rinput getCommonString CheckSeqNum getEleWithMaxFreq removeSuffix checkAbundance removeAllSuffix 
+getMostSeqLen extractSeqWithLen );
 our %EXPORT_TAGS     = ( DEFAULT => [qw (&DelDup  &GetSeqFromFasta &ParseSamFlag &RevCom &ProcessBar &InfoProcessBar &windows2linux
 &CheckProgram &CheckFile &CheckFolder &CheckPositiveInt &CheckDouble &Info &InfoError &InfoWarn &InfoDie &InfoPlain 
 &printcol &runcmd &SplitBigFile &CutArray &runMultipleThreads &runMultipleThreadsWith10Args &runMultipleThreadsWith9Args &runMultipleThreadsWith8Args &runMultipleThreadsWith7Args 
@@ -43,7 +45,8 @@ our %EXPORT_TAGS     = ( DEFAULT => [qw (&DelDup  &GetSeqFromFasta &ParseSamFlag
 &check3EqualNums &changeFastqSuffix2Fasta &formatMinutes &formatFqIntoColumns &removeFastaSuffix &removeFastqSuffix 
 &removeSamBamSuffix &getFileSize &checkMultipleEqualNums &getSystemInfo &extractSeqFromFasta &extractSeqFromFastq 
 &formatFastaToTwoLineMode &checkSeqLen &formatFastaForRInput &makedir &isInArray &removeBamSuffix &removeSamSuffix 
-&removeSamBamSuffix2 &convert2Rinput &getCommonString &CheckSeqNum &getEleWithMaxFreq &removeSuffix &checkAbundance &removeAllSuffix) ] );
+&removeSamBamSuffix2 &convert2Rinput &getCommonString &CheckSeqNum &getEleWithMaxFreq &removeSuffix &checkAbundance &removeAllSuffix 
+&getMostSeqLen &extractSeqWithLen ) ] );
 
 ##Debug mode prints more information while running 
 our $DEBUG_MODE = 1;
@@ -161,7 +164,7 @@ sub InfoProcessBar{
 	chomp (my $date = `date`);
     
     #output               
-	print   "\rINFO    : Progress [ ".("=" x int(($i/$n)*50)).(" " x (50 - int(($i/$n)*50)))." ] ";
+	print   "\rINFO    : Progress [ ".("=" x int(($i/$n)*40)).(" " x (40 - int(($i/$n)*40)))." ] ";
 	printf("%4.2f %%",$i/$n*100);
 	local $| = 0;
 }
@@ -1458,6 +1461,58 @@ sub removeAllSuffix {
     return $outname;
 }
 
+sub getMostSeqLen {
+	my $file = shift;
+	my $outputDir = shift;
+	
+	#convert fasta file to two line format
+	my $file2Name = removeFastaSuffix(basename($file)) . ".2line.fasta";
+	my $file2 = File::Spec -> catfile($outputDir,$file2Name);
+	formatFastaToTwoLineMode($file,$file2);
+	
+	open T,$file2 or die "Can not open fasta file $file2:$!";
+	my @len;
+	while(my $line1 = <T>){
+		chomp $line1;
+		chomp (my $line2 = <T>);
+		
+		next if($line1 eq '' or $line2 eq '');
+		
+		my $len = length $line2;
+		push @len,$len;
+	}
+	close T;
+	
+	system("rm -rf $file2");	
+	
+	if(scalar(@len) == 0){
+		InfoError("There is no sequence in $file.");
+		exit(0);
+	}
+	
+	my $mostLen = getEleWithMaxFreq(\@len);
+	return $mostLen;
+}
+
+sub extractSeqWithLen {
+	my $file = shift;
+	my $len = shift;
+	my $outfile = shift;
+
+	open OUT,">$outfile" or die "Can not output to $outfile:$!";
+		
+	open T,$file or die "Can not open file $file:$!";
+	while(my $line1 = <T>){
+		chomp $line1;
+		chomp (my $line2 = <T>);
+		
+		if(length($line2) == $len){
+			print OUT "$line1\n$line2\n";
+		}
+	}
+	close T;
+	close OUT;
+}
 
 1;
 
