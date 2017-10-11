@@ -426,17 +426,17 @@ while (my $line1 = <T>){
 	if ($interval1 != $interval2 * -1){
 		next;
 	}
-	if ($interval1 == 0 or $interval2 ==0){
+	if ($interval1 == 0 or $interval2 == 0){
 		next;
 	}
 	if(defined $bedFile){
 		next if abs($interval1) > max(@ampliconLens); #no need to check $interval2, because $interval1 eq $interval2
 		next if abs($interval1) < &getMin(\@ampliconLens); #there may be 'NA' in @ampliconLens, so get the real min number with &getmin
 	}
-	#map position filtration
-	if(abs($pos1 - $pos2) < 100){ #the minimum length of illumina reads is 75, so set cutoff to 100
-		next;
-	}
+	##map position filtration
+	#if(abs($pos1 - $pos2) < 100){ #the minimum length of illumina reads is 75, so set cutoff to 100
+	#	next;
+	#}
 	#ref filteration
 	if($ref1 ne $ref2){
 		next;
@@ -495,9 +495,8 @@ while (my $line1 = <T>){
 		my $qual2Overlap = substr $qual2Cut, 0, $overlapLength;
 		
 		#get overlap region 
-		my $overlapSeq = "N";
-		$overlapSeq = &assembleSeqBaseOnQual($id1, $seq1Overlap, $seq2Overlap, $qual1Overlap, $qual2Overlap);
-		next if $overlapSeq =~ /N/;
+		my $overlapSeq = &assembleSeqBaseOnQual($id1, $seq1Overlap, $seq2Overlap, $qual1Overlap, $qual2Overlap);
+		next if (not defined $overlapSeq);
 		
 		my $assembledSeq = $contig1 . $overlapSeq . $contig2;
 		#print "$seq1Overlap\n$seq2Overlap\n\n";
@@ -527,9 +526,8 @@ while (my $line1 = <T>){
 		my $qual1Overlap = substr $qual1Cut, 0, $overlapLength;
 		
 		#get overlap region 
-		my $overlapSeq = "N";
-		$overlapSeq = &assembleSeqBaseOnQual($id1, $seq1Overlap, $seq2Overlap, $qual1Overlap, $qual2Overlap);
-		next if $overlapSeq =~ /N/;
+		my $overlapSeq = &assembleSeqBaseOnQual($id1, $seq1Overlap, $seq2Overlap, $qual1Overlap, $qual2Overlap);
+		next if (not defined $overlapSeq);
 		
 		my $assembledSeq = $contig2 . $overlapSeq . $contig1;
 		#print "$seq2Overlap\n$seq1Overlap\n\n";
