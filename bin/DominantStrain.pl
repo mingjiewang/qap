@@ -153,6 +153,7 @@ if(defined $cutoff){
 
 
 if(defined $inputDir){
+	$inputDir =~ s/\/$//;
 	$inputDir = abs_path($inputDir) . "/";
 	if (not -e $inputDir){
 		InfoError("Input directory $inputDir does NOT exist! Please check again.");
@@ -281,10 +282,11 @@ for my $f (@inputfiles){
 	push @pieplot,$pieChart;
 	push @plotdir,$plotdir;
 	push @rscript,$rscript;
+	push @cutoff,$cutoff;
 	
-	getDominantStrain($f,$outfile,$tmpDir,$pieChart,$plotdir,$rscript,$cutoff);
-	#runMultipleThreadsWith7Args(\&getDominantStrain, \@inputfiles, \@outfile, \@tmpdir, \@pieplot, \@plotdir, \@rscript, \@cutoff,$threads);
+	#getDominantStrain($f,$outfile,$tmpDir,$pieChart,$plotdir,$rscript,$cutoff);
 }
+runMultipleThreadsWith7Args(\&getDominantStrain, \@inputfiles, \@outfile, \@tmpdir, \@pieplot, \@plotdir, \@rscript, \@cutoff,$threads);
 
 ##run success
 print("\n\n");

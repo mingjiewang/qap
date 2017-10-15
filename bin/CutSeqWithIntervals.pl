@@ -243,7 +243,7 @@ if(defined $intervalFile){
 			}
 			
 			# check interval file format
-			if(/[\d+\.\.\d+,?]+\s+\w+/){
+			if(/[\d+\.\.\d+,?]+\s*\w*/){
 				# pass
 				my @arr = split(/\s+/,$_);
 				if(scalar(@arr) == 1){
@@ -624,13 +624,9 @@ Path to directory contaning all the files to be read in.
 
 =item --interval,-v F<FILE> [Required]
 
-Path to the interval file which contains two columns: 1. Start Position..End Position; 2. Interval Name. The first column are mandatory and 
+Path to the interval file which contains two columns: 1. Start Position..End Position; 2. Interval Name. The first column are mandatory and the second one is optional. Columns should be seperated by tab or space and interval names should not contain any special characters. 
 
-the second one is optional. Columns should be seperated by tab or space and interval names should not contain any special characters. 
-
-If there are several sub-intervals within the same interval, the first column should be provided with format: Start Position1..End Postion1,Start Postion2..End Position2.
-
-e.g. 154..369,590..834 OrfName  
+If there are several sub-intervals within the same interval, the first column should be provided with format: Start Position1..End Postion1,Start Postion2..End Position2. e.g. 154..369,590..834 OrfName  
 
 =item --suffix,-s F<STRING> [Optional]
 

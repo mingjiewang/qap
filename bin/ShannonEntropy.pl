@@ -58,6 +58,18 @@ print "You are now running subprogram: ";
 printcol ("ShannonEntropy","green");
 print "\n";
 
+## check threads available or not
+InfoPlain("Checking threading status");
+sleep(1);
+my $threads_usable = eval 'use threads; 1';
+if ($threads_usable) {
+	use threads;
+	use threads::shared;
+	InfoPlain("Perl threading enabled");
+} else {
+	Info("No threading is possible. Please install perl module: threads or recompile perl with option -Dusethreads","red");
+}
+
 ##get workding directory
 my $wk_dir = getcwd;
 my $mainBin;
@@ -142,16 +154,16 @@ if(defined $inputDir){
 
 my $drawgraph = 0;
 if(defined $graphs){
-	if($graphs =~ /t/i){
+	if($graphs =~ /^y/i){
 		$drawgraph = 1;
-	}elsif($graphs =~ /f/i){
+	}elsif($graphs =~ /^n/i){
 		$drawgraph = 0
 	}else{
-		InfoError("Please specify whether draw graphs or not using -g/--graphs with \'T(true)\' or \'F(false)\'.");
+		InfoError("Please specify whether draw graphs or not using -g/--graphs with \'Y(Yes)\' or \'N(No)\'.");
 	}
 }else{
 	$drawgraph = 0;
-	InfoWarn("-g/--graphs not specified, using false as default.");
+	InfoWarn("-g/--graphs not specified, using \'-g N\' as default.");
 }
 
 if (defined $threads){
@@ -250,7 +262,7 @@ my $rscript = File::Spec -> catfile($mainBin, 'bin', 'Rscripts', 'CalculateShann
 if (-e $rscript){
 	#nothing
 }else{
-	InfoError("Rscript $rscript is missing. Abortting...",'red');
+	InfoError("Rscript $rscript is missing. Aborting...",'red');
 	exit;
 }
 
@@ -262,18 +274,33 @@ open RES,">>$resfile" or die "Cannot output to $resfile:$!";
 print RES "Sample\tValue\n";
 
 #run sub program
-my $i = 1;
-for my $f (@inputfiles){
+if($threads > 1){
+	my @format;
+	my @rscript;
+	my @resfile;
+	my @drawgraph;
+	my @outputDir;
+	for my $f(@inputfiles){
+		push @format,$format;
+		push @rscript,$rscript;
+		push @resfile,$resfile;
+		push @drawgraph,$drawgraph;
+		push @outputDir,$outputDir;
+	}
+	Info("Calculating with multiple threads.");
+	runMultipleThreadsWith6Args(\&shannonWithInfo,\@inputfiles,\@format,\@rscript,\@resfile,\@drawgraph,\@outputDir,$threads);
 	
-	&shannon($f, $format, $rscript, $resfile, $drawgraph);
-	
-	#process bar
-	InfoProcessBar($i, $numberOfFiles);
-	$i++;
+}else{
+	my $i = 1;
+	for my $f (@inputfiles){
+		
+		&shannon($f, $format, $rscript, $resfile, $drawgraph);
+		
+		#process bar
+		InfoProcessBar($i, $numberOfFiles);
+		$i++;
+	}
 }
-
-
-
 
 
 sub shannon {
@@ -321,21 +348,85 @@ sub shannon {
 	system($cmd);
 	
 	#handle figure output
-	if($wk_dir eq $outputDir){
-		#nothing
-	}else{
-		#mv tif and pdf to outputDir
-		my $png = File::Spec -> catfile($wk_dir, "${fileName}.png");
-		$cmd = "mv $png $outputDir";
-		system($cmd);
-		
-		my $pdf = File::Spec -> catfile($wk_dir, "${fileName}.pdf");
-		$cmd = "mv $pdf $outputDir";
-		system($cmd);
+	if($drawgraph){
+		if($wk_dir eq $outputDir){
+			#nothing
+		}else{
+			#mv png and pdf to outputDir
+			my $png = File::Spec -> catfile($wk_dir, "${fileName}.png");
+			$cmd = "mv $png $outputDir";
+			system($cmd);
+			
+			my $pdf = File::Spec -> catfile($wk_dir, "${fileName}.pdf");
+			$cmd = "mv $pdf $outputDir";
+			system($cmd);
+		}
 	}
-	
 }
 
+sub shannonWithInfo {
+	my $file = shift;
+	my $format = shift;
+	my $rscript = shift;
+	my $resfile = shift;
+	my $drawgraph = shift;
+	my $outputDir = shift;
+	
+	my $fileName = basename($file);
+	
+	print "[+] $fileName\n";
+	
+	my $rInputfile = $file . "." . time() . ".RInput";
+	
+	my $rRunLogFile = File::Spec -> catfile($outputDir, "${fileName}.RLog");
+	
+	if (uc($format) eq 'FASTA'){
+		$fileName = removeFastaSuffix($fileName);
+		
+		#extract seq
+		extractSeqFromFasta($file, $rInputfile);
+		
+		#calculate
+		my $cmd = "Rscript $rscript -i $rInputfile -o $resfile -l $fileName -p $drawgraph > $rRunLogFile";
+		system($cmd);
+	}elsif(uc($format) eq 'FASTQ'){
+		$fileName = removeFastqSuffix($fileName);
+		
+		#extract seq
+		extractSeqFromFastq($file, $rInputfile);
+		
+		#calculate
+		my $cmd = "Rscript $rscript -i $rInputfile -o $resfile -l $fileName -p $drawgraph > $rRunLogFile";
+		system($cmd);
+	}else{
+		InfoError("The formar MUST be \'fasta\' or \'fastq\'.");
+		exit;
+	}
+	
+	#remove tmp data file
+	my $inputFolder = dirname($file);
+	my $cmd = "rm -rf $inputFolder/${fileName}*.RInput";
+	system($cmd);
+	
+	$cmd = "rm -rf $rRunLogFile";
+	system($cmd);
+	
+	#handle figure output
+	if($drawgraph){
+		if($wk_dir eq $outputDir){
+			#nothing
+		}else{
+			#mv png and pdf to outputDir
+			my $png = File::Spec -> catfile($wk_dir, "${fileName}.png");
+			$cmd = "mv $png $outputDir";
+			system($cmd);
+			
+			my $pdf = File::Spec -> catfile($wk_dir, "${fileName}.pdf");
+			$cmd = "mv $pdf $outputDir";
+			system($cmd);
+		}
+	}
+}
 
 ##run success
 print("\n");
@@ -398,7 +489,7 @@ The format of the files to be calculated. Should be one of 'fasta' or 'fastq'.
 
 =item --graphs,-g F<BOOLEAN> [Optional]
 
-Whether draw graphs or not for illustrating virus quansispecies population structure. T for true and F for false. Using F as default.
+Whether draw graphs or not for illustrating virus quansispecies population structure. 'Y' for 'Yes' and 'N' for 'No'. Using 'N' as default.
 
 =item --outputDir,-o F<FILE> [Optional]
 

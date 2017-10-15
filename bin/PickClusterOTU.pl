@@ -45,7 +45,7 @@ use Pod::Usage;
 use lib "$FindBin::Bin/../lib";
 use Cwd qw/getcwd abs_path/;
 use File::Basename;
-
+use File::Copy;
 
 ####Use modules in this program####
 use General;
@@ -311,7 +311,7 @@ for my $f (@inputfiles){
 	push @f_withoutDel,$f_withoutDel;
 	
 	my $seqNum;
-	my $seqWithoutDelNum;
+	my $seqWithoutDelNum = 0;
 	while(my $line1 = <T>){
 		chomp $line1;
 		chomp (my $line2 = <T>);
@@ -371,53 +371,253 @@ for my $f (@f_withoutDel){
 	close T;
 }
 
-#run cluster
-Info("Running Swarm for sequence cluster.");
-my $clusterOut = File::Spec -> catfile($tmpDir,"SwarmOut.txt");
-my $clusterSeq = File::Spec -> catfile($tmpDir,"SwarmOut.seq");
-
-my $cmd = "$swarm_excu -a 1 -t $threads -w $clusterSeq -o $clusterOut $swarmInput";
-runcmd($cmd);
-
-#convert cluster out to R input
-my @otuseq;
-open SEQ,$clusterSeq or die "Can NOT open $clusterSeq:$!";
-while(my $line1 = <SEQ>){
-	chomp $line1;
-	chomp (my $line2 = <SEQ>);
-	push @otuseq,$line2;
+##check the total line number of swarm input.
+my $lineNumber0 = `wc -l $swarmInput`;
+chomp $lineNumber0;
+my $lineNumber = 0;
+if($lineNumber0 =~ /(^\d+) /){
+	$lineNumber = $1;
 }
- 
-my $rinput = File::Spec -> catfile($tmpDir,"RINPUT.txt");
-open RINPUT,">$rinput" or die "Can not output to $rinput:$!";
 
-open C,$clusterOut or die "Can NOT open swarm output $clusterOut:$!";
-my $otuNum = 0;
-while(<C>){
-	chomp;
-	my @tmp = split " ",$_;
-	for my $e (@tmp){
-		if($e =~ /\[(.*?)\]\[-\]\[/){
-			print RINPUT "$otuseq[$otuNum]\t$1\n";
-		}
+if($lineNumber > 100000){
+	Info("Your input file is too large. Trying split-apply-combine strategy.");
+	#first split files fasta files for swarm input
+	Info("Splitting files...");
+	my $dirname = dirname($swarmInput);
+	my $filename = basename($swarmInput);
+	chdir $dirname or die "Can not chdir to $dirname:$!";
+	system "pwd";
+	my $cmd = "split -l 100000 -a 4 -d $filename split.tmp.";
+	runcmd($cmd);
+	chdir $wk_dir or die "Can not chdir to $wk_dir:$!";
+	
+	my $splitdir = File::Spec -> catfile($tmpDir,'split');
+	makedir($splitdir);
+	
+	my @files = glob "$tmpDir/split.tmp.*";
+	for my $f(@files){
+		move($f,$splitdir);
 	}
-	$otuNum++;
-}
-close C;
-close RINPUT;
+	
+	## cluster for each splitted file
+	my @splitFiles = glob "$splitdir/split.tmp.*";
+	my @seqFiles;
+	my @txtFiles;
+	Info("Running sequences cluster for each splitted file.");
+	for my $f (@splitFiles){
+		my $outSeq = $f . ".seq";
+		my $outTxt = $f . ".txt";
+		$cmd = "$swarm_excu -a 1 -t $threads -w $outSeq -o $outTxt $f";
+		runcmd($cmd);
+		push @seqFiles,$outSeq;
+		push @txtFiles,$outTxt;
+	}
+	
+	## merge
+	Info("Combining cluster result into one file.");
+	my $seqFiles = join " ",@seqFiles;
+	my $txtFiles = join " ",@txtFiles;
+	my $mergeSeqFile = File::Spec -> catfile($splitdir, "merge.seq");
+	my $mergeTxtFile = File::Spec -> catfile($splitdir, "merge.txt");
+	system "cat $seqFiles >> $mergeSeqFile";
+	system "cat $txtFiles >> $mergeTxtFile";
+	
+	my $mergelinenumber0 = `wc -l $mergeSeqFile`;
+	chomp $mergelinenumber0;
+	my $mergelinenumber = 0;
+	if($mergelinenumber0 =~ /(^\d+) /){
+		$mergelinenumber = $1;
+	}
+	
+	my $mergeSeqFileFil;
+	my $mergeTxtFileFil;
+	if($mergelinenumber >= 100000){
+		InfoWarn("Data set still too big ...");
+		InfoWarn("Run filtering first ...");
+		
+		## delete seq with counts less than cutoff
+		open T,"$mergeSeqFile" or die "Can not open $mergeSeqFile:$!";
+		$mergeSeqFileFil = $mergeSeqFile . ".fil";
+		open OUT,">$mergeSeqFileFil" or die "Can not output to $mergeSeqFileFil:$!";
+		while(my $line1 = <T>){
+			chomp $line1;
+			chomp (my $line2 = <T>);
+			
+			if ($line1 =~ /\[.*\]\[-\]\[.*\]_(\d+)/){
+				my $count = $1;
+				if($count >= $cutoff){
+					print OUT "$line1\n$line2\n";
+				}
+			}
+		}
+		close T;
+		close OUT;
+		
+		open T,"$mergeTxtFile" or die "Can not open $mergeTxtFile:$!";
+		$mergeTxtFileFil = $mergeTxtFile . ".fil";
+		open OUT, ">$mergeTxtFileFil" or die "Can not output to $mergeTxtFileFil:$!";
+		while (my $line = <T>){
+			chomp $line;
+			my @tmp = split " ",$line;
+			if (scalar(@tmp) >= 2){
+				print OUT "$line\n";
+			}			
+		}
+		close T;
+		close OUT;
+		
+	}else{
+		$mergeSeqFileFil = $mergeSeqFile;
+	}
 
-#start to count
-my $rscript = File::Spec -> catfile($RealBin,'Rscripts','CalculateClusterOTUTable.R');
-if(! existFile($rscript)){
-	InfoError("Rscript $rscript is missing. Please check. Exiting...");
-	exit(0);
+	## run swarm again 
+	my $resSeq = File::Spec -> catfile($splitdir, "res.seq");
+	my $resTxt = File::Spec -> catfile($splitdir, "res.txt");
+	
+	$cmd = "$swarm_excu -t $threads -w $resSeq -o $resTxt $mergeSeqFileFil";
+	runcmd($cmd);
+	
+	## start to replace the seq ID with raw ID
+	my @rawID;
+	open T,$mergeTxtFile or die "Can not open file $mergeTxtFile:$!";
+	while(<T>){
+		chomp;
+		push @rawID,$_;
+	}
+	close T;
+	
+	my @mergeID;
+	open TT,$mergeSeqFile or die "Can not open file $mergeSeqFile:$!";
+	while(my $line1 = <TT>){
+		chomp $line1;
+		chomp (my $line2 = <TT>);
+
+		$line1 =~ s/^\>//;
+				
+		push @mergeID,$line1;
+	}
+	close TT;
+	
+	my $i = 0;
+	my %ID;
+	for my $id (@rawID){
+		$ID{$mergeID[$i]} = $id;
+		$i++;
+	}
+	
+	open T,$resTxt or die "Can not open file $resTxt:$!";
+	my $newTxt = File::Spec -> catfile($splitdir,"res.txt.new");
+	open OUT,">$newTxt" or die "Can not output to file $newTxt:$!";
+	while(my $line = <T>){
+		chomp $line;
+		my @ids = split ' ',$line;
+		for my $id (@ids){
+			if($ID{$id}){
+				print OUT $ID{$id};
+				print OUT " ";
+			}else{
+				InfoError("The sequence ID $line is not found.");
+				exit(0);
+			}
+		}
+		print OUT "\n";
+		
+	}
+	close OUT;
+	
+	## convert cluster out to R input
+	my @otuseq;
+	open SEQ,$resSeq or die "Can NOT open $resSeq:$!";
+	while(my $line1 = <SEQ>){
+		chomp $line1;
+		chomp (my $line2 = <SEQ>);
+		push @otuseq,$line2;
+	}
+	close SEQ;
+	
+	## R input
+	my $rinput = File::Spec -> catfile($splitdir,"RINPUT.txt");
+	open RINPUT,">$rinput" or die "Can not output to $rinput:$!";
+	
+	open C,$newTxt or die "Can NOT open swarm output $newTxt:$!";
+	my $otuNum = 0;
+	while(<C>){
+		chomp;
+		my @tmp = split " ",$_;
+		for my $e (@tmp){
+			if($e =~ /\[(.*?)\]\[-\]\[/){
+				print RINPUT "$otuseq[$otuNum]\t$1\n";
+			}else{
+				print "Error";
+			}
+		}
+		$otuNum++;
+	}
+	close C;
+	close RINPUT;
+	
+	#start to count
+	my $rscript = File::Spec -> catfile($RealBin,'Rscripts','CalculateClusterOTUTable.R');
+	if(! existFile($rscript)){
+		InfoError("Rscript $rscript is missing. Please check. Exiting...");
+		exit(0);
+	}
+	
+	#generate OTU table
+	Info("Generating OTU table");
+	my $finalOut = File::Spec -> catfile($outputDir,"OTUTable.txt");
+	$cmd = "Rscript $rscript --inputFile $rinput --outputFile $finalOut --sampleRatio $ratio --cutoff $cutoff";
+	runcmd($cmd);
+}else{
+	#run cluster
+	Info("Running Swarm for sequence cluster.");
+	my $clusterOut = File::Spec -> catfile($tmpDir,"SwarmOut.txt");
+	my $clusterSeq = File::Spec -> catfile($tmpDir,"SwarmOut.seq");
+
+	my $cmd = "$swarm_excu -a 1 -t $threads -w $clusterSeq -o $clusterOut $swarmInput";
+	runcmd($cmd);
+	
+	#convert cluster out to R input
+	my @otuseq;
+	open SEQ,$clusterSeq or die "Can NOT open $clusterSeq:$!";
+	while(my $line1 = <SEQ>){
+		chomp $line1;
+		chomp (my $line2 = <SEQ>);
+		push @otuseq,$line2;
+	}
+	 
+	my $rinput = File::Spec -> catfile($tmpDir,"RINPUT.txt");
+	open RINPUT,">$rinput" or die "Can not output to $rinput:$!";
+	
+	open C,$clusterOut or die "Can NOT open swarm output $clusterOut:$!";
+	my $otuNum = 0;
+	while(<C>){
+		chomp;
+		my @tmp = split " ",$_;
+		for my $e (@tmp){
+			if($e =~ /\[(.*?)\]\[-\]\[/){
+				print RINPUT "$otuseq[$otuNum]\t$1\n";
+			}
+		}
+		$otuNum++;
+	}
+	close C;
+	close RINPUT;
+	
+	#start to count
+	my $rscript = File::Spec -> catfile($RealBin,'Rscripts','CalculateClusterOTUTable.R');
+	if(! existFile($rscript)){
+		InfoError("Rscript $rscript is missing. Please check. Exiting...");
+		exit(0);
+	}
+	
+	#generate OTU table
+	Info("Generating OTU table");
+	my $finalOut = File::Spec -> catfile($outputDir,"OTUTable.txt");
+	$cmd = "Rscript $rscript --inputFile $rinput --outputFile $finalOut --sampleRatio $ratio --cutoff $cutoff";
+	runcmd($cmd);
 }
 
-#generate OTU table
-Info("Generating OTU table");
-my $finalOut = File::Spec -> catfile($outputDir,"OTUTable.txt");
-$cmd = "Rscript $rscript --inputFile $rinput --outputFile $finalOut --sampleRatio $ratio --cutoff $cutoff";
-runcmd($cmd);
 
 
 ##run success

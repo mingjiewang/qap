@@ -30,19 +30,13 @@ rownames(otu.nor.fil) = otu.nor.fil0[,1]
 
 #group and group color
 group = strsplit(opt$group,",")[[1]]
-group = c(rep("case",5),rep("control",5))
+#group = c(rep("case",5),rep("control",5))
 suppressPackageStartupMessages(library(RColorBrewer))
 colors = as.character(factor(group,levels=unique(group),
-                             labels=c("blue","red")))
-if(length(unique(group)) >= 3){
-  colors = as.character(factor(group,levels=unique(group),
-                               labels=brewer.pal(length(unique(group)),"Set3")))
-}
+                             labels=brewer.pal(length(unique(group)),"Set3")))
 
-cols = c("blue","red")
-if(length(unique(group)) >= 3){
-  cols = brewer.pal(length(unique(group)),"Set3")
-}
+cols = brewer.pal(length(unique(group)),"Set3")
+
 pdffile = paste(opt$outputFile,".pdf",sep="")
 pngfile = paste(opt$outputFile,".png",sep="")
 
@@ -50,11 +44,17 @@ pngfile = paste(opt$outputFile,".png",sep="")
 if(opt$dimension == '3'){
   suppressPackageStartupMessages(library(scatterplot3d))
   
-  pca = princomp(as.matrix(otu.nor.fil))
-  
+  if(nrow(otu.nor.fil) > ncol(otu.nor.fil)){
+    pca = princomp(as.matrix(otu.nor.fil))
+    plot.data <- data.frame(pca$loadings[,1:3])
+  }else{
+    fit <- prcomp(t(otu.nor.fil), scale=TRUE)
+    plot.data <- data.frame(fit$x[,1:3])
+  }
+  colnames(plot.data) = c("PC1","PC2","PC3")
   
   diffangle <- function(ang){
-    scatterplot3d(pca$loadings[,1:3],main='PCA',color=colors,type='p',
+    scatterplot3d(plot.data,main='PCA',color=colors,type='p',
                   highlight.3d=F,angle=ang,grid=T,box=T,scale.y=1,
                   cex.symbols=1.2,pch=16,col.grid='lightblue')
     legend("topright",
