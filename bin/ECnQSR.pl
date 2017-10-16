@@ -92,6 +92,8 @@ my $ref;
 my $program;
 my $bamfile;
 my $samfile;
+my $fasta;
+my $amplicon;
 
 my $DateNow = `date +"%Y%m%d_%Hh%Mm%Ss"`;
 chomp $DateNow;
@@ -105,7 +107,9 @@ GetOptions(
 'o|outputDir|=s'     => \$outputDir,
 'p|program|=s'       => \$program,
 'h|help|'            => \$help,
-'t|threads|=s'       => \$threads
+'t|threads|=s'       => \$threads,
+'f|fasta|=s'         => \$fasta,
+'a|amplicon|=s'      => \$amplicon
 );
 
 ##check command line arguments
@@ -176,14 +180,29 @@ if (defined $threads){
 	$threads = 1;#if -t not provided, default is NOT use theads;
 }
 
-if (defined $fq1){
+if(defined $amplicon){
+	if($amplicon =~ /^y/i){
+		$amplicon = 'Y';
+	}elsif($amplicon =~ /^n/i){
+		$amplicon = 'N';
+	}else{
+		InfoError("--amplicon/-a can only be \'Y\' or \'N\'.");
+		pod2usage(-verbose=>2,-exitval=>1);
+		exit;
+	}
+}else{
+	Info("--amplicon/-a is not defined. Treat this data as short-gun sequencing.");
+	$amplicon = 'N';
+}
+
+if (defined $fq1 and not defined $fasta){
 	if(not existFile($fq1)){
 		InfoError("Fastq1 file $fq1 does NOT exits.");
 		exit(0);
 	}
 }
 
-if (defined $fq2){
+if (defined $fq2 and not defined $fasta){
 	if(not existFile($fq2)){
 		InfoError("Fastq2 file $fq2 does NOT exits.");
 		exit(0);
@@ -194,6 +213,20 @@ if (defined $fq2){
 		pod2usage(-verbose=>1,-exitval=>1);
 		exit;
 	}
+}
+
+if (defined $fasta and not defined $fq1 and not defined $fq2){
+	if (not existFile($fasta)){
+		InfoError("Fasta file $fasta does not exist.");
+		pod2usage(-verbose=>1,-exitval=>2);
+		exit;
+	}
+}
+
+if(defined $fasta and defined $fq1){
+	InfoError("Only one of --fq1/--fq2 or --fasta can be defined.");
+	pod2usage(-verbose=>1,-exitval=>1);
+	exit;
 }
 
 if(defined $bamfile){
@@ -236,7 +269,7 @@ if(defined $samfile){
 	}
 }
 
-my $isFileInput = (defined $fq1 && defined $fq2) || defined $bamfile || defined $samfile;
+my $isFileInput = (defined $fq1 && defined $fq2) || defined $bamfile || defined $samfile || defined $fasta;
 if($isFileInput){
 	#nothing
 }else{
@@ -277,8 +310,13 @@ if (defined $program){
 	for my $t (@tmp){
 		if(uc($t) eq 'SHORAH' || uc($t) eq 'QURE' || uc($t) eq 'PREDICTHAPLO' || uc($t) eq 'VIQUAS' ){
 			push @program,$t;
+			if($amplicon eq 'Y' and (uc($t) eq 'QURE' || uc($t) eq 'PREDICTHAPLO' || uc($t) eq 'VIQUAS')){
+				InfoError("If --amplicon/-a is defined. Only --program ShoRAH is allowed.");
+				pod2usage(-verbose=>2, -exitval=>1);
+				exit;
+			}
 		}else{
-			InfoError("The mapping program MUST be among \"Shorah\", \"QuRe\", \"PredictHaplo\" or \"ViQuaS\" .","red");
+			InfoError("The program MUST be among \"ShoRAH\", \"QuRe\", \"PredictHaplo\" or \"ViQuaS\" .","red");
 			pod2usage(-verbose=>2,-exitval=>1);
 			exit;
 		}
@@ -287,6 +325,16 @@ if (defined $program){
 }else{
 	InfoWarn("The mapping program --program/-p is not provided. Using \"ViQuaS\" as default.");
 	push @program,'viquas';
+}
+
+if(defined $fasta and $fasta ne 'null'){
+	for my $t (@program){
+		if(uc($t) eq 'QURE' || uc($t) eq 'PREDICTHAPLO' || uc($t) eq 'VIQUAS' ){
+			InfoError("The program can only be \"ShoRAH\" if fasta files are provided.","red");
+			pod2usage(-verbose=>2,-exitval=>1);
+			exit;
+		}
+	}
 }
 
 
@@ -353,6 +401,7 @@ if(not CheckFolder($viquas_excu_dir)){
 $ref = abs_path($ref);
 $fq1 = abs_path($fq1) if $fq1 ne "null";
 $fq2 = abs_path($fq2) if $fq2 ne "null";
+$fasta = abs_path($fasta) if $fasta ne "null";
 $bamfile = abs_path($bamfile) if $bamfile ne "null";
 $samfile = abs_path($samfile) if $samfile ne "null";
 
@@ -402,7 +451,7 @@ if($fq1 ne "null"){
 	
 	##start to run
 	for my $p (@program){
-		qsr_pipeline($fq1new,$fq2new,$fastafile,$bamfile, $samfile, $newref,$outputDir,$p,$threads,$shorah_excu,$predicthaplo_excu,$qure_excu_dir,$viquas_excu_dir);
+		qsr_pipeline($amplicon, $fq1new,$fq2new,$fastafile,$bamfile, $samfile, $newref,$outputDir,$p,$threads,$shorah_excu,$predicthaplo_excu,$qure_excu_dir,$viquas_excu_dir);
 	}
 	
 }elsif($bamfile ne "null"){
@@ -457,7 +506,7 @@ if($fq1 ne "null"){
 	
 	##start to run
 	for my $p (@program){
-		qsr_pipeline($fq1new,$fq2new,$fastafile,$bamfile_PosSort, $samfile, $newref,$outputDir,$p,$threads,$shorah_excu,$predicthaplo_excu,$qure_excu_dir,$viquas_excu_dir);
+		qsr_pipeline($amplicon, $fq1new,$fq2new,$fastafile,$bamfile_PosSort, $samfile, $newref,$outputDir,$p,$threads,$shorah_excu,$predicthaplo_excu,$qure_excu_dir,$viquas_excu_dir);
 	}
 }elsif($samfile ne "null"){
 	my $samfile_new = File::Spec -> catfile($tmpdir, removeSamSuffix(basename($samfile)) . ".sam");
@@ -511,8 +560,43 @@ if($fq1 ne "null"){
 	
 	##start to run
 	for my $p (@program){
-		qsr_pipeline($fq1new,$fq2new,$fastafile,$bamfile_PosSort, $samfile, $newref,$outputDir,$p,$threads,$shorah_excu,$predicthaplo_excu,$qure_excu_dir,$viquas_excu_dir);
+		qsr_pipeline($amplicon, $fq1new,$fq2new,$fastafile,$bamfile_PosSort, $samfile, $newref,$outputDir,$p,$threads,$shorah_excu,$predicthaplo_excu,$qure_excu_dir,$viquas_excu_dir);
 	}
+}elsif($fasta ne "null"){
+	my $fastanew = File::Spec -> catfile($tmpdir,removeFastaSuffix(basename($fasta)) . ".fasta");
+	copy($fasta, $fastanew) if (not -e $fastanew);
+	
+	my $sampleName = removeFastaSuffix(basename($fasta));
+	$sampleName =~ s/[_\.R]+$//i;
+	
+	#generate fasta file
+	my $fastafile = File::Spec -> catfile($tmpdir, $sampleName . ".merge.fasta");
+	copy ($fastanew, $fastafile) if (not existFile($fastafile));
+	
+	#generate sam/bam file
+	my $sam = File::Spec -> catfile($tmpdir,$sampleName . ".sam");
+	Bowtie2_pipeline_fasta($bowtie2_excu,$ref,$fastanew,$sam,$threads) if (not existFile($sam));	
+	
+	my $bamfile = $sam =~ s/\.sam$/.PosSorted.bam/r;
+	sam2SortedAndIndexedBam($samtools_excu,$sam,'Pos',0,$threads) if (not existFile($bamfile));
+	
+	my $bam_namesorted = $sam =~ s/\.sam$/.NameSorted.bam/r;
+	sam2SortedAndIndexedBam($samtools_excu,$sam,'Name',0,$threads) if (not existFile($bam_namesorted));
+	
+	my $samfile = $bam_namesorted =~ s/\.bam$/.sam/r;
+	bam2sam($samtools_excu,$bam_namesorted,$threads) if (not existFile($samfile));
+	
+	##format fasta file
+	my $newref = File::Spec -> catfile($tmpdir, removeFastaSuffix(basename($ref)) . ".2line.fasta");
+	formatFastaToTwoLineMode($ref,$newref);
+	
+	##start to run
+	my $fq1new = "null";
+	my $fq2new = "null";
+	for my $p (@program){
+		qsr_pipeline($amplicon, $fq1new,$fq2new,$fastafile,$bamfile, $samfile, $newref,$outputDir,$p,$threads,$shorah_excu,$predicthaplo_excu,$qure_excu_dir,$viquas_excu_dir);
+	}
+	
 }else{
 	InfoError("Something wrong with input arguments. Exiting...");
 	exit(0);
@@ -572,17 +656,25 @@ Path to next generation sequencing raw data. REQUIRED for both paired-end reads 
 
 Path to next generation sequencing raw data. REQUIRED for paired-end reads. Both compressed files and uncompressed files are allowed. 
 
+=item --fasta,-f F<FILE> [Optional]
+
+Path to input data file in fasta format. One of input fastq or fasta or BAM or SAM file must be provided. CAUTION: Fasta files are not recommended. 
+
 =item --bamFile,-b F<FILE> [Optional]
 
-Path to the input BAM file. 
+Path to the input BAM file. One of input fastq or fasta or BAM or SAM file must be provided.
 
 =item --samFile,-s F<FILE> [Optional]
 
-Path to the input SAM file. One of input fastq or BAM or SAM file must be provided.
+Path to the input SAM file. One of input fastq or fasta or BAM or SAM file must be provided.
 
 =item --refSeq,-r F<File> [Required]
 
 Path to the reference fasta file. 
+
+=item --amplicon,-a F<STRING> [Optional] 
+
+Is this data derived from amplicon sequencing? Choose between Y(Yes) and N(No). If --amplicon Y is defined, only --program ShoRAH is allowed.
 
 =item --outputDir,-o F<FILE> [Optional]
 
@@ -590,7 +682,7 @@ Path of the directory to storage result files. If NOT provided, the program will
 
 =item --program,-p F<STRING> [Optional]
 
-The program used for error correction and quasispecies reconstruction. Choose among 'Shorah', 'QuRe', 'PredictHaplo' and 'ViQuaS' (case insensitive). The default value is 'ViQuaS' which is faster. 
+The program used for error correction and quasispecies reconstruction. Choose among 'ShoRAH', 'QuRe', 'PredictHaplo' and 'ViQuaS' (case insensitive). The default value is 'ViQuaS' which is faster. 
 
 You can choose multiple programs and separate your choice by comma, e.g. --program/-p Shorah,QuRe,PredictHaplo,ViQuaS. What you should know is that running EC and QSR using multiple programs will 
 

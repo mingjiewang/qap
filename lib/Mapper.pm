@@ -21,11 +21,11 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 our $VERSION     = 1.00;
 our @ISA         = qw(Exporter);
-our @EXPORT      = qw(Bowtie2_index Bowtie2_pipeline BWA_index BWA_pipeline sam2SortedAndIndexedBam sortAndIndexBam 
+our @EXPORT      = qw(Bowtie2_index Bowtie2_pipeline Bowtie2_pipeline_fasta BWA_index BWA_pipeline BWA_pipeline_fasta sam2SortedAndIndexedBam sortAndIndexBam 
 isSamFile isBamFile bam2sam bam2newsam existBowtieIndex existBowtie2Index existBWAIndex blatPipeline blastPipeline);
-our @EXPORT_OK   = qw(Bowtie2_index Bowtie2_pipeline BWA_index BWA_pipeline sam2SortedAndIndexedBam sortAndIndexBam 
+our @EXPORT_OK   = qw(Bowtie2_index Bowtie2_pipeline Bowtie2_pipeline_fasta BWA_index BWA_pipeline BWA_pipeline_fasta sam2SortedAndIndexedBam sortAndIndexBam 
 isSamFile isBamFile bam2sam bam2newsam existBowtieIndex existBowtie2Index existBWAIndex blatPipeline blastPipeline);
-our %EXPORT_TAGS = ( DEFAULT => [qw(&Bowtie2_index &Bowtie2_pipeline &BWA_index &BWA_pipeline &sam2SortedAndIndexedBam &sortAndIndexBam 
+our %EXPORT_TAGS = ( DEFAULT => [qw(&Bowtie2_index &Bowtie2_pipeline &Bowtie2_pipeline_fasta &BWA_index &BWA_pipeline_fasta &BWA_pipeline &sam2SortedAndIndexedBam &sortAndIndexBam 
 &isSamFile &isBamFile &bam2sam &bam2newsam &existBowtieIndex &existBowtie2Index &existBWAIndex &blatPipeline &blastPipeline)]);
 
 
@@ -113,6 +113,45 @@ sub Bowtie2_pipeline{
 	}
 }
 
+sub Bowtie2_pipeline_fasta{
+	my($Bowtie2_excu,$ref,$fasta,$sam,$threads) = @_;
+	
+	my $Bowtie2_dir = dirname($Bowtie2_excu);
+	my $Bowtie2_build_excu = File::Spec -> catfile($Bowtie2_dir,'bowtie2-build');
+	my $DEBUG_MODE = 1;
+	#check bowtie2-build
+	if(CheckProgram($Bowtie2_build_excu, __FILE__, __LINE__, $DEBUG_MODE)){
+		#keep running
+	}else{
+		InfoError("The program $Bowtie2_build_excu does NOT exist. Exiting...");
+		exit;
+	}
+	
+	##fix \r in windows os
+	my $sedcmd = "sed -i \'s\/\\r\/\/g\' $ref";
+	system($sedcmd);
+	
+	#build index
+	my $Bowtie2_index = removeFastaSuffix($ref);
+	my $cmd = "$Bowtie2_build_excu $ref $Bowtie2_index";
+	if(existBowtie2Index($Bowtie2_index)){
+		#nothing
+	}else{
+		InfoPlain("Building Bowtie2 index for $ref.");
+		runcmd($cmd);
+	}
+	
+	#run bowtie2 mapping
+	InfoPlain("Start to map reads to $ref using Bowtie2.");
+	if (existFile($sam)){
+		InfoWarn("$sam already exist,skip Bowtie2 mapping.");
+	}else{
+		InfoPlain("Running Bowtie2 for mapping");
+		my $cmd = "$Bowtie2_excu --very-sensitive-local --threads $threads -x $Bowtie2_index -f $fasta -S $sam";
+		runcmd($cmd);
+	}
+}
+
 sub BWA_index {
 	my ($BWA_excu,$ref) = @_;
 	
@@ -190,6 +229,45 @@ sub BWA_pipeline {
 		}
 	}
 }
+
+sub BWA_pipeline_fasta {
+	my ($BWA_excu,$ref,$fasta,$sam,$threads) = @_;
+	
+	##fix \r in windows os
+	my $sedcmd = "sed -i \'s\/\\r\/\/g\' $ref";
+	system($sedcmd);
+	
+	##build index file
+	my $BWA_index = removeFastaSuffix($ref);
+	my $refSize = getFileSize($ref);
+	if ($refSize < 10000000){
+		my $cmd = "$BWA_excu index -a is -p $BWA_index $ref";
+		if (existBWAIndex($BWA_index)){
+			#nothing
+		}else{
+			InfoPlain("Building BWA index for $ref.");
+			runcmd($cmd);
+		}
+	}else{
+		my $cmd = "$BWA_excu index -a bwtsw -p $BWA_index $ref";
+		if (existBWAIndex($BWA_index)){
+			#nothing
+		}else{
+			runcmd($cmd);
+		}
+	}
+	
+	##start to map reads to ref 
+	InfoPlain("Start to map reads to $ref using BWA");
+	##mem
+	if (existFile($sam)){
+		InfoPlain("$sam already exist,skip BWA mem mapping.");
+	}else{
+		my $cmd = "$BWA_excu mem -t $threads $BWA_index $fasta > $sam";
+		runcmd($cmd);
+	}
+}
+
 
 sub sam2SortedAndIndexedBam {
 	my ($samtools_excu, $samfile, $sortMethod, $clear_sam, $threads) = @_;

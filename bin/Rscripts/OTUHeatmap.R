@@ -33,17 +33,11 @@ rownames(otu.nor.fil) = otu.nor.fil0[,1]
 ## group colors
 group = strsplit(opt$group,",")[[1]]
 suppressPackageStartupMessages(library(RColorBrewer))
-colors = as.character(factor(group,levels=unique(group),
-                             labels=c("blue","red")))
-if(length(unique(group)) >= 3){
-  colors = as.character(factor(group,levels=unique(group),
-                               labels=brewer.pal(length(unique(group)),"Set3")))
-}
 
-cols = c("blue","red")
-if(length(unique(group)) >= 3){
-  cols = brewer.pal(length(unique(group)),"Set3")
-}
+colors = as.character(factor(group,levels=unique(group),
+                               labels=brewer.pal(length(unique(group)),"Set3")))
+
+cols = brewer.pal(length(unique(group)),"Set3")
 
 ##pdf 
 outpdf = paste(opt$outputFile,".pdf",sep="")
@@ -54,8 +48,9 @@ suppressWarnings(source(as.character(opt$script)))
 #pdf("4.pdf",height = 5, width = 5)
 heatmap.2(as.matrix(otu.nor.fil),
           col = GenerateHeatmapColor(opt$heatColor,as.numeric(opt$colorDegree)), 
-          hclust=function(x) hclust(x,method = "ward.D2"),
-          distfun=function(x) as.dist((1-cor(t(x)))/2),
+          #hclust=function(x) hclust(x,method = "ward.D"),
+          #distfun=function(x) as.dist((1-cor(t(x)))/2),
+          #distfun=function(x) dist(x,method="euclidean"),
           scale = "row",dendrogram = 'both',
           key = TRUE, symkey = FALSE, density.info = "none", 
           trace = "none", cexRow = 0.4, cexCol = 0.8,

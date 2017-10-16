@@ -38,6 +38,7 @@ if ($RealBin =~ /(.*)\/bin/){
 ##subprogram goes here
 
 sub shorah_pipeline {
+	my $amplicon = shift;
 	my $shorah_excu = shift;
 	my $bamfile = shift;
 	my $ref = shift;
@@ -45,7 +46,14 @@ sub shorah_pipeline {
 	
 	chdir $outdir or die "Can NOT chdir to $outdir:$!";
 	
-	my $cmd = "python $shorah_excu -b $bamfile -f $ref";
+	my $cmd;
+	if($amplicon eq 'Y'){
+		my $shorah_excu_new = File::Spec -> catfile(dirname($shorah_excu), 'amplian.py'); 
+		$cmd = "python $shorah_excu -b $bamfile -f $ref"
+	}else{
+		$cmd = "python $shorah_excu -b $bamfile -f $ref";
+	}
+	
 	runcmd($cmd,1);
 	
 	chdir $RealBin or die "Can NOT chdir to $RealBin:$!";
@@ -145,6 +153,7 @@ sub viquas_pipeline {
 }
 
 sub qsr_pipeline {
+	my $amplicon = shift;
 	my $fq1 = shift;
 	my $fq2 = shift;
 	my $fasta = shift;
@@ -162,7 +171,7 @@ sub qsr_pipeline {
 	$ref = abs_path($ref);
 	$fq1 = abs_path($fq1) if $fq1 ne "null";
 	$fq2 = abs_path($fq2) if $fq2 ne "null";
-	$fasta = abs_path($fasta);
+	$fasta = abs_path($fasta) if $fasta ne "null";
 	$bamfile = abs_path($bamfile) if $bamfile ne "null";
 	$samfile = abs_path($samfile) if $samfile ne "null";
 	
@@ -175,7 +184,7 @@ sub qsr_pipeline {
 		makedir($shorah_dir);
 		
 		Info("Running Shorah for ECnQSR");
-		shorah_pipeline($shorah_excu,$bamfile,$ref,$shorah_dir);
+		shorah_pipeline($amplicon, $shorah_excu,$bamfile,$ref,$shorah_dir);
 		
 	}elsif(uc($program) eq 'PREDICTHAPLO'){
 		my $predicthaplo_dir = File::Spec -> catfile($outdir,'PredictHaplo');
