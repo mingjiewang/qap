@@ -139,6 +139,7 @@ sub getConsensusSeq {
 	my $graphic = shift;
 	my $gsProgram = shift;
 	my $seqlogoProgram = shift;
+	my $deletion = shift;
 	
 	#convert fasta file to two line format
 	my $inputfile2Name = removeFastaSuffix(basename($inputfile)) . ".2line.fasta";
@@ -163,7 +164,7 @@ sub getConsensusSeq {
 	
 	#get cs
 	my $fileLabel = removeFastaSuffix(basename($inputfile));
-	my $cmd = "Rscript $rscript -i $rinput -o $outputfile -l $fileLabel";
+	my $cmd = "Rscript $rscript -i $rinput -o $outputfile -l $fileLabel -d $deletion";
 	system($cmd);
 	
 	#graphic weblogo
@@ -202,6 +203,7 @@ sub getConsensusSeqWithInfo {
 	my $graphic = shift;
 	my $gsProgram = shift;
 	my $seqlogoProgram = shift;
+	my $deletion = shift;
 	
 	Info("Calculating CS for $inputfile");
 	
@@ -228,7 +230,7 @@ sub getConsensusSeqWithInfo {
 	
 	#get cs
 	my $fileLabel = removeFastaSuffix(basename($inputfile));
-	my $cmd = "Rscript $rscript -i $rinput -o $outputfile -l $fileLabel";
+	my $cmd = "Rscript $rscript -i $rinput -o $outputfile -l $fileLabel -d $deletion";
 	runcmd($cmd);
 	
 	#graphic weblogo

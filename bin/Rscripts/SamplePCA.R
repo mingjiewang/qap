@@ -32,10 +32,21 @@ rownames(otu.nor.fil) = otu.nor.fil0[,1]
 group = strsplit(opt$group,",")[[1]]
 #group = c(rep("case",5),rep("control",5))
 suppressPackageStartupMessages(library(RColorBrewer))
-colors = as.character(factor(group,levels=unique(group),
-                             labels=brewer.pal(length(unique(group)),"Set3")))
 
-cols = brewer.pal(length(unique(group)),"Set3")
+#handle colors
+n = length(unique(group))
+if(n == 1){
+  colors = rep("grey",ncol(otu.nor.fil))
+  cols = "grey"
+}else if(n == 2){
+  colors = as.character(factor(group,levels=unique(group),
+                               labels=c("blue","red")))
+  cols = c("blue","red")
+}else{
+  colors = as.character(factor(group,levels=unique(group),
+                               labels=brewer.pal(length(unique(group)),"Set3")))
+  cols = brewer.pal(length(unique(group)),"Set3")
+}
 
 pdffile = paste(opt$outputFile,".pdf",sep="")
 pngfile = paste(opt$outputFile,".png",sep="")

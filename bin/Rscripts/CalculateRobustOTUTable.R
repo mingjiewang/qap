@@ -52,8 +52,16 @@ index <- otu.notZeroCount >= ceiling(ncol(otu) * as.numeric(opt$sampleRatio))
 #index <- otu.notZeroCount >= ceiling(ncol(otu) * 0.3)
 otu.fil = otu[index,]
 otu.fil = as.data.frame(otu.fil)
+zeroOTUSample = colnames(otu.fil)[which(colSums(otu.fil) == 0)]
+if(length(zeroOTUSample) > 0){
+  zeroSampleName = paste(zeroOTUSample,sep=" ")
+  stop("Zero OTU meets the filter criteria in sample [", zeroSampleName, "]! Please check the input fasta file." )
+}
+
 otu.fil$OTUName = rownames(otu.fil)
 otu.fil = otu.fil[,c(ncol(otu.fil),c(1:(ncol(otu.fil) - 1)))]
+
+
 
 write.table(otu.fil,opt$outputFile,quote = F,sep="\t",col.names=T,row.names = F)
 

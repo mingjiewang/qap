@@ -12,7 +12,9 @@ option_list <- list(
   make_option(c("-o","--outputFile"),
               help="output result file"),
   make_option(c("-l","--fileLabel"),
-              help="label of input file")
+              help="label of input file"),
+  make_option(c("-d","--deletion"),
+              help="show deletion or not")
 )
 # get command line options, if help option encountered print help and exit,
 # otherwise if options not found on command line then set defaults, 
@@ -29,6 +31,13 @@ mat.t = t(mat)
 cs = paste(c(">",opt$fileLabel,"\n"),collapse = '',sep='')
 for (i in 1:nrow(mat.t)){
   tmp = names(sort(table(mat.t[i,]),decreasing = T)[1])
+  if(as.character(opt$deletion) == 'Y'){
+    #nothing
+  }else{
+    if(tmp == '-'){
+      tmp = names(sort(table(mat.t[i,]),decreasing = T)[2])
+    }
+  }
   cs = c(cs,tmp)
 }
 

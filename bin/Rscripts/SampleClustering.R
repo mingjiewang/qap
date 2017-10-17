@@ -40,16 +40,18 @@ plot(clusters, cex = 0.75,
 if(opt$group != 'notProvided'){
   group = strsplit(opt$group,",")[[1]]
   suppressPackageStartupMessages(library(RColorBrewer))
-  colors = as.character(factor(group,levels=unique(group),
-                               labels=c("blue","red")))
-  if(length(unique(group)) >= 3){
+  #handle colors
+  n = length(unique(group))
+  if(n == 1){
+    colors = rep("grey",ncol(otu.nor.fil))
+    cols = "grey"
+  }else if(n == 2){
+    colors = as.character(factor(group,levels=unique(group),
+                                 labels=c("blue","red")))
+    cols = c("blue","red")
+  }else{
     colors = as.character(factor(group,levels=unique(group),
                                  labels=brewer.pal(length(unique(group)),"Set3")))
-  }
-  
-  #add figure legend
-  cols = c("blue","red")
-  if(length(unique(group)) >= 3){
     cols = brewer.pal(length(unique(group)),"Set3")
   }
   
@@ -78,16 +80,18 @@ plot(clusters, cex = 0.75,
 if(opt$group != 'notProvided'){
   group = strsplit(opt$group,",")[[1]]
   suppressPackageStartupMessages(library(RColorBrewer))
-  colors = as.character(factor(group,levels=unique(group),
-                               labels=c("blue","red")))
-  if(length(unique(group)) >= 3){
+  #handle colors
+  n = length(unique(group))
+  if(n == 1){
+    colors = rep("grey",ncol(otu.nor.fil))
+    cols = "grey"
+  }else if(n == 2){
+    colors = as.character(factor(group,levels=unique(group),
+                                 labels=c("blue","red")))
+    cols = c("blue","red")
+  }else{
     colors = as.character(factor(group,levels=unique(group),
                                  labels=brewer.pal(length(unique(group)),"Set3")))
-  }
-  
-  #add figure legend
-  cols = c("blue","red")
-  if(length(unique(group)) >= 3){
     cols = brewer.pal(length(unique(group)),"Set3")
   }
   

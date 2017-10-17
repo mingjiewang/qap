@@ -29,7 +29,7 @@
 ##  GNU General Public License for more details.                               ##
 ##                                                                             ##
 ##  You should have received a copy of the GNU General Public                  ##
-##  License along with QAP; if not, see                             ##
+##  License along with QAP; if not, see                                        ##
 ##  <http://www.gnu.org/licenses/>.                                            ##
 ##                                                                             ##
 #################################################################################
@@ -63,13 +63,11 @@ printcol ("ConsensusSeq","green");
 print "\n";
 
 ## check threads available or not
-InfoPlain("Checking threading status");
 sleep(1);
 my $threads_usable = eval 'use threads; 1';
 if ($threads_usable) {
 	use threads;
 	use threads::shared;
-	InfoPlain("Perl threading enabled");
 } else {
 	Info("No threading is possible. Please install perl module: threads or recompile perl with option -Dusethreads","red");
 }
@@ -88,6 +86,7 @@ my $outputDir;
 my $suffix;
 my $graphic;
 my $threads;
+my $deletion;
 
 my $DateNow = `date +"%Y%m%d_%Hh%Mm%Ss"`;
 chomp $DateNow;
@@ -97,14 +96,19 @@ GetOptions(
 's|suffix|=s'       => \$suffix,
 'o|outputDir|=s'    => \$outputDir,
 't|threads|=s'      => \$threads,
-'g|graphic|'      => \$graphic,
-'h|help|'           => \$help
+'g|graphic|=s'        => \$graphic,
+'h|help|'           => \$help,
+'d|deletion|=s'     => \$deletion
 );
 
 
 ##check command line arguments
 if (defined $help){
 	pod2usage(-verbose=>2,-exitval=>1);
+}
+
+if(scalar(@ARGV) == 0){
+	pod2usage(-verbose=>1,-exitval=>1);
 }
 
 if (defined $outputDir){
@@ -143,6 +147,7 @@ if (defined $outputDir){
 }
 
 if(defined $inputDir){
+	$inputDir =~ s/\/$//;
 	$inputDir = abs_path($inputDir) . "/";
 	if (not -e $inputDir){
 		InfoError("Input directory $inputDir does NOT exist! Please check again.");
@@ -230,11 +235,32 @@ if (defined $threads){
 
 my $seqlogo = 1;
 if (defined $graphic){
-	#nothing
+	if($graphic =~ /^y/i){
+		$seqlogo = 1;
+	}elsif($graphic =~ /^n/i){
+		$seqlogo = 0;
+	}else{
+		InfoError("Please choose whether draw graphs with --grahpic/-g between \'Y\' or \'N\'.");
+		exit;
+	}
 }else{
-	$seqlogo = 0;
+	Info("--graphic/-g is not defined. Use \'--graphic Y\' as default.");
+	$seqlogo = 1;
 }
 
+if(defined $deletion){
+	if($deletion =~ /^y/i){
+		$deletion = 'Y';
+	}elsif($deletion =~ /^n/i){
+		$deletion = 'N';
+	}else{
+		InfoError("Please choose whether show deletions in output sequence with --grahpic/-g between \'Y\' or \'N\'.");
+		exit;
+	}
+}else{
+	Info("--deletion/-d is not defined. Use \'--deletion Y\' as default.");
+	$deletion = 'Y';
+}
 
 ##core proram starts here
 #check rscript
@@ -295,6 +321,7 @@ if ($threads > 1){
 	my @seqlogo;
 	my @gsProgram;
 	my @seqlogoProgram;
+	my @deletion;
 	for my $f (@inputfiles){
 		push @rscript,$rscript;
 		my $outputfile = File::Spec -> catfile($outputDir,basename(removeFastaSuffix($f)) . "_CS.fasta");
@@ -302,10 +329,11 @@ if ($threads > 1){
 		push @seqlogo,$seqlogo;
 		push @gsProgram,$gsProgram;
 		push @seqlogoProgram,$seqlogoProgram;
+		push @deletion,$deletion;
 	}
 	
 	Info("Start calculating consensus sequences using multiple threads.");
-	runMultipleThreadsWith6Args(\&getConsensusSeqWithInfo,\@inputfiles,\@rscript,\@outcsfile,\@seqlogo,\@gsProgram,\@seqlogoProgram,$threads);
+	runMultipleThreadsWith7Args(\&getConsensusSeqWithInfo,\@inputfiles,\@rscript,\@outcsfile,\@seqlogo,\@gsProgram,\@seqlogoProgram,\@deletion,$threads);
 
 }else{
 	Info("Start calculating consensus sequences using single thread.");
@@ -314,7 +342,7 @@ if ($threads > 1){
 	for my $f(@inputfiles){
 		my $outputfile = File::Spec -> catfile($outputDir,basename(removeFastaSuffix($f)) . "_CS.fasta");
 		
-		getConsensusSeq($f,$rscript,$outputfile,$seqlogo,$gsProgram,$seqlogoProgram);
+		getConsensusSeq($f,$rscript,$outputfile,$seqlogo,$gsProgram,$seqlogoProgram,$deletion);
 		
 		InfoProcessBar($i,$numberOfFiles);
 		
@@ -383,11 +411,13 @@ Suffix of the files to be read in. If suffix is not provided, all the files in i
 
 Path of the directory to storage result files. If NOT provided, the program will generate a folder automatically.
 
-=item --graphic,-g [Optional] 
+=item --graphic,-g F<STRING> [Optional] 
 
-Whether visualize the consensus sequences or not. -g is specified as default. Drawing graphics requires ghostscripts, 
+Whether visualize the consensus sequences or not. Choose between 'Y'(Yes) and 'N'(No). '-g Y' is specified as default. Drawing graphics requires ghostscripts, so make sure 'gs' is in your system PATH.
 
-so make sure 'gs' is in your system PATH.
+=item --deletion,-d F<STRING> [Optional]
+
+Whether show deletions('-') in output sequence. Choose between 'Y'(Yes) and 'N'(No). '-d Y' is used as default.
 
 =item --threads,-t F<INTEGER> [Optional]
 
@@ -403,7 +433,7 @@ Display this detailed help information.
 
 =over 5
 
-qap ConsensusSeq -i ./seq -t 10 -s fasta -g -o ./cs
+qap ConsensusSeq -i ./seq -t 10 -s fasta -g Y -o ./cs
 
 =back
 

@@ -61,13 +61,11 @@ print "\n";
 
 ## check threads available or not
 $| = 1;
-InfoPlain("Checking threading status");
 sleep(1);
 my $threads_usable = eval 'use threads; 1';
 if ($threads_usable) {
 	use threads;
 	use threads::shared;
-	InfoPlain("Perl threading enabled");
 } else {
 	Info("No threading is possible. Please install perl module: threads or recompile perl with option -Dusethreads","red");
 }
@@ -105,6 +103,10 @@ GetOptions(
 ##check command line arguments
 if (defined $help){
 	pod2usage(-verbose=>2,-exitval=>1);
+}
+
+if(scalar(@ARGV) == 0){
+	pod2usage(-verbose=>1,-exitval=>1);
 }
 
 if (defined $outputDir){
@@ -168,6 +170,7 @@ if (defined $threads){
 }
 
 if(defined $inputDir){
+	$inputDir =~ s/\/$//;
 	$inputDir = abs_path($inputDir) . "/";
 	if (not -e $inputDir){
 		InfoError("Input directory $inputDir does NOT exist! Please check again.");
@@ -318,7 +321,7 @@ for my $f (@inputfiles){
 	}
 	close(OUT);
 	
-	sleep 1;
+	#sleep 1;
 	printf "[%02d] $id: ",$i;
 	print "$otu OTUs from $seqNum sequences were detected.\n";
 	$i++;

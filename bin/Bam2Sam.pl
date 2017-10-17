@@ -29,7 +29,7 @@
 ##  GNU General Public License for more details.                               ##
 ##                                                                             ##
 ##  You should have received a copy of the GNU General Public                  ##
-##  License along with QAP; if not, see                             ##
+##  License along with QAP; if not, see                                        ##
 ##  <http://www.gnu.org/licenses/>.                                            ##
 ##                                                                             ##
 #################################################################################
@@ -85,6 +85,10 @@ GetOptions(
 ##check command line arguments
 if (defined $help){
 	pod2usage(-verbose=>2,-exitval=>1);
+}
+
+if(scalar(@ARGV) == 0){
+	pod2usage(-verbose=>1,-exitval=>1);
 }
 
 

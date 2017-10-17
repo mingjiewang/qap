@@ -67,13 +67,11 @@ printcol ("AssembleSeq","green");
 print "\n";
 
 ## check threads available or not
-InfoPlain("Checking threading status");
 sleep(1);
 my $threads_usable = eval 'use threads; 1';
 if ($threads_usable) {
 	use threads;
 	use threads::shared;
-	InfoPlain("Perl threading enabled");
 } else {
 	Info("No threading is possible. Please install perl module: threads or recompile perl with option -Dusethreads","red");
 }
@@ -111,6 +109,10 @@ GetOptions(
 ##check command line arguments
 if (defined $help){
 	pod2usage(-verbose=>2,-exitval=>1);
+}
+
+if(scalar(@ARGV) == 0){
+	pod2usage(-verbose=>1,-exitval=>1);
 }
 
 if (defined $outputDir){
@@ -759,7 +761,7 @@ sub assembleSeqBaseOnQual {
 		my $len2 = length($seq2);
 		my $len3 = length($qual1);
 		my $len4 = length($qual2);
-		print "$id\t$len1\t$len2\t$len3\t$len4\n";
+		#print "$id\t$len1\t$len2\t$len3\t$len4\n";
 		return;
 	}
 	

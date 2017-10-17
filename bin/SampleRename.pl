@@ -77,6 +77,10 @@ if (defined $help){
 	pod2usage(-verbose=>2,-exitval=>1);
 }
 
+if(scalar(@ARGV) == 0){
+	pod2usage(-verbose=>1,-exitval=>1);
+}
+
 if (defined $sampleName){
 	if (not -e $sampleName){
  		InfoError("The file of sample names $sampleName does NOT exist.",'red');
@@ -90,6 +94,8 @@ if (defined $sampleName){
 }
 
 if (defined $sampleDir){
+	$sampleDir =~ s/\/$//;
+	$sampleDir = abs_path($sampleDir) . "/";
 	if (not -e $sampleDir){
  		InfoError("The directory for sample raw data $sampleDir does NOT exist.",'red');
  		exit;

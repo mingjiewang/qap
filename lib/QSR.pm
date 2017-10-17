@@ -45,11 +45,10 @@ sub shorah_pipeline {
 	my $outdir = shift;
 	
 	chdir $outdir or die "Can NOT chdir to $outdir:$!";
-	
 	my $cmd;
 	if($amplicon eq 'Y'){
 		my $shorah_excu_new = File::Spec -> catfile(dirname($shorah_excu), 'amplian.py'); 
-		$cmd = "python $shorah_excu -b $bamfile -f $ref"
+		$cmd = "python $shorah_excu_new -b $bamfile -f $ref"
 	}else{
 		$cmd = "python $shorah_excu -b $bamfile -f $ref";
 	}

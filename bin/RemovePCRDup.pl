@@ -29,7 +29,7 @@
 ##  GNU General Public License for more details.                               ##
 ##                                                                             ##
 ##  You should have received a copy of the GNU General Public                  ##
-##  License along with QAP; if not, see                             ##
+##  License along with QAP; if not, see                                        ##
 ##  <http://www.gnu.org/licenses/>.                                            ##
 ##                                                                             ##
 #################################################################################
@@ -63,13 +63,11 @@ print "\n";
 
 ## check threads available or not
 $| = 1;
-InfoPlain("Checking threading status");
 sleep(1);
 my $threads_usable = eval 'use threads; 1';
 if ($threads_usable) {
 	use threads;
 	use threads::shared;
-	InfoPlain("Perl threading enabled");
 } else {
 	Info("No threading is possible. Please install perl module: threads or recompile perl with option -Dusethreads","red");
 }
@@ -106,6 +104,10 @@ GetOptions(
 ##check command line arguments
 if (defined $help){
 	pod2usage(-verbose=>2,-exitval=>1);
+}
+
+if(scalar(@ARGV) == 0){
+	pod2usage(-verbose=>1,-exitval=>1);
 }
 
 if (defined $outputDir){

@@ -61,15 +61,21 @@ if(scalar(@ARGV) == 0){
 } 
 if(not $isSubprogramFlag){
 	my $help;
-	if(isInARGV("-h",\@ARGV) or isInARGV("--help",\@ARGV)){
-		pod2usage(-verbose=>2,-exitval=>1);
-		$help = 1;
+	if(isInARGV("-h",\@ARGV) or isInARGV("--help",\@ARGV) or isInARGV("-help",\@ARGV)){
+		if(scalar(@ARGV) > 1){
+			InfoError("Incorrect input arguments detected. You can try \'qap -h\' to see more details.");
+			exit(0);
+		}else{
+			pod2usage(-verbose=>2,-exitval=>1);
+			$help = 1;
+		}
 	}
 	
 	my $graphic;
 	if(isInARGV("-g",\@ARGV) or isInARGV("--graphic",\@ARGV) or isInARGV("--graph",\@ARGV) or isInARGV("--gui",\@ARGV)){
 		$graphic = 1;
 	}
+	
 	
 	if(scalar(@ARGV) > 0 and not defined $help and not defined $graphic){
 		InfoError("Incorrect input arguments detected. You can try \'qap -h\' to see more details.");
@@ -240,9 +246,10 @@ sub isSubprogramProvided {
 	my $msg = "";
 	for my $p (@program){
 		for my $a ($arg[0]){
-			if($p =~ /$a/i){
+			if(length($a) >= 3 and $p =~ /$a/i){
 				if($p eq $a){
 					$msg = "";
+					return(1,$msg);
 				}else{
 					$msg = "You have entered sub program [$a]. I asume you meant [$p]?";
 				}

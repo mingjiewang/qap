@@ -147,7 +147,7 @@ sub Bowtie2_pipeline_fasta{
 		InfoWarn("$sam already exist,skip Bowtie2 mapping.");
 	}else{
 		InfoPlain("Running Bowtie2 for mapping");
-		my $cmd = "$Bowtie2_excu --very-sensitive-local --threads $threads -x $Bowtie2_index -f $fasta -S $sam";
+		my $cmd = "$Bowtie2_excu --very-sensitive-local -x $Bowtie2_index -f $fasta -S $sam";
 		runcmd($cmd);
 	}
 }
