@@ -444,7 +444,7 @@ while (my $line1 = <T>){
 		next;
 	}
 	
-	#if --withIns is false, disgard sequences with insertions.
+	#if --withIns is false, discard sequences with insertions.
 	if ($insertion == 1){
 		next if $matExp1 =~ /I/ or $matExp2 =~ /I/;
 	}
@@ -872,7 +872,7 @@ More information about bed formats, please refer to [http://www.ensembl.org/info
 
 =item --withIns,-s F<INTEGER> [Optional]
 
-Whether the output fasta file should include sequences with insertions. Choose between '1'(disgard sequences with insertions) or '2'(keep sequences with insertions but cut the insertion sites). Default value if '2'.
+Whether the output fasta file should include sequences with insertions. Choose between '1'(discard sequences with insertions) or '2'(keep sequences with insertions but cut the insertion sites). Default value if '2'.
 
 =item --threads,-t F<INTEGER> [Optional]
 
