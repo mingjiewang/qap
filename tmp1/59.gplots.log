@@ -1,7 +1,0 @@
-
-载入程辑包：‘gplots’
-
-The following object is masked from ‘package:stats’:
-
-    lowess
-

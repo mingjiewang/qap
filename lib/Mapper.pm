@@ -590,7 +590,9 @@ sub blatPipeline {
 		chomp;
 		my @tmp = split "\t",$_;
 		my $start = $tmp[15] + 1;
-		my $end = $tmp[16];
+		my $query_size = $tmp[10];
+		#my $end = $tmp[16];
+		my $end = $start + $query_size - 1;
 		
 		push @start,$start;
 		push @end,$end;

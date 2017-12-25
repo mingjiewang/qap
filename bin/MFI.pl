@@ -95,7 +95,7 @@ chomp $DateNow;
 
 GetOptions(
 'i|inputFile|=s'     => \$inputfile,
-'r|reference|=s'     => \$ref,
+'r|refSeq|=s'        => \$ref,
 'o|outputDir|=s'     => \$outputDir,
 'm|mode|=s'          => \$mode,
 'l|spanLength|=s'    => \$spanLength,
@@ -112,7 +112,7 @@ if (defined $help){
 }
 
 if(scalar(@ARGV) == 0){
-    pod2usage(-verbose=>1,-exitval=>1);
+	pod2usage(-verbose=>1,-exitval=>1);
 }
 
 if (defined $outputDir){
@@ -149,7 +149,7 @@ if (defined $outputDir){
 if (defined $threads){
 	my $check_threads_positive = &CheckPositiveInt($threads);
 	my $threads_max;
-	if(CheckFile("/proc/cpuinfo")){
+	if(existFile("/proc/cpuinfo")){
 		$threads_max = `grep 'processor' /proc/cpuinfo | sort -u | wc -l`;
 		chomp $threads_max;
 		$threads_max =~ s/\s//g;

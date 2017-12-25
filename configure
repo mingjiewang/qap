@@ -938,12 +938,12 @@ sub checkPerlModules {
 
 ##check R packages
 #bioconductor:Biostrings ; 
-#base:gplots RColorBrewer ggplot2 seqinr optparse plyr xlsx stringr scatterplot3d devtools ggpubr ape devtools
+#base:gplots RColorBrewer ggplot2 seqinr optparse plyr xlsx stringr scatterplot3d devtools ggpubr ape 
 #github:ggbiplot
 ###library(devtools)
 ###install_github("vqv/ggbiplot")
 $num = 59;
-for my $p (qw/gplots RColorBrewer ggplot2 seqinr optparse plyr rJava xlsx stringr scatterplot3d devtools ggpubr ape devtools/){
+for my $p (qw/gplots RColorBrewer ggplot2 seqinr optparse plyr rJava xlsx stringr scatterplot3d devtools ggpubr ape boot/){
 	&check_R_Packages($p,'cran',$num);
 	$num++;
 }
@@ -1080,7 +1080,7 @@ sleep(1);
 $tmpOutFile = File::Spec -> catfile($tmpDir, "77.CheckQuRe.log");
 open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
 my $qure_dir = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools", "qsr", "QuRe");
-chdir $qure_dir or die "Checking QuRe has encountered error. Can not chdir to $qure_dir:$!\n";
+chdir $qure_dir or InfoDie("Error when checking QuRe. Can not chdir to $qure_dir:$!\n","red");
 $cmd = "java QuRe > $tmpOutFile";
 system($cmd);
 chdir $mainBin;
@@ -1125,16 +1125,16 @@ system($cmd);
 
 #check output
 open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
-my @out21;
+my @out29;
 while (<T>){
 	chomp;
-	push @out21,$_;
+	push @out29,$_;
 }
 close T;
 
-my $out21 = join '',@out21;
+my $out29 = join '',@out29;
 
-if ($out21 =~ /Usage: shorah.py \[options\]/){
+if ($out29 =~ /Usage: shorah.py \[options\]/){
 	Info("ShoRAH.........PASS",'green');
 }else{
 	InfoError("ShoRAH is not installed in your system. Please check.");
@@ -1158,8 +1158,11 @@ sleep(1);
 $tmpOutFile = File::Spec -> catfile($tmpDir, "79.CheckViQuaS.log");
 open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
 my $viquas_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools",'qsr',"ViQuaS","ViQuaS.R");
+my $viquas_dir = dirname($viquas_excu);
+chdir dirname($viquas_excu) or InfoDie("Error when checking ViQuaS. Can not chdir to $viquas_dir:$!\n","red");
 $cmd = "Rscript $viquas_excu > $tmpOutFile";
 system($cmd);
+chdir $mainBin;
 
 #check output
 open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
@@ -1295,28 +1298,238 @@ if(existFile($varscan_excu)){
 }
 
 ##check circos  
+#circos | v 0.69-5 | 2 May 2017 | Perl 5.016003
+sleep(1);
+Info("Checking Circos");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "84.CheckCircos.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $circos_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools","circos", "bin", "circos");
+$cmd = "perl $circos_excu -v > $tmpOutFile";
+system($cmd);
+
+#check output
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out23;
+while (<T>){
+	chomp;
+	push @out23,$_;
+}
+close T;
+
+my $out23 = join '',@out23;
+
+if ($out23 =~ /circos \| v \d/){
+	Info("Circos.........PASS",'green');
+}else{
+	InfoError("Circos is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing Circos\n";
+	my $circosnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'circos.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/circos.tar.gz -O $circosnew\n";
+	system("rm -rf $thirdPartyToolsPath/circos/");
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/\n";
+	$autoInstallCMD .= "tar xvzf $circosnew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	
+	push @softwareToInstall,'Circos';
+}
 
 ##check makeblastdb,blastn
+#Application to create BLAST databases
+sleep(1);
+Info("Checking Blast");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "85.CheckBlast.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $makeblastdb_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools","blast", "makeblastdb");
+my $blastn_excu = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools' ,'blast', 'blastn');
+$cmd = "$makeblastdb_excu -h > $tmpOutFile";
+system($cmd);
+$cmd = "$blastn_excu -h >> $tmpOutFile";
+system($cmd);
+
+#check output
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out24;
+while (<T>){
+	chomp;
+	push @out24,$_;
+}
+close T;
+
+my $out24 = join '',@out24;
+
+if ($out24 =~ /Application to create BLAST databases.*Nucleotide-Nucleotide BLAST/){
+	Info("Blast.........PASS",'green');
+}else{
+	InfoError("Blast is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing Blast\n";
+	my $blastnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'blast.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/blast.tar.gz -O $blastnew\n";
+	system("rm -rf $thirdPartyToolsPath/blast/");
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/\n";
+	$autoInstallCMD .= "tar xvzf $blastnew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	
+	push @softwareToInstall,'Blast';
+}
 
 ##check blat
+sleep(1);
+Info("Checking Blat");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "86.CheckBlat.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $blat_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools","blat", "blat");
+$cmd = "$blat_excu > $tmpOutFile";
+system($cmd);
 
+#check output
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out25;
+while (<T>){
+	chomp;
+	push @out25,$_;
+}
+close T;
+
+my $out25 = join '',@out25;
+
+if ($out25 =~ /blat - Standalone BLAT/){
+	Info("Blat.........PASS",'green');
+}else{
+	InfoError("Blat is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing Blat\n";
+	my $blatnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'blat.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/blat.tar.gz -O $blatnew\n";
+	system("rm -rf $thirdPartyToolsPath/blat/");
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/\n";
+	$autoInstallCMD .= "tar xvzf $blatnew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	
+	push @softwareToInstall,'Blat';
+}
 
 ##check lofreq
+sleep(1);
+Info("Checking LoFreq");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "87.CheckLoFreq.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $lofreq_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools","caller", "lofreq");
+$cmd = "$lofreq_excu > $tmpOutFile";
+system($cmd);
 
+#check output
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out26;
+while (<T>){
+	chomp;
+	push @out26,$_;
+}
+close T;
 
+my $out26 = join '',@out26;
+
+if ($out26 =~ /Usage: lofreq \<command\> \[options\]/){
+	Info("LoFreq.........PASS",'green');
+}else{
+	InfoError("LoFreq is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing LoFreq\n";
+	my $lofreqnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'caller','lofreq.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/lofreq.tar.gz -O $lofreqnew\n";
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/caller/\n";
+	$autoInstallCMD .= "tar xvzf $lofreqnew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	
+	push @softwareToInstall,'LoFreq';
+}
 
 ##check swarm
+sleep(1);
+Info("Checking Swarm");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "88.CheckSwarm.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $swarm_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools","cluster", "swarm", "swarm");
+$cmd = "$swarm_excu -h > $tmpOutFile";
+system($cmd);
 
+#check output
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out27;
+while (<T>){
+	chomp;
+	push @out27,$_;
+}
+close T;
+
+my $out27 = join '',@out27;
+
+if ($out27 =~ /Usage: swarm \[OPTIONS\] \[FASTAFILE\]/){
+	Info("Swarm.........PASS",'green');
+}else{
+	InfoError("Swarm is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing Swarm\n";
+	my $swarmnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'cluster','swarm.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/swarm.tar.gz -O $swarmnew\n";
+	system("rm -rf $thirdPartyToolsPath/cluster/swarm/");
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/cluster/\n";
+	$autoInstallCMD .= "tar xvzf $swarmnew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	
+	push @softwareToInstall,'Swarm';
+}
 
 ##check gsl
-#sudo apt-get upate -qq
-#sudo apt-get install -y gsl-bin libgs10-dev
-#sudo yum install -y gsl gsl-devel
+#GNU Scientific Library	
+sleep(1);
+Info("Checking GSL");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "89.CheckGSL.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+$cmd = "locate 'gsl/gsl_statistics.h' > $tmpOutFile";
+system($cmd);
+$cmd = "more /proc/version >> $tmpOutFile";
+system($cmd);
+
+#check output
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out28;
+while (<T>){
+	chomp;
+	push @out28,$_;
+}
+close T;
+
+my $out28 = join '',@out28;
+
+if ($out28 =~ /gsl_statistics.h/){
+	Info("GSL.........PASS",'green');
+}else{
+	InfoError("GSL is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing GSL\n";
+	if($out28 =~ /red\s?hat/i or $out28 =~ /centos/i){
+		$autoInstallCMD .= "sudo yum install -y gsl gsl-devel\n";
+	}else{
+		$autoInstallCMD .= "sudo apt-get upate -qq\n";
+		$autoInstallCMD .= "sudo apt-get install -y gsl-bin libgs10-dev\n";
+	}
+	
+	push @softwareToInstall,'GSL';
+}
 
 ##get cmd file ready to run
 print AUTO $autoInstallCMD;
 $cmd = "chmod 755 $autoInstallFile";
 system($cmd);
+
 
 
 ##sub program goes here
@@ -1329,6 +1542,16 @@ sub quit {
 
 ##run success
 sleep(1);
+my $numOfprogram = scalar @softwareToInstall;
+my $missingPrograms;
+for (my $i = 1; $i <= $numOfprogram; $i++){
+	$missingPrograms .= "[$i] $softwareToInstall[$i - 1]; ";
+}
+$missingPrograms =~ s/;$/\./;
+
+if($numOfprogram > 0){
+	InfoError("There are totally $numOfprogram dependencies need to be installed: $missingPrograms");
+}
 Info("Program completed!",'green');
 
 ####---------------------------####

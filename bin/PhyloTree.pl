@@ -180,7 +180,7 @@ if(defined $inputDir){
 if (defined $threads){
 	my $check_threads_positive = &CheckPositiveInt($threads);
 	my $threads_max;
-	if(CheckFile("/proc/cpuinfo")){
+	if(existFile("/proc/cpuinfo")){
 		$threads_max = `grep 'processor' /proc/cpuinfo | sort -u | wc -l`;
 		chomp $threads_max;
 		$threads_max =~ s/\s//g;
@@ -833,7 +833,7 @@ Method used to construct phylogenetic tree. There are 5 methods available. 'ML' 
 
 Statistical model used for calculation. This parameter is a little complicated. 
 
---treeModel is only available when --method MP is not defined. Choose model with index. 
+--model is only available when --method MP is not defined. Choose model with index. 
 
 For --seqtype nnt/cnt and --method ML, following models are available: 
 
