@@ -1,0 +1,129 @@
+usage: fastx_trimmer [-h] [-f N] [-l N] [-t N] [-m MINLEN] [-z] [-v] [-i INFILE] [-o OUTFILE]
+Part of FASTX Toolkit 0.0.14 by A. Gordon (assafgordon@gmail.com)
+
+   [-h]         = This helpful help screen.
+   [-f N]       = First base to keep. Default is 1 (=first base).
+   [-l N]       = Last base to keep. Default is entire read.
+   [-t N]       = Trim N nucleotides from the end of the read.
+                  '-t'  can not be used with '-l' and '-f'.
+   [-m MINLEN]  = With [-t], discard reads shorter than MINLEN.
+   [-z]         = Compress output with GZIP.
+   [-i INFILE]  = FASTA/Q input file. default is STDIN.
+   [-o OUTFILE] = FASTA/Q output file. default is STDOUT.
+
+Barcode Splitter, by Assaf Gordon (gordon@cshl.edu), 11sep2008
+
+This program reads FASTA/FASTQ file and splits it into several smaller files,
+Based on barcode matching.
+FASTA/FASTQ data is read from STDIN (format is auto-detected.)
+Output files will be writen to disk.
+Summary will be printed to STDOUT.
+
+usage: /home/webusers/webroot/bioinfo/labs/jhuang/tools/qap/wqap/qap/bin/3rdPartyTools/fastx_toolkit/fastx_barcode_splitter.pl --bcfile FILE --prefix PREFIX [--suffix SUFFIX] [--bol|--eol] 
+         [--mismatches N] [--exact] [--partial N] [--help] [--quiet] [--debug]
+
+Arguments:
+
+--bcfile FILE	- Barcodes file name. (see explanation below.)
+--prefix PREFIX	- File prefix. will be added to the output files. Can be used
+		  to specify output directories.
+--suffix SUFFIX	- File suffix (optional). Can be used to specify file
+		  extensions.
+--bol		- Try to match barcodes at the BEGINNING of sequences.
+		  (What biologists would call the 5' end, and programmers
+		  would call index 0.)
+--eol		- Try to match barcodes at the END of sequences.
+		  (What biologists would call the 3' end, and programmers
+		  would call the end of the string.)
+		  NOTE: one of --bol, --eol must be specified, but not both.
+--mismatches N	- Max. number of mismatches allowed. default is 1.
+--exact		- Same as '--mismatches 0'. If both --exact and --mismatches 
+		  are specified, '--exact' takes precedence.
+--partial N	- Allow partial overlap of barcodes. (see explanation below.)
+		  (Default is not partial matching)
+--quiet		- Don't print counts and summary at the end of the run.
+		  (Default is to print.)
+--debug		- Print lots of useless debug information to STDERR.
+--help		- This helpful help screen.
+
+Example (Assuming 's_2_100.txt' is a FASTQ file, 'mybarcodes.txt' is 
+the barcodes file):
+
+   $ cat s_2_100.txt | /home/webusers/webroot/bioinfo/labs/jhuang/tools/qap/wqap/qap/bin/3rdPartyTools/fastx_toolkit/fastx_barcode_splitter.pl --bcfile mybarcodes.txt --bol --mismatches 2 \
+   	--prefix /tmp/bla_ --suffix ".txt"
+
+Barcode file format
+-------------------
+Barcode files are simple text files. Each line should contain an identifier 
+(descriptive name for the barcode), and the barcode itself (A/C/G/T), 
+separated by a TAB character. Example:
+
+    #This line is a comment (starts with a 'number' sign)
+    BC1 GATCT
+    BC2 ATCGT
+    BC3 GTGAT
+    BC4 TGTCT
+
+For each barcode, a new FASTQ file will be created (with the barcode's 
+identifier as part of the file name). Sequences matching the barcode 
+will be stored in the appropriate file.
+
+Running the above example (assuming "mybarcodes.txt" contains the above 
+barcodes), will create the following files:
+	/tmp/bla_BC1.txt
+	/tmp/bla_BC2.txt
+	/tmp/bla_BC3.txt
+	/tmp/bla_BC4.txt
+	/tmp/bla_unmatched.txt
+The 'unmatched' file will contain all sequences that didn't match any barcode.
+
+Barcode matching
+----------------
+
+** Without partial matching:
+
+Count mismatches between the FASTA/Q sequences and the barcodes.
+The barcode which matched with the lowest mismatches count (providing the
+count is small or equal to '--mismatches N') 'gets' the sequences.
+
+Example (using the above barcodes):
+Input Sequence:
+    GATTTACTATGTAAAGATAGAAGGAATAAGGTGAAG
+
+Matching with '--bol --mismatches 1':
+   GATTTACTATGTAAAGATAGAAGGAATAAGGTGAAG
+   GATCT (1 mismatch, BC1)
+   ATCGT (4 mismatches, BC2)
+   GTGAT (3 mismatches, BC3)
+   TGTCT (3 mismatches, BC4)
+
+This sequence will be classified as 'BC1' (it has the lowest mismatch count).
+If '--exact' or '--mismatches 0' were specified, this sequence would be 
+classified as 'unmatched' (because, although BC1 had the lowest mismatch count,
+it is above the maximum allowed mismatches).
+
+Matching with '--eol' (end of line) does the same, but from the other side
+of the sequence.
+
+** With partial matching (very similar to indels):
+
+Same as above, with the following addition: barcodes are also checked for
+partial overlap (number of allowed non-overlapping bases is '--partial N').
+
+Example:
+Input sequence is ATTTACTATGTAAAGATAGAAGGAATAAGGTGAAG
+(Same as above, but note the missing 'G' at the beginning.)
+
+Matching (without partial overlapping) against BC1 yields 4 mismatches:
+   ATTTACTATGTAAAGATAGAAGGAATAAGGTGAAG
+   GATCT (4 mismatches)
+
+Partial overlapping would also try the following match:
+   -ATTTACTATGTAAAGATAGAAGGAATAAGGTGAAG
+   GATCT (1 mismatch)
+
+Note: scoring counts a missing base as a mismatch, so the final
+mismatch count is 2 (1 'real' mismatch, 1 'missing base' mismatch).
+If running with '--mismatches 2' (meaning allowing upto 2 mismatches) - this 
+seqeunce will be classified as BC1.
+

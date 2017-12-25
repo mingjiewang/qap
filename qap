@@ -50,7 +50,7 @@ use General;
 my $wk_dir = getcwd;
 
 ##start to run program
-my @all_subprograms = qw/RawDataQC RawDataFiltration BarcodeSplitter BarcodeTrimmer ExtractReadID ExtractSeq ExtractSeqInR MapReadsToRef RemovePCRDup AssembleSeq ECnQSR TGSpipeline FixCircRef MultipleSeqAlign CutSeqIntoTile CutSeqWithIntervals AminoAcidTranslator ConsensusSeq DominantStrain ShannonEntropy SingleBaseComplexity Diversity MFI MutationCaller MSAMutationCaller PickRobustOTU PickClusterOTU SampleClutering SampleCorrelation SamplePCA OTUBarplot OTUHeatmap OTUNetwork SampleRename Sam2Bam Bam2Sam SortBam Bam2Fastq Fastq2Fasta Circos IGV /;
+my @all_subprograms = qw/RawDataQC RawDataFiltration BarcodeSplitter BarcodeTrimmer ExtractReadID ExtractSeq ExtractSeqInR MapReadsToRef RemovePCRDup AssembleSeq ECnQSR TGSpipeline FixCircRef MultipleSeqAlign CutSeqIntoTile CutSeqWithIntervals AminoAcidTranslator ConsensusSeq DominantStrain ShannonEntropy SingleBaseComplexity Diversity MFI MutationCaller MSAMutationCaller PickRobustOTU PickClusterOTU SampleClutering SampleCorrelation SamplePCA OTUBarplot OTUHeatmap OTUNetwork PhyloTree SampleRename Sam2Bam Bam2Sam SortBam Bam2Fastq Fastq2Fasta Circos IGV /;
 
 my $isSubprogramFlag;
 my $checkMsg;
@@ -229,7 +229,12 @@ Usage: qap <command> [options]
 		my $subprogramPath = File::Spec -> catfile($RealBin,"bin",$subprogram);
 		$subprogramPath .= ".pl";
 		my $argsTosubprogram = join ' ',@ARGV[1..(scalar @ARGV - 1)];
-		system "perl $subprogramPath $argsTosubprogram";
+		if(scalar(@ARGV) == 1){
+			system("perl $subprogramPath $argsTosubprogram");
+		}else{
+			system("perl $subprogramPath args $argsTosubprogram");
+		}
+		
 		#system "perl $subprogramPath ";
 	}
 }

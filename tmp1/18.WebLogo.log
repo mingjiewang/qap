@@ -1,0 +1,37 @@
+
+input file not specified, terminating...
+Ns with values]
+Creates a logo for the given input filename.
+
+Available options:
+  -B <bar bits>              Number of bits in bar (real # > 0)
+  -T <tic bits>              Number of bits between tic marks
+  -C <chars per line>        Number of characters per line of logo
+  -d <box shrink factor>     Shrink factor of characters if option c is toggled
+  -E <error bar fraction>    Fraction of error bar to show (real # > 0)
+  -f <input filename>        Input filename
+  -F <format>                Format of output (EPS, GIF, PDF, PNG), - for STDOUT
+  -h <logo height>           Height of output logo (real # > 0)
+  -k <kind of data>          0 for amino acid, 1 for nucleic acid
+  -l <sequence lower bound>  Lower bound of sequence (integer)
+  -m <sequence upper bound>  Upper bound of sequence (integer)
+  -o <output file>           Name of output file
+  -s <sequence start>        Sequence start number, defaults to 1 (int)
+  -t <titletext>             Text of title, enclosed in "" if more than one word
+  -w <logo width>            Width of output logo
+  -x <x-axis label>          Label for x-axis
+  -y <y-axis label>          Label for y-axis
+
+Available toggles (no values associated) bOenc
+  -a       Toggle antialiasing
+  -b       Toggle bar ends
+  -c       Toggle color
+  -e       Toggle error bar
+  -M       Toggle small sample correction
+  -O       Toggle outlining of characters
+  -p       Toggle fineprint
+  -n       Toggle numbering of x-axis
+  -S       Toggle stretching of logos to entire length
+  -X       Toggle boxing of characters
+  -Y       Toggle y-axis
+

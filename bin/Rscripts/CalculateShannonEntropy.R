@@ -14,7 +14,13 @@ option_list <- list(
   make_option(c("-o","--outputFile"),
               help="output result file"),
   make_option(c("-p","--photos"),
-              help="whether draw graphs")
+              help="whether draw graphs"),
+  make_option(c("-n","--selectSeqNum"),
+              help="number of selected sequences"),
+  make_option(c("-r","--repNum"),
+              help="number of replicates"),
+  make_option(c("-m","--normalized"),
+              help="calculate normalized efficiency")
 )
 # get command line options, if help option encountered print help and exit,
 # otherwise if options not found on command line then set defaults, 
@@ -23,18 +29,62 @@ opt <- parse_args(OptionParser(option_list=option_list))
 
 ##read in file
 dat0 = read.table(as.character(opt$inputFile), sep="\t", header=F)
+#dat0 = read.table("1.txt",sep="\t",header = F)
 dat = dat0$V1
-##calculate
-num = length(dat)
-count = table(dat)
-freq = count / num
-freq.log = log(freq)
-shannon = sum(freq * freq.log)/log(num) * -1
 
-out = data.frame(sample=opt$sampleLabel, value=shannon)
+##calculate
+calculateSnEff <- function(dat, selectNum, repNum){
+  if(selectNum < 1){
+    num = length(dat)
+    count = table(dat)
+    freq = count / num
+    freq.log = log(freq)
+    shannon = sum(freq * freq.log)/log(num) * -1
+    return(shannon)
+  }else{
+    out = NULL
+    for (i in 1:repNum){
+      if(selectNum > length(dat)){
+        selectNum = length(dat)
+      }
+      dat.new = dat[sample(1:length(dat), selectNum, replace=F)]
+      #print(paste(dat.new))
+      num = length(dat.new)
+      count = table(dat.new)
+      freq = count / num
+      freq.log = log(freq)
+      shannon = sum(freq * freq.log)/log(num) * -1
+      out = c(out,shannon)
+    }
+    return(mean(out))
+  }
+  
+}
+
+
+calculateSn <- function(dat){
+  num = length(dat)
+  count = table(dat)
+  freq = count / num
+  freq.log = log(freq)
+  shannon = sum(freq * freq.log) * -1
+  return(shannon)
+}
+
+if(as.character(opt$normalized) == 'Y'){
+  out = data.frame(sample=opt$sampleLabel, 
+                   value=calculateSnEff(dat,
+                                        as.numeric(as.character(opt$selectSeqNum)), 
+                                        as.numeric(as.character(opt$repNum))))
+}else{
+  out = data.frame(sample=opt$sampleLabel, 
+                   value=calculateSn(dat))
+}
+
 ##output
 write.table(out,opt$outputFile,col.names=F,row.names=F,quote=F,sep="\t",append = T)
 
+count = table(dat)
 if(opt$photos == '1'){
   gra = matrix(sort(as.numeric(count),decreasing = T),ncol=1,byrow = F)
   

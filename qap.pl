@@ -229,7 +229,12 @@ Usage: qap <command> [options]
 		my $subprogramPath = File::Spec -> catfile($RealBin,"bin",$subprogram);
 		$subprogramPath .= ".pl";
 		my $argsTosubprogram = join ' ',@ARGV[1..(scalar @ARGV - 1)];
-		system "perl $subprogramPath $argsTosubprogram";
+		if(scalar(@ARGV) == 1){
+			system("perl $subprogramPath $argsTosubprogram");
+		}else{
+			system("perl $subprogramPath args $argsTosubprogram");
+		}
+		
 		#system "perl $subprogramPath ";
 	}
 }

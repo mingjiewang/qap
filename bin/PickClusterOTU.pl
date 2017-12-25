@@ -290,8 +290,7 @@ Info("Convert fasta files and calculate OTU sequences.");
 my @inputfiles2line;
 my $i = 1;
 
-my $swarmInput = File::Spec -> catfile($tmpDir,"MergeNoDel.fasta");
-open NODEL,">$swarmInput" or die "Can NOT output to $swarmInput:$!"; 
+#open NODEL,">$swarmInput" or die "Can NOT output to $swarmInput:$!"; 
 
 my $otuDir = File::Spec -> catfile($outputDir, "OTU");
 makedir($otuDir);
@@ -309,12 +308,10 @@ for my $f (@inputfiles){
 	open T,$f2line or die "Can NOT open file $f:$!";
 	my $f_withDel = File::Spec -> catfile($tmpDir,$id . ".withDel.fasta");
 	open DEL,">$f_withDel" or die "Can NOT output to $f_withDel:$!";	
-	my $f_withoutDel = File::Spec -> catfile($tmpDir, $id . "withoutDel.fasta");
-	open NODELEACH,">$f_withoutDel" or die "Can NOT output to $f_withoutDel:$!";
-	push @f_withoutDel,$f_withoutDel;
 	
 	my $seqNum;
 	my $seqWithoutDelNum = 0;
+	my %seqWithoutDel;
 	while(my $line1 = <T>){
 		chomp $line1;
 		chomp (my $line2 = <T>);
@@ -323,22 +320,36 @@ for my $f (@inputfiles){
 			print DEL "$line1\n$line2\n";
 		}else{
 			$seqWithoutDelNum++;
-			print NODEL ">[${id}][-][OTU${seqWithoutDelNum}]\n$line2\n";
-			print NODELEACH ">[${id}][-][OTU${seqWithoutDelNum}]\n$line2\n";
+			#print NODEL ">[${id}][-][OTU${seqWithoutDelNum}]\n$line2\n";
+			#print NODELEACH ">[${id}][-][OTU${seqWithoutDelNum}]\n$line2\n";
+			$seqWithoutDel{$line2}++;
 		}
 		
 		$seqNum++;
 		#print RINPUT "$line2\t$id\n";
 	}
 	close DEL;
-	close NODELEACH;
+	#close NODELEACH;
+	
+	my $f_withoutDel = File::Spec -> catfile($tmpDir, $id . "withoutDel.fasta");
+	open NODELEACH,">$f_withoutDel" or die "Can NOT output to $f_withoutDel:$!";
+	push @f_withoutDel,$f_withoutDel;
+	
+	my $seqID = 1;
+	for my $line (keys %seqWithoutDel){
+		print NODELEACH ">[${id}][-][OTU${seqID}]_$seqWithoutDel{$line}\n$line\n";
+		$seqID++;
+	}
 	
 	sleep 1;
 	printf "[%02d] $id: ",$i;
 	print "$seqWithoutDelNum / $seqNum sequences without special characters were detected.\n";
 	$i++;
 }
-close(NODEL);
+#close(NODEL);
+my $swarmInput = File::Spec -> catfile($tmpDir,"MergeNoDel.fasta");
+my $f_withoutDel_together = join " ",@f_withoutDel;
+system("cat $f_withoutDel_together > $swarmInput");
 
 #cluster seq for each sample
 for my $f (@f_withoutDel){
@@ -349,7 +360,7 @@ for my $f (@f_withoutDel){
 	sleep(1);
 	my $swarmSeqFile = File::Spec -> catfile($tmpDir, $id . ".swarmOTU.tmp.fasta");
 	my $swarmCountFile = File::Spec -> catfile($tmpDir, $id . ".swarmOTUCluster.tmp.txt");
-	my $swarmCMD = "$swarm_excu -a 1 -w $swarmSeqFile -o $swarmCountFile $f";
+	my $swarmCMD = "$swarm_excu -w $swarmSeqFile -o $swarmCountFile $f";
 	runcmd($swarmCMD);
 	
 	my $finalOTUseq = File::Spec -> catfile($otuDir, $id . ".OTU.fasta");
@@ -373,6 +384,8 @@ for my $f (@f_withoutDel){
 	close OUT;
 	close T;
 }
+
+
 
 ##check the total line number of swarm input.
 my $lineNumber0 = `wc -l $swarmInput`;
@@ -410,7 +423,7 @@ if($lineNumber > 100000){
 	for my $f (@splitFiles){
 		my $outSeq = $f . ".seq";
 		my $outTxt = $f . ".txt";
-		$cmd = "$swarm_excu -a 1 -t $threads -w $outSeq -o $outTxt $f";
+		$cmd = "$swarm_excu -t $threads -w $outSeq -o $outTxt $f";
 		runcmd($cmd);
 		push @seqFiles,$outSeq;
 		push @txtFiles,$outTxt;
@@ -577,7 +590,7 @@ if($lineNumber > 100000){
 	my $clusterOut = File::Spec -> catfile($tmpDir,"SwarmOut.txt");
 	my $clusterSeq = File::Spec -> catfile($tmpDir,"SwarmOut.seq");
 
-	my $cmd = "$swarm_excu -a 1 -t $threads -w $clusterSeq -o $clusterOut $swarmInput";
+	my $cmd = "$swarm_excu -t $threads -w $clusterSeq -o $clusterOut $swarmInput";
 	runcmd($cmd);
 	
 	#convert cluster out to R input

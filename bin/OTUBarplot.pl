@@ -83,6 +83,8 @@ my $inputFile;
 my $outputDir;
 my $legend;
 my $barWidth;
+my $relative;
+my $sort;
 
 my $DateNow = `date +"%Y%m%d_%Hh%Mm%Ss"`;
 chomp $DateNow;
@@ -92,7 +94,9 @@ GetOptions(
 'o|outputDir|=s'     => \$outputDir,
 'h|help|'            => \$help,
 'w|barWidth|=s'      => \$barWidth,
-'l|figLegend|=s'     => \$legend
+'l|figLegend|=s'     => \$legend,
+'r|relative|=s'      => \$relative,
+'s|sort|=s'          => \$sort
 );
 
 
@@ -157,17 +161,45 @@ if(defined $barWidth){
 }
 
 if(defined $legend){
-	if($legend =~ /^f/i){
-		$legend = "F";
-	}elsif($legend =~ /^t/i){
-		$legend = "T";
+	if($legend =~ /^y/i){
+		$legend = "Y";
+	}elsif($legend =~ /^n/i){
+		$legend = "N";
 	}else{
-		InfoError("--figLegend/-l should be \'T\' or \'F\'.");
+		InfoError("--figLegend/-l should be \'Y\' or \'N\'.");
 		pod2usage(-verbose=>0,-exitval=>1);
 		exit;
 	}
 }else{
-	$legend = 'F';
+	$legend = 'N';
+}
+
+if(defined $relative){
+	if($relative =~ /^y/i){
+		$relative = "Y";
+	}elsif($relative =~ /^n/i){
+		$relative = "N";
+	}else{
+		InfoError("--relative should be \'Y\' or \'N\'.");
+		pod2usage(-verbose=>0,-exitval=>1);
+		exit;
+	}
+}else{
+	$relative = 'N';
+}
+
+if(defined $sort){
+	if($sort =~ /^y/i){
+		$sort = "Y";
+	}elsif($sort =~ /^n/i){
+		$sort = "N";
+	}else{
+		InfoError("--sort should be \'Y\' or \'N\'.");
+		pod2usage(-verbose=>0,-exitval=>1);
+		exit;
+	}
+}else{
+	$sort = 'N';
 }
 
 sleep(1);
@@ -183,7 +215,7 @@ if(not existFile($rscript)){
 #run r script
 Info("Calculating relative abundance and drawing OTU barplot.");
 my $outfig = File::Spec -> catfile($outputDir,"OTUBarplot");
-my $cmd = "Rscript $rscript --inputFile $inputFile --legend $legend --barWidth $barWidth --outputFile $outfig";
+my $cmd = "Rscript $rscript --inputFile $inputFile --legend $legend --barWidth $barWidth --outputFile $outfig --relative $relative --sort $sort";
 sleep(1);
 runcmd($cmd);
 sleep(2);
@@ -245,7 +277,15 @@ A decimal between 0 and 1 to specify the width of bars in the barplot, which 0 r
 
 =item --figLegend,-l F<BOOLEAN> [Optional]
 
-Whether to draw figure legends or not. Choose between 'T'(TRUE) and 'F'(FALSE). Default value is 'F'.
+Whether to draw figure legends or not. Choose between 'Y'(Yes) and 'N'(No). Default value is 'N'.
+
+=item --relative,-r F<BOOLEAN> [Optional]
+
+Whether draw bars with relative height (Total height normalized to 1.0), or using abunance value as true height. Choose between 'Y'(Yes) and 'N'(No). Default value is 'N'.
+
+=item --sort,-s F<BOOLEAN> [Optional]
+
+Whether sort bars with heights. Choose between 'Y'(Yes) and 'N'(No). If set to 'Y', bars will be sorted from height to low, and OTUs within bars will also be sorted by abudances.
 
 =item --outputDir,-o F<FILE> [Optional]
 

@@ -137,6 +137,8 @@ if (defined $outputDir){
 
 }
 
+print ">>$outputDir<<\n";
+
 if (defined $threads){
 	my $check_threads_positive = &CheckPositiveInt($threads);
 	my $threads_max;

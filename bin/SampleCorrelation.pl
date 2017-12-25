@@ -84,6 +84,10 @@ my $outputDir;
 my $heatColor;
 my $withLabel;
 my $corTable;
+my $triangle;
+my $sort;
+my $dendrogram;
+my $line;
 
 my $DateNow = `date +"%Y%m%d_%Hh%Mm%Ss"`;
 chomp $DateNow;
@@ -94,7 +98,11 @@ GetOptions(
 'h|help|'            => \$help,
 'c|color|=s'         => \$heatColor,
 'l|withLabel|=s'     => \$withLabel,
-'b|corTable|=s'      => \$corTable
+'b|corTable|=s'      => \$corTable,
+'a|triangle|=s'      => \$triangle,
+'s|sort|=s'          => \$sort,
+'d|dendrogram|=s'    => \$dendrogram,
+'e|line|=s'          => \$line
 );
 
 
@@ -163,33 +171,88 @@ if(defined $heatColor){
 }
 
 if(defined $withLabel){
-	if($withLabel =~ /^t/i){
-		$withLabel = "T";
-	}elsif($withLabel =~ /^f/i){
-		$withLabel = "F";
+	if($withLabel =~ /^y/i){
+		$withLabel = "Y";
+	}elsif($withLabel =~ /^n/i){
+		$withLabel = "N";
 	}else{
-		InfoError("--withLabel/-l should be \'T\' or \'F\'.");
+		InfoError("--withLabel/-l should be \'Y\' or \'N\'.");
 		pod2usage(-verbose=>0,-exitval=>1);
 		exit;
 	}
 }else{
-	$withLabel = "T";
+	$withLabel = "Y";
 }
 
 if(defined $corTable){
-	if($corTable =~ /^t/i){
-		$corTable = "T";
-	}elsif($corTable =~ /^f/i){
-		$corTable = "F";
+	if($corTable =~ /^y/i){
+		$corTable = "Y";
+	}elsif($corTable =~ /^n/i){
+		$corTable = "N";
 	}else{
-		InfoError("--$corTable/-b should be \'T\' or \'F\'.");
+		InfoError("--$corTable/-b should be \'Y\' or \'N\'.");
 		pod2usage(-verbose=>0,-exitval=>1);
 		exit;
 	}
 }else{
-	$corTable = "T";
+	$corTable = "Y";
 }
 
+if(defined $triangle){
+	if($triangle =~ /^y/i){
+		$triangle = "Y";
+	}elsif($triangle =~ /^n/i){
+		$triangle = "N";
+	}else{
+		InfoError("--triangle/-a should be \'Y\' or \'N\'.");
+		pod2usage(-verbose=>0,-exitval=>1);
+		exit;
+	}
+}else{
+	$triangle = "Y";
+}
+
+if(defined $sort){
+	if($sort =~ /^y/i){
+		$sort = "Y";
+	}elsif($sort =~ /^n/i){
+		$sort = "N";
+	}else{
+		InfoError("--sort/-s should be \'Y\' or \'N\'.");
+		pod2usage(-verbose=>0,-exitval=>1);
+		exit;
+	}
+}else{
+	$sort = "Y";
+}
+
+if(defined $dendrogram){
+	if($dendrogram =~ /^y/i){
+		$dendrogram = "Y";
+	}elsif($dendrogram =~ /^n/i){
+		$dendrogram = "N";
+	}else{
+		InfoError("--dendrogram/-d should be \'Y\' or \'N\'.");
+		pod2usage(-verbose=>0,-exitval=>1);
+		exit;
+	}
+}else{
+	$dendrogram = "Y";
+}
+
+if(defined $line){
+	if($line =~ /^y/i){
+		$line = "Y";
+	}elsif($line =~ /^n/i){
+		$line = "N";
+	}else{
+		InfoError("--line/-e should be \'Y\' or \'N\'.");
+		pod2usage(-verbose=>0,-exitval=>1);
+		exit;
+	}
+}else{
+	$line = "Y";
+}
 
 sleep(1);
 
@@ -204,7 +267,7 @@ if(not existFile($rscript)){
 #run r script
 Info("Calculating sample correlations and drawing pairwise heatmap.");
 my $outfig = File::Spec -> catfile($outputDir,"SampleCorrelation");
-my $cmd = "Rscript $rscript --inputFile $inputFile --heatColor $heatColor --corTable $corTable --withLabel $withLabel --outputFile $outfig";
+my $cmd = "Rscript $rscript --inputFile $inputFile --heatColor $heatColor --corTable $corTable --withLabel $withLabel --outputFile $outfig --triangle $triangle --sort $sort --line $line --dendrogram $dendrogram ";
 runcmd($cmd);
 
 ##run success
@@ -264,11 +327,27 @@ Color used to draw heatmap. Choose between 'BlueRed', 'GreenRed', or 'PinkRed'. 
 
 =item --withLabel,-l F<BOOLEAN> [Optional]
 
-Whether add correlation labels to the figure or not. Choose bewtwen 'T' for 'True' and 'F' for 'False'. Default value is 'T'.
+Whether add correlation labels to the figure or not. Choose bewtwen 'Y' for 'Yes' and 'N' for 'No'. Default value is 'Y'.
 
 =item --corTable,-b F<BOOLEAN> [Optional]
 
-Whether output correlation table or not. Choose between 'T' for 'True' and 'F' for 'False'. Default value is 'T'.
+Whether output correlation table or not. Choose between 'Y' for 'Yes' and 'N' for 'No'. Default value is 'Y'.
+
+=item --triangle,-a F<BOOLEAN> [Optional]
+
+Whether draw a triangle or a rectangle of sample correlation matrix. Choose between 'Y' for 'Yes' and 'N' for 'No'. Default value is 'Y'.
+
+=item --sort,-s F<BOOLEAN> [Optional]
+
+Whether reorder the samples by distance or not. Choose between 'Y' for 'Yes' and 'N' for 'No'. Default value is 'Y'.
+
+=item --dendrogram,-d F<BOOLEAN> [Optional]
+
+Whether draw sample dendrogram or not. Choose between 'Y' for 'Yes' and 'N' for 'No'. Default value is 'Y'.
+
+=item --line,-e F<BOOLEAN> [Optional]
+
+Whether draw lines to on colored correlation matrix or not. Choose between 'Y' for 'Yes' and 'N' for 'No'. Default value is 'N'.
 
 =item --outputDir,-o F<FILE> [Optional]
 

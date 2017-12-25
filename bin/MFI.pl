@@ -112,7 +112,7 @@ if (defined $help){
 }
 
 if(scalar(@ARGV) == 0){
-	pod2usage(-verbose=>1,-exitval=>1);
+    pod2usage(-verbose=>1,-exitval=>1);
 }
 
 if (defined $outputDir){

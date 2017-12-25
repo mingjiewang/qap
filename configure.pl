@@ -355,7 +355,7 @@ if ($out5 =~ /pip (\d+)\.(\d+)\.(\d+) from \//){
 		$pipPass = 1;
 	}else{
 		InfoWarn("A newer version of pip is required. Installation CMD written to autoInstall file.");
-		print STDERR "A newer version of pip is required. Will updating pip automatically.";
+		print STDERR "A newer version of pip is required. Will update pip automatically.";
 		
 		$autoInstallCMD .= "##Upgrating python pip\n";
 		$autoInstallCMD .= "pip install -U pip\n\n";
@@ -374,7 +374,7 @@ if ($out5 =~ /pip (\d+)\.(\d+)\.(\d+) from \//){
 	#method2--build from source
 	my $pipnew = File::Spec -> catfile($thirdPartyToolsPath, "pip.tar.gz");
 	my $pipold = File::Spec -> catfile($thirdPartyToolsPath, "pip");
-	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/download/pip.tar.gz -O $pipnew\n";
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/pip.tar.gz -O $pipnew\n";
 	$autoInstallCMD .= "cd $thirdPartyToolsPath\n";
 	$autoInstallCMD .= "tar xvzf $pipnew\n";
 	$autoInstallCMD .= "cd $pipold\n";
@@ -417,7 +417,7 @@ if ($out6 =~ /Bowtie 2 version/){
 	InfoError("Bowtie2 is not installed in your system or not in bin/ folder. Please check.");
 	$autoInstallCMD .= "##Installing Bowtie2\n";
 	my $bowtie2new = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'bowtie2.tar.gz');
-	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/download/bowtie2.tar.gz -O $bowtie2new\n";
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/bowtie2.tar.gz -O $bowtie2new\n";
 	my $bowtie2old = dirname($bowtie2_excu);
 	$autoInstallCMD .= "rm -rf $bowtie2old\n";
 	$autoInstallCMD .= "cd $thirdPartyToolsPath\n";
@@ -456,7 +456,7 @@ if ($out7 =~ /Program: bwa \(alignment via Burrows-Wheeler transformation\)/){
 	InfoError("BWA is not installed in your system or not in bin/ folder. Please check.");
 	$autoInstallCMD .= "##Installing BWA\n";
 	my $bwanew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'bwa.tar.gz');
-	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/download/bwa.tar.gz -O $bwanew\n";
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/bwa.tar.gz -O $bwanew\n";
 	my $bwaold = dirname($bwa_excu);
 	$autoInstallCMD .= "rm -rf $bwaold\n";
 	$autoInstallCMD .= "cd $thirdPartyToolsPath\n";
@@ -496,7 +496,7 @@ if ($out8 =~ /Program: samtools \(Tools for alignments in the SAM format\)/){
 	InfoError("Samtools is not installed in your system or not in bin/ folder. Please check.");
 	$autoInstallCMD .= "##Installing Samtools\n";
 	my $samtoolsnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'samtools.tar.gz');
-	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/download/samtools.tar.gz -O $samtoolsnew\n";
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/samtools.tar.gz -O $samtoolsnew\n";
 	my $samtoolsold = dirname($samtools_excu);
 	$autoInstallCMD .= "rm -rf $samtoolsold\n";
 	$autoInstallCMD .= "cd $thirdPartyToolsPath\n";
@@ -537,7 +537,7 @@ if ($out9 =~ /FastQC v[0-9\.]+/){
 	InfoError("FastQC is not installed in your system or not in bin/ folder. Please check.");
 	$autoInstallCMD .= "##Installing FastQC\n";
 	my $fastqcnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'fastqc.tar.gz');
-	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/download/fastqc.tar.gz -O $fastqcnew\n";
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/fastqc.tar.gz -O $fastqcnew\n";
 	my $fastqcold = dirname($fastqc_excu);
 	$autoInstallCMD .= "rm -rf $fastqcold\n";
 	$autoInstallCMD .= "cd $thirdPartyToolsPath\n";
@@ -616,7 +616,7 @@ if ($out11 =~ /usage\: fastx_trimmer.*Barcode Splitter, by Assaf Gordon/){
 	InfoError("FASTX-Toolkit is not installed in your system or not in bin/ folder. Please check.");
 	$autoInstallCMD .= "##Installing FASTX-Toolkit\n";
 	my $fastxnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'fastx_toolkit.tar.gz');
-	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/download/fastx_toolkit.tar.gz -O $fastxnew\n";
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/fastx_toolkit.tar.gz -O $fastxnew\n";
 	my $fastxold = dirname($fastx_trimmer_excu);
 	$autoInstallCMD .= "rm -rf $fastxold\n";
 	$autoInstallCMD .= "cd $thirdPartyToolsPath\n";
@@ -655,7 +655,7 @@ if ($out12 =~ /-a --analysisOptions/){
 	InfoError("MEGA is not installed in your system or not in bin/ folder. Please check.");
 	$autoInstallCMD .= "##Installing MEGA\n";
 	my $meganew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'megacc.tar.gz');
-	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/download/megacc.tar.gz -O $meganew\n";
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/megacc.tar.gz -O $meganew\n";
 	my $megaold = dirname($mega_excu);
 	$autoInstallCMD .= "rm -rf $megaold\n";
 	$autoInstallCMD .= "cd $thirdPartyToolsPath\n";
@@ -694,7 +694,7 @@ if ($out13 =~ /-i, --in, --infile=/){
 	InfoError("Clustal Omega is not installed in your system or not in bin/ folder. Please check.");
 	$autoInstallCMD .= "##Installing Clustal Omega\n";
 	my $clustalonew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'msa','clustalo.tar.gz');
-	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/download/clustalo.tar.gz -O $clustalonew\n";
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/clustalo.tar.gz -O $clustalonew\n";
 	my $clustaloold = dirname($clustalo_excu);
 	$autoInstallCMD .= "rm -rf $clustaloold\n";
 	$autoInstallCMD .= "cd $thirdPartyToolsPath/msa\n";
@@ -733,7 +733,7 @@ if ($out14 =~ /-INFILE=file.ext/){
 	InfoError("ClustalW is not installed in your system or not in bin/ folder. Please check.");
 	$autoInstallCMD .= "##Installing ClustalX\n";
 	my $clustalwnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'msa','clustalw.tar.gz');
-	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/download/clustalw.tar.gz -O $clustalwnew\n";
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/clustalw.tar.gz -O $clustalwnew\n";
 	my $clustalwold = dirname($clustalw_excu);
 	$autoInstallCMD .= "rm -rf $clustalwold\n";
 	$autoInstallCMD .= "cd $thirdPartyToolsPath/msa\n";
@@ -772,7 +772,7 @@ if ($out15 =~ /-in \<inputfile\>/){
 	InfoError("MUSCLE is not installed in your system or not in bin/ folder. Please check.");
 	$autoInstallCMD .= "##Installing MUSCLE\n";
 	my $musclenew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'msa','muscle.tar.gz');
-	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/download/muscle.tar.gz -O $musclenew\n";
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/muscle.tar.gz -O $musclenew\n";
 	my $muscleold = dirname($muscle_excu);
 	$autoInstallCMD .= "rm -rf $muscleold\n";
 	$autoInstallCMD .= "cd $thirdPartyToolsPath/msa\n";
@@ -784,36 +784,534 @@ if ($out15 =~ /-in \<inputfile\>/){
 
 ##check gs
 # gs must be in the system path
+sleep(1);
+Info("Checking Ghostscript");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "17.Ghostscript.log");
+open STDERR,">>$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $gs_excu = File::Spec -> catfile($thirdPartyToolsPath, 'cs',"gs", "gs");
+$cmd = "gs -version > $tmpOutFile";
+system($cmd);
+
+#check output
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out16;
+while (<T>){
+	chomp;
+	push @out16,$_;
+}
+close T;
+
+my $out16 = join '',@out16;
+
+if ($out16 =~ /GPL Ghostscript (\d)\.(\d+)/){
+	my $mainVersion = $1;
+	my $subVersion = $2;
+	if($mainVersion >= 9){
+		Info("Ghostscript version ${mainVersion}\.${subVersion}.........PASS",'green');
+	}else{
+		InfoWarn("A newer version of Ghostscript is required. Installation CMD written to autoInstall file.");
+		print STDERR "A newer version of Ghostscript is required. Will update automatically.";
+		
+		$autoInstallCMD .= "##Upgrating Ghostscript\n";
+		my $gsnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'cs','gs.tar.gz');
+		$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/gs.tar.gz -O $gsnew\n";
+		my $gsold = dirname($gs_excu);
+		$autoInstallCMD .= "rm -rf $gsold\n";
+		$autoInstallCMD .= "cd $thirdPartyToolsPath/cs\n";
+		$autoInstallCMD .= "tar xvzf $gsnew\n";
+		$autoInstallCMD .= "cd $mainBin\n\n";
+		my $gsdir = dirname($gs_excu);
+		$autoInstallCMD .= "echo \"export PATH=$gsdir:\$PATH \" >> ~/.bash_profile\n";
+		$autoInstallCMD .= "source ~/.bash_profile\n\n";
+		
+		push @softwareToInstall,"Ghostscript";
+	}
+
+	
+}else{
+	InfoError("Ghostscript is not installed in your system or not in system PATH. Please check.");
+	$autoInstallCMD .= "##Installing Ghostscript\n";
+	my $gsnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'cs','gs.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/gs.tar.gz -O $gsnew\n";
+	my $gsold = dirname($gs_excu);
+	$autoInstallCMD .= "rm -rf $gsold\n";
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/cs\n";
+	$autoInstallCMD .= "tar xvzf $gsnew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	my $gsdir = dirname($gs_excu);
+	$autoInstallCMD .= "echo \"export PATH=$gsdir:\$PATH \" >> ~/.bash_profile\n";
+	$autoInstallCMD .= "source ~/.bash_profile\n\n";
+	
+	push @softwareToInstall,'Ghostscript';
+}
 
 ##check weblogo
+sleep(1);
+Info("Checking WebLogo");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "18.WebLogo.log");
+open STDERR,">>$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $weblogo_excu = File::Spec -> catfile($thirdPartyToolsPath, 'cs',"weblogo", "seqlogo");
+$cmd = "$weblogo_excu > $tmpOutFile";
+system($cmd);
+
+#check output
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out17;
+while (<T>){
+	chomp;
+	push @out17,$_;
+}
+close T;
+
+my $out17 = join '',@out17;
+
+if ($out17 =~ /Available options:/){
+	Info("WebLogo.........PASS",'green');
+}else{
+	InfoError("WebLogo is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing WebLogo\n";
+	my $weblogonew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'cs','weblogo.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/weblogo.tar.gz -O $weblogonew\n";
+	my $weblogoold = dirname($weblogo_excu);
+	$autoInstallCMD .= "rm -rf $weblogoold\n";
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/cs/\n";
+	$autoInstallCMD .= "tar xvzf $weblogonew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+
+	push @softwareToInstall,'WebLogo';
+}
+
 
 ##check perl modules
-#Bio::Perl  cmd: cpan Bio::Perl ; perl -MCPAN -Mlocal::lib -e "CPAN::install(\"C/CJ/CJFIELDS/BioPerl-1.007001.tar.gz\")"
+#Bio::Perl  cmd: cpan Bio::Perl ; perl -MCPAN -Mlocal::lib -e "CPAN::install(\"C/CJ/CJFIELDS/Bio::Perl-1.007001.tar.gz\")"
 #Perl4::CoreLibs  to successful run perl scripts compile on perl4 
+#Info("Checking Perl modules");
+my $num = 19;
+for my $m (qw/AppConfig Bio::Perl Cwd FindBin File::Basename File::Copy File::Spec Getopt::Long Perl4::CoreLibs Pod::Usage Carp Clone Config::General Data::Dumper Digest::MD5 File::Spec::Functions File::Temp Font::TTF::Font GD GD::Polyline IO::File List::MoreUtils List::Util Math::Bezier Math::BigFloat Math::Round Math::VecStat Memoize POSIX Params::Validate Readonly Regexp::Common SVG Set::IntSpan Statistics::Basic Storable Sys::Hostname Text::Balanced Text::Format Time::HiRes/){
+	&checkPerlModules($m,$num);
+	$num++;
+}
+
+sub checkPerlModules {
+	my $moduleName = shift;
+	my $number = shift;
+	
+	sleep(1);
+	Info("Checking Perl module $moduleName");
+	#run check
+	sleep(1);
+	my $outname = $moduleName =~ s/::/_/gr;
+	$tmpOutFile = File::Spec -> catfile($tmpDir, "${number}.Check${outname}.log");
+	open STDERR,">>$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+	$cmd = "perl -e \'use $moduleName\'";
+	system($cmd);
+	
+	#check output
+	open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+	my @out18;
+	while (<T>){
+		chomp;
+		push @out18,$_;
+	}
+	close T;
+	
+	my $out18 = join '',@out18;
+	
+	if ($out18 =~ /Can't locate .*?\.pm in \@INC/){
+		InfoError("Perl module $moduleName is not installed in your system. Please check.");
+		
+		$autoInstallCMD .= "##Installing Perl module $moduleName\n";
+		$autoInstallCMD .= "cpan -fi $moduleName\n";
+		
+		my $name = "$moduleName(Perl module)";
+		push @softwareToInstall,$name;
+	}else{
+		Info("Perl module $moduleName.........PASS",'green');
+	}
+}
+
+
 
 ##check R packages
 #bioconductor:Biostrings ; 
-#base:gplots RColorBrewer ggplot2 seqinr optparse plyr xlsx stringr scatterplot3d devtools ggpubr ape
+#base:gplots RColorBrewer ggplot2 seqinr optparse plyr xlsx stringr scatterplot3d devtools ggpubr ape devtools
 #github:ggbiplot
 ###library(devtools)
 ###install_github("vqv/ggbiplot")
+$num = 59;
+for my $p (qw/gplots RColorBrewer ggplot2 seqinr optparse plyr rJava xlsx stringr scatterplot3d devtools ggpubr ape devtools/){
+	&check_R_Packages($p,'cran',$num);
+	$num++;
+}
 
+&check_R_Packages('Biostrings','bioconductor',73);
+&check_R_Packages('ggbiplot','github',74);
+
+sub check_R_Packages {
+	my $moduleName = shift;
+	my $repo = shift;
+	my $number = shift;
+	
+	sleep(1);
+	Info("Checking R package $moduleName");
+	#run check
+	sleep(1);
+	$tmpOutFile = File::Spec -> catfile($tmpDir, "${number}.Check${moduleName}.log");
+	open STDERR,">>$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+	$cmd = "Rscript -e \'library($moduleName)\'";
+	system($cmd);
+	
+	#check output
+	open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+	my @out18;
+	while (<T>){
+		chomp;
+		push @out18,$_;
+	}
+	close T;
+	
+	my $out18 = join '',@out18;
+	
+	if ($out18 =~ /Error in library/){
+		InfoError("R package $moduleName is not installed in your system. Please check.");
+		
+		$autoInstallCMD .= "##Installing R package $moduleName\n";
+		if($repo eq 'cran'){
+			$autoInstallCMD .= "R -e \"install.packages(\'$moduleName\', repos=\'http://cran.r-project.org\')\"\n";
+		}elsif($repo eq 'github'){
+			$autoInstallCMD .= "R -e \"library(devtools); install_github(\'vqv\/ggbiplot\');\"\n";
+		}elsif($repo eq 'bioconductor'){
+			$autoInstallCMD .= "R -e \"source(\'http:\/\/bioconductor.org\/biocLite.R\'); biocLite(\'$moduleName\');\"\n";
+		}else{
+			$autoInstallCMD .= "#ERROR! Unknown repository selected.\n";
+		}
+		
+		my $name = "$moduleName (R package)";
+		push @softwareToInstall,$name;
+	}else{
+		Info("R package $moduleName.........PASS",'green');
+	}
+}
 
 ##check Biopython
 #pip install Biopython
+sleep(1);
+Info("Checking Biopython");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "75.CheckBiopython.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+$cmd = "python -c \'from Bio import SeqIO\'";
+system($cmd);
+
+#check output
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out19;
+while (<T>){
+	chomp;
+	push @out19,$_;
+}
+close T;
+
+my $out19 = join '',@out19;
+
+if ($out19 =~ /ImportError/){
+	InfoError("Biopython is not installed in your system. Please check.",'green');
+	 
+	$autoInstallCMD .= "##Installing Biopyton\n";
+	$autoInstallCMD .= "pip install --user Biopython\n";
+	
+	push @softwareToInstall,"Biopython";
+	
+}else{
+	Info("Biopython.........PASS",'green');
+}
+
+
+##check PredictHaplo
+sleep(1);
+Info("Checking PredictHaplo");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "76.CheckPredictHaplo.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $predicthaplo_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools", "qsr", "PredictHaplo","PredictHaplo-Paired");
+$cmd = "$predicthaplo_excu > $tmpOutFile";
+system($cmd);
+
+#check output
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out20;
+while (<T>){
+	chomp;
+	push @out20,$_;
+}
+close T;
+
+my $out20 = join '',@out20;
+
+if ($out20 =~ /usage: PredictHaplo \<config.txt\>/){
+	Info("PredictHaplo.........PASS",'green');
+}else{
+	InfoError("PredictHaplo is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing PredictHaplo\n";
+	my $predicthaplonew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'qsr', 'predicthaplo.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/predicthaplo.tar.gz -O $predicthaplonew\n";
+	my $predicthaploold = dirname($predicthaplo_excu);
+	$autoInstallCMD .= "rm -rf $predicthaploold\n";
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/qsr/\n";
+	$autoInstallCMD .= "tar xvzf $predicthaplonew\n";
+	$autoInstallCMD .= "cd $predicthaploold\n";
+	$autoInstallCMD .= "make\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	
+	push @softwareToInstall,'PredictHaplo';
+}
+
+##check QuRe
+sleep(1);
+Info("Checking QuRe");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "77.CheckQuRe.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $qure_dir = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools", "qsr", "QuRe");
+chdir $qure_dir or die "Checking QuRe has encountered error. Can not chdir to $qure_dir:$!\n";
+$cmd = "java QuRe > $tmpOutFile";
+system($cmd);
+chdir $mainBin;
+
+#check output
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out21;
+while (<T>){
+	chomp;
+	push @out21,$_;
+}
+close T;
+
+my $out21 = join '',@out21;
+
+if ($out21 =~ /QuRe\.main/){
+	Info("QuRe.........PASS",'green');
+}else{
+	InfoError("QuRe is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing QuRe\n";
+	my $qurenew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'qsr', 'qure.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/qure.tar.gz -O $qurenew\n";
+	$autoInstallCMD .= "rm -rf $qure_dir\n";
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/qsr/\n";
+	$autoInstallCMD .= "tar xvzf $qurenew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	
+	push @softwareToInstall,'QuRe';
+}
+
+##check ShoRAH
+#Usage: shorah.py [options]
+sleep(1);
+Info("Checking ShoRAH");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "78.CheckShoRAH.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $shorah_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools",'qsr',"Shorah","shorah.py");
+$cmd = "python $shorah_excu -h > $tmpOutFile";
+system($cmd);
+
+#check output
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out21;
+while (<T>){
+	chomp;
+	push @out21,$_;
+}
+close T;
+
+my $out21 = join '',@out21;
+
+if ($out21 =~ /Usage: shorah.py \[options\]/){
+	Info("ShoRAH.........PASS",'green');
+}else{
+	InfoError("ShoRAH is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing ShoRAH\n";
+	my $shorahnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'qsr', 'shorah.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/shorah.tar.gz -O $shorahnew\n";
+	my $shorahold = dirname($shorah_excu);
+	$autoInstallCMD .= "rm -rf $shorahold\n";
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/qsr/\n";
+	$autoInstallCMD .= "tar xvzf $shorahnew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	
+	push @softwareToInstall,'ShoRAH';
+}
+
+##check ViQuaS
+sleep(1);
+Info("Checking ViQuaS");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "79.CheckViQuaS.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $viquas_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools",'qsr',"ViQuaS","ViQuaS.R");
+$cmd = "Rscript $viquas_excu > $tmpOutFile";
+system($cmd);
+
+#check output
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out22;
+while (<T>){
+	chomp;
+	push @out22,$_;
+}
+close T;
+
+my $out22 = join '',@out22;
+
+if ($out22 =~ /BiocGenerics/){
+	Info("ViQuaS.........PASS",'green');
+}else{
+	InfoError("ViQuaS is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing ViQuaS\n";
+	my $viquasnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'qsr', 'viquas.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/viquas.tar.gz -O $viquasnew\n";
+	my $viquasold = dirname($viquas_excu);
+	$autoInstallCMD .= "rm -rf $viquasold\n";
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/qsr/\n";
+	$autoInstallCMD .= "tar xvzf $viquasnew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	
+	push @softwareToInstall,'ViQuaS';
+}
+
+##check igv
+sleep(1);
+Info("Checking IGV");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "80.CheckIGV.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $igv_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools","igv","igv.jar");
+$cmd = "echo \"Checking jar file exist or not\" > $tmpOutFile";
+system($cmd);
+
+#check output
+if(existFile($igv_excu)){
+	Info("IGV.........PASS",'green');
+}else{
+	InfoError("IGV is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing IGV\n";
+	my $igvnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'igv.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/igv.tar.gz -O $igvnew\n";
+	my $igvold = dirname($igv_excu);
+	$autoInstallCMD .= "rm -rf $igvold\n";
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/\n";
+	$autoInstallCMD .= "tar xvzf $igvnew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	
+	push @softwareToInstall,'IGV';
+}
+
+##check picard
+sleep(1);
+Info("Checking Picard tools");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "81.CheckPicard.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $picard_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools","caller","picard.jar");
+$cmd = "echo \"Checking jar file exist or not\" > $tmpOutFile";
+system($cmd);
+
+#check output
+if(existFile($picard_excu)){
+	Info("Picard.........PASS",'green');
+}else{
+	InfoError("Picard is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing Picard\n";
+	my $picardnew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'caller','picard.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/picard.tar.gz -O $picardnew\n";
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/caller/\n";
+	$autoInstallCMD .= "tar xvzf $picardnew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	
+	push @softwareToInstall,'Picard';
+}
+
+##check gatk
+sleep(1);
+Info("Checking GATK");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "82.CheckGATK.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $gatk_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools","caller","GenomeAnalysisTK.jar");
+$cmd = "echo \"Checking jar file exist or not\" > $tmpOutFile";
+system($cmd);
+
+#check output
+if(existFile($gatk_excu)){
+	Info("GATK.........PASS",'green');
+}else{
+	InfoError("GATK is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing GATK\n";
+	my $gatknew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'caller','gatk.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/gatk.tar.gz -O $gatknew\n";
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/caller/\n";
+	$autoInstallCMD .= "tar xvzf $gatknew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	
+	push @softwareToInstall,'GATK';
+}
+
+##check varscan
+sleep(1);
+Info("Checking VarScan");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "83.CheckVarScan.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+my $varscan_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools","caller","VarScan.jar");
+$cmd = "echo \"Checking jar file exist or not\" > $tmpOutFile";
+system($cmd);
+
+#check output
+if(existFile($varscan_excu)){
+	Info("VarScan.........PASS",'green');
+}else{
+	InfoError("VarScan is not installed in your system. Please check.");
+	$autoInstallCMD .= "##Installing VarScan\n";
+	my $varscannew = File::Spec -> catfile($mainBin, 'bin', '3rdPartyTools', 'caller','varscan.tar.gz');
+	$autoInstallCMD .= "wget http://bioinfo.rjh.com.cn/labs/jhuang/tools/softwares/varscan.tar.gz -O $varscannew\n";
+	$autoInstallCMD .= "cd $thirdPartyToolsPath/caller/\n";
+	$autoInstallCMD .= "tar xvzf $varscannew\n";
+	$autoInstallCMD .= "cd $mainBin\n\n";
+	
+	push @softwareToInstall,'VarScan';
+}
+
+##check circos  
+
+##check makeblastdb,blastn
+
+##check blat
+
+
+##check lofreq
+
+
+
+##check swarm
+
 
 ##check gsl
 #sudo apt-get upate -qq
 #sudo apt-get install -y gsl-bin libgs10-dev
 #sudo yum install -y gsl gsl-devel
-
-##check shorah-master and other qsr programs
-
-##check igv
-
-##check circos modules 
-
-##check makeblastdb,blastn
 
 ##get cmd file ready to run
 print AUTO $autoInstallCMD;

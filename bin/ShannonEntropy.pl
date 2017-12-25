@@ -83,6 +83,9 @@ my $format;
 my $suffix;
 my $graphs;
 my $threads;
+my $selectSeqNum;
+my $repNum;
+my $normalized;
 
 my $DateNow = `date +"%Y%m%d_%Hh%Mm%Ss"`;
 chomp $DateNow;
@@ -94,7 +97,10 @@ GetOptions(
 'o|outputDir|=s'    => \$outputDir,
 'g|graphic|=s'      => \$graphs,
 'h|help|'           => \$help,
-'t|threads|=s'      => \$threads
+'t|threads|=s'      => \$threads,
+'n|selectSeqNum|=s' => \$selectSeqNum,
+'r|repNum|=s'       => \$repNum,
+'m|normalized|=s'   => \$normalized
 );
 
 
@@ -113,7 +119,7 @@ if (defined $outputDir){
 	if (not -e $outputDir){
  		InfoWarn("The output directory $outputDir does NOT exist.",'yellow');
  		InfoWarn("Will mkdir $outputDir and use it as the output directory.",'yellow');
-		#pod2usage(-verbose=>0,-exitval=>1);
+		#pod2usage(-verbose=>1,-exitval=>1);
 		#exit;
 		if (!-e $outputDir){
 			my $cmd = "mkdir -p $outputDir";
@@ -121,7 +127,7 @@ if (defined $outputDir){
 		}else{
 			InfoError("Mkdir Failed! Folder $outputDir already exists!","red");
 			InfoError("Please specify another output directory using option -o/--outputDir");
-			pod2usage(-verbose=>0,-exitval=>1);
+			pod2usage(-verbose=>1,-exitval=>1);
 			exit;
 		}
 	}
@@ -136,7 +142,7 @@ if (defined $outputDir){
 	}else{
 		InfoError("Mkdir Failed! $outputDir already exists!","red");
 		InfoError("Please specify another output directory using option -o/--outputDir\n");
-		pod2usage(-verbose=>0,-exitval=>1);
+		pod2usage(-verbose=>1,-exitval=>1);
 		exit;
 	}
 
@@ -151,7 +157,7 @@ if(defined $inputDir){
 	}
 }else{
 	InfoError("Input directory MUST be specified with -i/--inputDir\n");
-	pod2usage(-verbose=>0,-exitval=>1);
+	pod2usage(-verbose=>1,-exitval=>1);
 	exit;
 }
 
@@ -246,15 +252,72 @@ if (defined $format){
 		#nothing
 	}else{
 		InfoError("The file format MUST be one of \'fasta\' or \'fastq\'.");
-		pod2usage(-verbose=>0,-exitval=>1);
+		pod2usage(-verbose=>1,-exitval=>1);
 		exit;
 	}
 }else{
 	InfoError("The file format MUST be specified using -f/--format.");
-	pod2usage(-verbose=>0,-exitval=>1);
+	pod2usage(-verbose=>1,-exitval=>1);
 	exit;
 }
 
+if(defined $selectSeqNum and $selectSeqNum ne "null"){
+	if(CheckPositiveInt($selectSeqNum)){
+		#nothing
+	}else{
+		InfoError("A positive integer is required for --selectSeqNum.");
+		pod2usage(-verbose=>1,-exitval=>1);
+		exit;
+	}
+}else{
+	$selectSeqNum = "0.001";
+}
+
+if(defined $repNum and $repNum ne "null"){
+	if(not defined $selectSeqNum){
+		InfoError("--repNum is available only when --selectSeqNum is enabled.");
+		pod2usage(-verbose=>1,-exitval=>1);
+		exit;
+	}
+	if(CheckPositiveInt($repNum)){
+		if($repNum > 10){
+			InfoWarn("The replication number you provided is 10. This will make the calculations much more slow.");
+		}
+	}else{
+		InfoError("A positive integer is required for --repNum.");
+		pod2usage(-verbose=>1,-exitval=>1);
+		exit;
+	}
+}else{
+	$repNum = "0.001";
+}
+
+if(defined $normalized){
+	if ($normalized =~ /^y/i){
+		$normalized = 'Y';
+	}elsif($normalized =~ /^n/i){
+		$normalized = 'N';
+		
+		if($repNum >= 1 or $selectSeqNum >= 1){
+			InfoError("--repNum and --selectSeqNum are enabled only when --normalized Y is used.");
+			pod2usage(-verbose=>1,-exitval=>1);
+			exit;
+		}
+	}else{
+		InfoError("--normalized should be \'Y\' or \'N\'.");
+		pod2usage(-verbose=>1,-exitval=>1);
+		exit;
+	}
+}else{
+	InfoWarn("--normalized is not defined, using \'--normalized N\' as default.");
+	$normalized = 'N';
+	
+	if($repNum >= 1 or $selectSeqNum >= 1){
+		InfoError("--repNum and --selectSeqNum are enabled only when --normalized Y is used.");
+		pod2usage(-verbose=>1,-exitval=>1);
+		exit;
+	}
+}
 
 ##the core program starts here
 Info("Start calculating...");
@@ -283,21 +346,27 @@ if($threads > 1){
 	my @resfile;
 	my @drawgraph;
 	my @outputDir;
+	my @selectSeqNum;
+	my @repNum;
+	my @normalized;
 	for my $f(@inputfiles){
 		push @format,$format;
 		push @rscript,$rscript;
 		push @resfile,$resfile;
 		push @drawgraph,$drawgraph;
 		push @outputDir,$outputDir;
+		push @selectSeqNum,$selectSeqNum;
+		push @repNum,$repNum;
+		push @normalized,$normalized;
 	}
 	Info("Calculating with multiple threads.");
-	runMultipleThreadsWith6Args(\&shannonWithInfo,\@inputfiles,\@format,\@rscript,\@resfile,\@drawgraph,\@outputDir,$threads);
+	runMultipleThreadsWith9Args(\&shannonWithInfo,\@inputfiles,\@format,\@rscript,\@resfile,\@drawgraph,\@outputDir,\@selectSeqNum,\@repNum,\@normalized,$threads);
 	
 }else{
 	my $i = 1;
 	for my $f (@inputfiles){
 		
-		&shannon($f, $format, $rscript, $resfile, $drawgraph);
+		&shannon($f, $format, $rscript, $resfile, $drawgraph, $selectSeqNum, $repNum, $normalized);
 		
 		#process bar
 		InfoProcessBar($i, $numberOfFiles);
@@ -312,6 +381,9 @@ sub shannon {
 	my $rscript = shift;
 	my $resfile = shift;
 	my $drawgraph = shift;
+	my $selectnum = shift;
+	my $repnum = shift;
+	my $normalized = shift;
 	
 	my $fileName = basename($file);
 	
@@ -326,7 +398,7 @@ sub shannon {
 		extractSeqFromFasta($file, $rInputfile);
 		
 		#calculate
-		my $cmd = "Rscript $rscript -i $rInputfile -o $resfile -l $fileName -p $drawgraph > $rRunLogFile";
+		my $cmd = "Rscript $rscript -i $rInputfile -o $resfile -l $fileName -p $drawgraph -n $selectnum -r $repnum -m $normalized > $rRunLogFile";
 		system($cmd);
 	}elsif(uc($format) eq 'FASTQ'){
 		$fileName = removeFastqSuffix($fileName);
@@ -335,7 +407,7 @@ sub shannon {
 		extractSeqFromFastq($file, $rInputfile);
 		
 		#calculate
-		my $cmd = "Rscript $rscript -i $rInputfile -o $resfile -l $fileName -p $drawgraph > $rRunLogFile";
+		my $cmd = "Rscript $rscript -i $rInputfile -o $resfile -l $fileName -p $drawgraph -n $selectnum -r $repnum -m $normalized > $rRunLogFile";
 		system($cmd);
 	}else{
 		InfoError("The formar MUST be \'fasta\' or \'fastq\'.");
@@ -374,6 +446,9 @@ sub shannonWithInfo {
 	my $resfile = shift;
 	my $drawgraph = shift;
 	my $outputDir = shift;
+	my $selectnum = shift;
+	my $repnum = shift;
+	my $normalized = shift;
 	
 	my $fileName = basename($file);
 	
@@ -390,7 +465,7 @@ sub shannonWithInfo {
 		extractSeqFromFasta($file, $rInputfile);
 		
 		#calculate
-		my $cmd = "Rscript $rscript -i $rInputfile -o $resfile -l $fileName -p $drawgraph > $rRunLogFile";
+		my $cmd = "Rscript $rscript -i $rInputfile -o $resfile -l $fileName -p $drawgraph -n $selectnum -r $repnum -m $normalized > $rRunLogFile";
 		system($cmd);
 	}elsif(uc($format) eq 'FASTQ'){
 		$fileName = removeFastqSuffix($fileName);
@@ -399,7 +474,7 @@ sub shannonWithInfo {
 		extractSeqFromFastq($file, $rInputfile);
 		
 		#calculate
-		my $cmd = "Rscript $rscript -i $rInputfile -o $resfile -l $fileName -p $drawgraph > $rRunLogFile";
+		my $cmd = "Rscript $rscript -i $rInputfile -o $resfile -l $fileName -p $drawgraph -n $selectnum -r $repnum -m $normalized > $rRunLogFile";
 		system($cmd);
 	}else{
 		InfoError("The formar MUST be \'fasta\' or \'fastq\'.");
@@ -486,9 +561,23 @@ Path to directory contaning all the files to be read in.
 
 Suffix of the files to be read in. If suffix is not provided, all the files in input directory will be read in.
 
+=item --selectSeqNum,-n F<INTEGER> [Optional]
+
+Randomly select a subset of input sequences to calculate Shannon entropy. This parameter is disabled as default. If --selectSeqNum is used, please provide a positive integer. 
+
+If the number of selected sequences is set to a number greater than the total number of sequences, then --selectSeqNum will be set to the total number of sequences provided.
+
+=item --repNumber,-r F<INTEGER> [Optional]
+
+If random selection is used, --repNumber is enabled. Please input a positive integer to specify the replication times of calculation. --repNumber 3 is used as default if --selectSeqNum is enabled.
+
 =item --format,-f F<STRING> [Required]
 
 The format of the files to be calculated. Should be one of 'fasta' or 'fastq'.
+
+=item --normalized,-n F<BOOLEAN> [Optional]
+
+Whether calculate shannon entropy or normalized shannon entropy efficiency. Choose between 'Y' and 'N'. 'Y'(Yes) means using normalized value, and 'N'(No) means using the raw value.
 
 =item --graphs,-g F<BOOLEAN> [Optional]
 

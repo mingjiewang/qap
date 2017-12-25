@@ -58,8 +58,9 @@ otu.fil = as.data.frame(otu.fil)
 ## filter samples without OTU
 zeroOTUSample = colnames(otu.fil)[which(colSums(otu.fil) == 0)]
 if(length(zeroOTUSample) > 0){
-  zeroSampleName = paste(zeroOTUSample,sep=" ")
-  stop("Zero OTU meets the filter criteria in sample [", zeroSampleName, "]! Please check the input fasta file." )
+  zeroSampleName = paste(zeroOTUSample,sep="; ", collapse = "; ")
+  message("Zero OTU meets the filter criteria in sample [", zeroSampleName, "]! Please check the input fasta file." )
+  #stop()
 }
 
 otu.fil$OTUName = rownames(otu.fil)
