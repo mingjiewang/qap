@@ -6,13 +6,31 @@ QAP
 
 Virus community, also known as Quasispecies (QS) is highly related to pathogenesis of viral infectious diseases. Recent development of high through-put sequencing have dramatically lowered the cost and labor of QS detection, yet making computational analysis a major limiting step and an enormous challenge. There is an urgent need for an integrated workflow combining different processing steps in quasispecies studies to discover clinical significance underlying virus populations that could be used on a daily basis by clinicians and virologists. That's why we developed QAP, a powerful all-in-one software to solve the problem.
 
-QAP does not only provide command line tools
+There are 41 tools included in QAP till now, and all these tools are classified into 6 categories. 
+- Raw data preprocessing
+- Sequences manipulations
+- Quasispecies characterization
+- Multiple samples comparison 
+- Useful tools
+- Visualization and plots
 
-| Raw data preprocessing | a | b | c |   |
-|------------------------|---|---|---|---|
-| Sequence manipulations | a | b |   |   |
-|                        |   |   |   |   |
-|                        |   |   |   |   |
+After you download or cloned the source code, use QAP with commands below.
+```shell
+# Uncompress the tarball file and enter the directory
+tar xvzf qap.tar.gz
+cd qap/
+# Check dependencies 
+./configure
+# Install missing dependencies
+./autoInstall
+# The step of installation and configuration will take some time. Next, add QAP to system PATH and enjoy.
+echo "export PATH=`pwd`:$PATH" >> ~/.bash_profile
+source ~/.bash_profile 
+```
+
+QAP does not only provide command line tools, but also provide a pretty GUI for users who are uncomfortable with command lines. For more information, please visit [QAP website](http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/).
+
+
 
 In addition, to provide more transcription levels of variant database resources, we collected total 1,285 cases public B-progenitor acute lymphoblastic leukemia (B-ALL) transcriptome data from five different published datasets and built a novel large-scale transcript level sequencing variant database. [The Genome Analysis Toolkit (GATK)](https://software.broadinstitute.org/gatk/), [VarScan2](http://massgenomics.org/varscan) and [LoFreq](http://csb5.github.io/lofreq/) be used to call variants from the RNA-seq data (Database called BRVar). This work can help us to screen candidate systematic sequencing bias and evaluate variant calling trait from B-ALL RNA-seq.
 
