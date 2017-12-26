@@ -66,18 +66,17 @@ Please fork the [GitHub QAP repository](https://github.com/mingjiewang/qap), mod
 ## Maintainer
 
 [Mingjie Wang](https://github.com/mingjiewang/)
+Email: [huzai920621@126.com](huzai920621@126.com)
+Affiliation: [Ruijin Hospital, Shanghai Jiaotong University, School of Medicine](http://bioinfo.rjh.com.cn/labs/jhuang/)
 
 ## License
 
 Main program
-
 [GPL3](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 R package
-
 [MIT](https://en.wikipedia.org/wiki/MIT_License)
 
 Related Other Resources:
-
 [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 
