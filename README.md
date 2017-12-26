@@ -19,13 +19,17 @@ After you download or cloned the source code, use QAP with commands below.
 # Uncompress the tarball file and enter the directory
 $ tar xvzf qap.tar.gz
 $ cd qap/
-# Check dependencies 
+
+# Check dependencies, this may take some time.
 $ ./configure
-# Install missing dependencies
+
+# Install missing dependencies. Please be patient.
 $ ./autoInstall
-# The step of installation and configuration will take some time. Next, add QAP to system PATH.
+
+# Next, add QAP to system PATH.
 $ echo "export PATH=`pwd`:$PATH" >> ~/.bash_profile
 $ source ~/.bash_profile 
+
 # Now, enjoy! 
 $ qap
 ```
@@ -46,10 +50,13 @@ All tools could be invoked from the wrapped main program. Thus, the usage of QAP
 ```bash
 # General command
 $ qap \[Tool name\] \[Arguments\]
+
 # Help information
 $ qap -h or qap \[Tool name\] -h
+
 # Initiate GUI
 $ qap -g
+```
 
 ## Docker
 We also provide for Docker image for full package of QAP. Download it from [docker hub](https://hub.docker.com/r/mingjiewang/qap/).
