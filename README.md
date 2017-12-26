@@ -65,11 +65,11 @@ Please fork the [GitHub QAP repository](https://github.com/mingjiewang/qap), mod
 
 ## Maintainer
 
-[Mingjie Wang](https://github.com/mingjiewang/)
+Author: [Mingjie Wang](https://github.com/mingjiewang/)
 
 Email: huzai920621@126.com
 
-Affiliation: [Bioinformatics center]((http://bioinfo.rjh.com.cn/labs/jhuang/), Ruijin Hospital, Shanghai Jiaotong University, School of Medicine
+Affiliation: [Bioinformatics center](http://bioinfo.rjh.com.cn/labs/jhuang/), Ruijin Hospital, Shanghai Jiaotong University, School of Medicine
 
 ## License
 
