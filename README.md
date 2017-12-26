@@ -30,7 +30,7 @@ $ source ~/.bash_profile
 $ qap
 ```
 
-QAP does not only provide command line tools, but also provide a pretty GUI and web applications for users who are uncomfortable with command lines. For more information, please visit [<font size="15">QAP website</font>](http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/).
+QAP does not only provide command line tools, but also provide a pretty GUI and web applications for users who are uncomfortable with command lines. For more information, please visit [QAP website](http://bioinfo.rjh.com.cn/labs/jhuang/tools/qap/).
 
 
 ## Requirements
