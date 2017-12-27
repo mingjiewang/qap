@@ -1,5 +1,3 @@
-# [![Build Status](https://travis-ci.org/JhuangLab/annovarR.svg)](https://travis-ci.org/JhuangLab/annovarR) [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](https://en.wikipedia.org/wiki/MIT_License) [![codecov](https://codecov.io/github/JhuangLab/annovarR/branch/master/graphs/badge.svg)](https://codecov.io/github/JhuangLab/annovarR) 
-
 QAP
 ==============
 [QAP](https://github.com/mingjiewang/qap) (Quasispecies Analysis Package) is an integrated software to analyze viral quasispecies (QS) high through-put sequencing data, including next generation sequencing (NGS) and third generation sequencing (TGS) data. 
