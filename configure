@@ -1519,7 +1519,7 @@ if ($out28 =~ /gsl_statistics.h/){
 		$autoInstallCMD .= "sudo yum install -y gsl gsl-devel\n";
 	}else{
 		$autoInstallCMD .= "sudo apt-get update -qq\n";
-		$autoInstallCMD .= "sudo apt-get install -y gsl-bin libgsl0-dev\n";
+		$autoInstallCMD .= "sudo apt-get install -y libgsl0ldbl gsl-bin libgsl0-dev\n";
 	}
 	
 	push @softwareToInstall,'GSL';
