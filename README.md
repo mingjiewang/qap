@@ -60,8 +60,11 @@ $ qap -g
 We also provide for Docker image for full package of QAP. Download it from [docker hub](https://hub.docker.com/r/mingjiewang/qap/).
 
 ```bash
-docker pull mingjiewang/qap
-docker run -it -v /tmp/db:/tmp/db -v /tmp/input:/tmp/input mingjiewang/qap /usr/bin/bash
+# Get docker image
+$ docker pull mingjiewang/qap
+
+# Run QAP image in a container
+$ docker run -it -v /tmp/db:/tmp/db -v /tmp/input:/tmp/input mingjiewang/qap /usr/bin/bash
 ```
 
 ## How to contribute?
