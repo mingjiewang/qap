@@ -1494,7 +1494,7 @@ Info("Checking GSL");
 sleep(1);
 $tmpOutFile = File::Spec -> catfile($tmpDir, "89.CheckGSL.log");
 open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
-$cmd = "locate 'gsl/gsl_statistics.h' > $tmpOutFile";
+$cmd = "whereis gsl' > $tmpOutFile";
 system($cmd);
 $cmd = "more /proc/version >> $tmpOutFile";
 system($cmd);
@@ -1510,7 +1510,7 @@ close T;
 
 my $out28 = join '',@out28;
 
-if ($out28 =~ /gsl_statistics.h/){
+if ($out28 =~ /gsl:\s+\/.*gsl/){
 	Info("GSL.........PASS",'green');
 }else{
 	InfoError("GSL is not installed in your system. Please check.");
