@@ -1518,8 +1518,8 @@ if ($out28 =~ /gsl_statistics.h/){
 	if($out28 =~ /red\s?hat/i or $out28 =~ /centos/i){
 		$autoInstallCMD .= "sudo yum install -y gsl gsl-devel\n";
 	}else{
-		$autoInstallCMD .= "sudo apt-get upate -qq\n";
-		$autoInstallCMD .= "sudo apt-get install -y gsl-bin libgs10-dev\n";
+		$autoInstallCMD .= "sudo apt-get update -qq\n";
+		$autoInstallCMD .= "sudo apt-get install -y gsl-bin libgsl0-dev\n";
 	}
 	
 	push @softwareToInstall,'GSL';
