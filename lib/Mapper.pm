@@ -569,12 +569,18 @@ sub blatPipeline {
 	my $input = shift;
 	my $ref = shift;
 	my $outputdir = shift;
+	my $type = shift;
 	
+	$type = "nt" if not defined $type;
 	#run blat
 	Info("Locating the position of sequences using BLAT");
 	my $psl = File::Spec -> catfile($outputdir,removeFastaSuffix(basename($input)) . ".psl");
 	my $cmd = "$blatProgram $ref $input $psl";
-	system($cmd);
+	if($type eq "aa"){
+		$cmd = "$blatProgram -t=prot -q=prot $ref $input $psl";
+	}
+	
+	runcmd($cmd);
 	
 	#parse blat output
 	open T,"$psl" or die "Can NOT open blat output $psl:$!";

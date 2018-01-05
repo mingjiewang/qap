@@ -85,15 +85,17 @@ my $inputfile;
 my $outputDir;
 my $ref;
 my $cutoff;
+my $seqType;
 
 my $DateNow = `date +"%Y%m%d_%Hh%Mm%Ss"`;
 chomp $DateNow;
 
 GetOptions(
 'i|inputFile|=s'     => \$inputfile,
-'r|refSeq|=s'     => \$ref,
-'o|outputDir=s'      => \$outputDir,
+'r|refSeq|=s'        => \$ref,
+'o|outputDir|=s'     => \$outputDir,
 'c|cutoff|=s'        => \$cutoff,
+'p|seqType|=s'       => \$seqType,
 'h|help|'            => \$help
 );
 
@@ -159,6 +161,22 @@ if(defined $inputfile){
 	exit;
 }
 
+if(defined $seqType){
+	if($seqType =~ /nt/i){
+		$seqType = 'nt';
+	}elsif($seqType =~ /aa/i){
+		$seqType = 'aa';
+	}else{
+		InfoError("Type of input sequences MUST be one of \'nt\' or \'aa\'.");
+		pod2usage(-verbose=>1,-exitval=>1);
+		exit;
+	}
+}else{
+	InfoError("Type of input sequence file MUST be provided.");
+	pod2usage(-verbose=>1,-exitval=>1);
+	exit;
+}
+
 if(defined $ref){
 	if(existFile($ref)){
 		#nothing
@@ -213,7 +231,7 @@ if(existFile($rscript)){
 }
 
 #get location from blat output
-my ($psl,$start,$end) = blatPipeline($blatProgram,$inputfile,$ref,$outputDir);
+my ($psl,$start,$end) = blatPipeline($blatProgram,$inputfile,$ref,$outputDir,$seqType);
 
 #get total ref seq
 my $ref2 = File::Spec -> catfile($outputDir,removeFastaSuffix(basename($ref)) . ".2line.fasta");
@@ -296,6 +314,10 @@ This script implements a function to call variants from multiple sequence alignm
 =item --inputFile,-i F<FILE> [Required]
 
 Path to input MSA file (fasta format) which is required.
+
+=item --seqType,-p F<FILE> [Required]
+
+Type of input sequences. Choose between 'nt'(Nucleotide) and 'aa'(Amino acid).
 
 =item --refSeq,-r F<File> [Required]
 
