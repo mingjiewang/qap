@@ -565,7 +565,7 @@ sub extractRes {
 	open T,$file or die "Cannot open $file:$!";
 	while(<T>){
 		chomp;
-		if(/\s+([0-9\.]+)\s+[0-9\.]+/){
+		if(/\s+([0-9\.]+)/){
 			$num = $1;
 			last;
 		}
