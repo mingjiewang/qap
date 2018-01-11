@@ -153,7 +153,7 @@ if (defined $outputDir){
 if (defined $threads){
 	my $check_threads_positive = &CheckPositiveInt($threads);
 	my $threads_max;
-	if(existFile("/proc/cpuinfo")){
+	if(-e ("/proc/cpuinfo")){
 		$threads_max = `grep 'processor' /proc/cpuinfo | sort -u | wc -l`;
 		chomp $threads_max;
 		$threads_max =~ s/\s//g;
