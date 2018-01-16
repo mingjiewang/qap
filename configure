@@ -823,7 +823,7 @@ if ($out16 =~ /GPL Ghostscript (\d)\.(\d+)/){
 		$autoInstallCMD .= "tar xvzf $gsnew\n";
 		$autoInstallCMD .= "cd $mainBin\n\n";
 		my $gsdir = dirname($gs_excu);
-		$autoInstallCMD .= "echo \"export PATH=$gsdir:\$PATH \" >> ~/.bash_profile\n";
+		$autoInstallCMD .= "echo \"export PATH=$gsdir:\\\$PATH \" >> ~/.bash_profile\n";
 		$autoInstallCMD .= "source ~/.bash_profile\n\n";
 		
 		push @softwareToInstall,"Ghostscript";
@@ -841,7 +841,7 @@ if ($out16 =~ /GPL Ghostscript (\d)\.(\d+)/){
 	$autoInstallCMD .= "tar xvzf $gsnew\n";
 	$autoInstallCMD .= "cd $mainBin\n\n";
 	my $gsdir = dirname($gs_excu);
-	$autoInstallCMD .= "echo \"export PATH=$gsdir:\$PATH \" >> ~/.bash_profile\n";
+	$autoInstallCMD .= "echo \"export PATH=$gsdir:\\\$PATH \" >> ~/.bash_profile\n";
 	$autoInstallCMD .= "source ~/.bash_profile\n\n";
 	
 	push @softwareToInstall,'Ghostscript';
@@ -1494,7 +1494,7 @@ Info("Checking GSL");
 sleep(1);
 $tmpOutFile = File::Spec -> catfile($tmpDir, "89.CheckGSL.log");
 open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
-$cmd = "whereis gsl' > $tmpOutFile";
+$cmd = "whereis gsl > $tmpOutFile";
 system($cmd);
 $cmd = "more /proc/version >> $tmpOutFile";
 system($cmd);
@@ -1524,6 +1524,50 @@ if ($out28 =~ /gsl:\s+\/.*gsl/){
 	
 	push @softwareToInstall,'GSL';
 }
+
+##check qap PATH
+sleep(1);
+Info("Checking system PATH");
+#run check
+sleep(1);
+$tmpOutFile = File::Spec -> catfile($tmpDir, "90.CheckPATH.log");
+open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
+$cmd = "qap > $tmpOutFile";
+system($cmd);
+open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
+my @out30;
+while (<T>){
+	chomp;
+	push @out30,$_;
+}
+close T;
+
+my $out30 = join '',@out30;
+
+if ($out30 =~ /Version/){
+	Info("qap system PATH.........PASS",'green');
+}else{
+	InfoError("qap is not in your system PATH. Please check.");
+		$autoInstallCMD .= "echo \"PATH=$mainBin:\\\$PATH \" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"_qap()\" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"{\" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"    COMPREPLY=()\" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"    local cur=\\\$\{COMP_WORDS[COMP_CWORD]\}\;\" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"    local cmd=\\\$\{COMP_WORDS[COMP_CWORD-1]\}\;\" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"    case \\\$cmd in\" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"        'qap')\" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"         COMPREPLY=( \\\$(compgen -W 'RawDataQC RawDataFiltration BarcodeSplit BarcodeTrimmer ExtractReadID ExtractSeq ExtractSeqInR MapReadsToRef RemovePCRDup AssembleSeq ECnQSR TGSpipeline FixCircRef MultipleSeqAlign CutSeqIntoTile CutSeqWithIntervals AminoAcidTranslator ConsensusSeq DominantStrain ShannonEntropy SingleBaseComplexity Diversity MFI MutationCaller MSAMutationCaller PickRobustOTU PickClusterOTU SampleClutering SampleCorrelation SamplePCA OTUBarplot OTUHeatmap OTUNetwork PhyloTree SampleRename Sam2Bam Bam2Sam SortBam Bam2Fastq Fastq2Fasta Circos IGV' -- \\\$cur) ) \;\; \" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"    '*')\" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"        ;;\" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"    esac\" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"    return 0\" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"}\" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"complete -F _qap qap\" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "source ~/.bash_profile\n\n";
+		
+		push @softwareToInstall,'system PATH';
+}
+
 
 ##get cmd file ready to run
 print AUTO $autoInstallCMD;

@@ -575,7 +575,7 @@ If random selection is used, --repNumber is enabled. Please input a positive int
 
 The format of the files to be calculated. Should be one of 'fasta' or 'fastq'.
 
-=item --normalized,-n F<BOOLEAN> [Optional]
+=item --normalized,-m F<BOOLEAN> [Optional]
 
 Whether calculate shannon entropy or normalized shannon entropy efficiency. Choose between 'Y' and 'N'. 'Y'(Yes) means using normalized value, and 'N'(No) means using the raw value.
 
