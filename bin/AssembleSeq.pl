@@ -624,7 +624,7 @@ sub getConsensusSeq {
 		exit(0);
 	}
 	my $fileLabel = removeFastaSuffix(basename($inputfile));
-	my $cmd = "Rscript $rscript -i $rinput -o $outputfile -l $fileLabel";
+	my $cmd = "Rscript $rscript -i $rinput -o $outputfile -l $fileLabel -d N";
 	system($cmd);
 	
 	open C,"$outputfile" or die "Can not open $outputfile:$!";

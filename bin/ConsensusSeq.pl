@@ -309,7 +309,7 @@ for my $f (@inputfiles){
 	my $name = basename($f);
 	printf "[%02d] $name:$len bp\n",$i;
 		
-	sleep(1);
+	#sleep(1);
 	$i++;
 }
 

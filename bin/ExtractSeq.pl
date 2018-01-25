@@ -184,6 +184,12 @@ if (defined $fq2){
 	$pairEnded = 1;
 }
 
+if(not defined $sampleLabel){
+	InfoError("--sampleLabel is not provided. Please check.",'red');
+	pod2usage(-verbose=>0,-exitval=>1);
+	exit;
+}
+
 ##start the analysis
 #find the r script
 my $Rscript = File::Spec -> catfile($RealBin, 'Rscripts', 'ExtractSeq.R');

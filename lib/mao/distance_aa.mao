@@ -18,9 +18,9 @@ Variance Estimation Method         = None
 No. of Bootstrap Replications      = Not Applicable                    
 Substitution Model                 = ====================              
 Substitutions Type                 = Amino acid                        
-Model/Method                       = Jones-Taylor-Thornton (JTT) model 
+Model/Method                       = p-distance                        
 Rates and Patterns                 = ====================              
-Rates among Sites                  = Gamma Distributed (G)             
+Rates among Sites                  = Gamma Distributed With Invariant Sites (G+I)
 Gamma Parameter                    = 1.00                              
 Pattern among Lineages             = Same (Homogeneous)                
 Data Subset to Use                 = ====================              

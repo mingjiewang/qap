@@ -20,9 +20,9 @@ opt <- parse_args(OptionParser(option_list=option_list))
 
 ##read in file
 flog.info(paste("[R OUTPUT] Reading in read ID file:", opt$inputIDFile))
-id = read.table(opt$inputIDFile, header=F, sep="\t")
+id = read.csv2(opt$inputIDFile, header=F, sep="\t")
 flog.info(paste("[R OUTPUT] Reading in sequence file:", opt$inputRawData))
-seq = read.table(opt$inputRawData, header=T, sep="\t")
+seq = read.csv2(opt$inputRawData, header=T, sep="\t")
 
 flog.info(paste("[R OUTPUT] Totally", nrow(id), "IDs and", ceiling(nrow(seq) / 4), "sequences are inputted."))
 

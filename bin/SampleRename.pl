@@ -178,9 +178,7 @@ First is the directory of the file contaning the name of all data files. Second 
 
 =item --sampleName,-s F<FILE> [Required]
 
-Path to the plain text file contaning all the file names to convert. The name file MUST be formatted accordingly: 1. No headline; 2. Two columns, the first contains the old names and the second contains the third name; 
-
-3. Columns seperated by tabs; 4. Both the old names and new names should NOT contain space.
+Path to the plain text file contaning all the file names to convert. The name file MUST be formatted accordingly: 1. No headline; 2. Two columns, the first contains the old names and the second contains the third name; 3. Columns seperated by tabs; 4. Both the old names and new names should NOT contain space.
 
 =item --sampleDir,-d F<FILE> [Required]
 

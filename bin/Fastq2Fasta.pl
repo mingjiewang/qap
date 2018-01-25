@@ -77,7 +77,8 @@ chomp $DateNow;
 GetOptions(
 'i|inputFile|=s'      => \$inputFile,
 'o|outputFile|=s'     => \$outputFile,
-'t|threads|=s'        => \$threads 
+'t|threads|=s'        => \$threads, 
+'h|help|'             => \$help
 );
 
 

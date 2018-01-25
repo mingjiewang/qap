@@ -209,7 +209,7 @@ my $fq2FilterFileName = addTagForRawData($fq2Name,$tag,1) if $pairEnded;
 #outputFile
 my $fq1FilterFile = File::Spec -> catfile($outputDir, $fq1FilterFileName);
 my $fq2FilterFile = File::Spec -> catfile($outputDir, $fq2FilterFileName);
-my $cmd = "cutadapt --quality-cutoff $baseQual --max-n=$maxN --minimum-length $readLen -o $fq1FilterFile -p $fq2FilterFile $fq1 $fq2";
+my $cmd = "cutadapt -U 0 --quality-cutoff $baseQual --max-n=$maxN --minimum-length $readLen -o $fq1FilterFile -p $fq2FilterFile $fq1 $fq2";
 runcmd($cmd);
 
 ##run success
