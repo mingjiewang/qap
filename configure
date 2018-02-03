@@ -1556,7 +1556,7 @@ if ($out30 =~ /Version/){
 		$autoInstallCMD .= "echo \"    local cmd=\\\$\{COMP_WORDS[COMP_CWORD-1]\}\;\" >> ~/.bash_profile \n";
 		$autoInstallCMD .= "echo \"    case \\\$cmd in\" >> ~/.bash_profile \n";
 		$autoInstallCMD .= "echo \"        'qap')\" >> ~/.bash_profile \n";
-		$autoInstallCMD .= "echo \"         COMPREPLY=( \\\$(compgen -W 'RawDataQC RawDataFiltration BarcodeSplit BarcodeTrimmer ExtractReadID ExtractSeq ExtractSeqInR MapReadsToRef RemovePCRDup AssembleSeq ECnQSR TGSpipeline FixCircRef MultipleSeqAlign CutSeqIntoTile CutSeqWithIntervals AminoAcidTranslator ConsensusSeq DominantStrain ShannonEntropy SingleBaseComplexity Diversity MFI MutationCaller MSAMutationCaller PickRobustOTU PickClusterOTU SampleClutering SampleCorrelation SamplePCA OTUBarplot OTUHeatmap OTUNetwork PhyloTree SampleRename Sam2Bam Bam2Sam SortBam Bam2Fastq Fastq2Fasta Circos IGV' -- \\\$cur) ) \;\; \" >> ~/.bash_profile \n";
+		$autoInstallCMD .= "echo \"         COMPREPLY=( \\\$(compgen -W 'RawDataQC RawDataFiltration BarcodeSplitter BarcodeTrimmer ExtractReadID ExtractSeq MapReadsToRef RemovePCRDup AssembleSeq ECnQSR TGSpipeline FixCircRef MultipleSeqAlign CutSeqIntoTile CutSeqWithIntervals AminoAcidTranslator ConsensusSeq DominantStrain ShannonEntropy SingleBaseComplexity Diversity MFI MutationCaller MSAMutationCaller PickRobustOTU PickClusterOTU SampleClustering SampleCorrelation SamplePCA OTUBarplot OTUHeatmap OTUNetwork PhyloTree SampleRename Sam2Bam Bam2Sam SortBam Bam2Fastq Fastq2Fasta Circos IGV' -- \\\$cur) ) \;\; \" >> ~/.bash_profile \n";
 		$autoInstallCMD .= "echo \"    '*')\" >> ~/.bash_profile \n";
 		$autoInstallCMD .= "echo \"        ;;\" >> ~/.bash_profile \n";
 		$autoInstallCMD .= "echo \"    esac\" >> ~/.bash_profile \n";
