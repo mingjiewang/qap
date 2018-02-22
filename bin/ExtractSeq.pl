@@ -55,7 +55,7 @@ use General;
 
 ##Show welcome
 print "You are now running subprogram: ";
-printcol ("ExtractSeqInR","green");
+printcol ("ExtractSeq","green");
 print "\n";
 
 ##get workding directory
@@ -120,7 +120,7 @@ if (defined $outputDir){
 		}
 	}
 }else{
-	$outputDir = File::Spec -> catfile($wk_dir,"qap_Results_for_ExtractSeqInR_$DateNow");
+	$outputDir = File::Spec -> catfile($wk_dir,"qap_Results_for_ExtractSeq_$DateNow");
 	InfoWarn("The output directory is not provided!",'yellow');
 	InfoWarn("Will mkdir \"$outputDir\" and use it as the output directory.",'yellow');
 	
@@ -398,7 +398,7 @@ qap -- Quasispecies analysis package
 
 
 
-qap ExtractSeqInR [options]
+qap ExtractSeq [options]
 
 Use --help to see more information.
 
@@ -450,7 +450,7 @@ Display this detailed help information.
 
 =over 5
 
-qap ExtractSeqInR -1 Data1_R1.fq.gz -2 Data1_R2.fq.gz -i readID.txt -f fastq -o ./seq
+qap ExtractSeq -1 Data1_R1.fq.gz -2 Data1_R2.fq.gz -i readID.txt -f fastq -o ./seq
 
 =back
 
