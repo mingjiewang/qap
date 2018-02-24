@@ -1133,6 +1133,7 @@ sub formatFastaToTwoLineMode {
 	while (<T>){
 		chomp;
 		if (/^>/){
+			$_ =~ s/\s+/_/g;
 			print TMP "\n$_\n";
 		}else{
 			$_ = uc($_);

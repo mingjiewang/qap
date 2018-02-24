@@ -53,18 +53,27 @@ for (i in c(1:nrow(seq.mat))){
 }
 
 out = as.data.frame(out)
-out$Reference = refname
-out$Position = out$Pos + as.numeric(opt$startPos) - 1
-out$Ref.Base = out$Ref
-out$Alt.Base = out$Var1
-out$Depth = ncol(seq.mat)
-out$Frequency = out$Freq / out$Depth
-out$Count = out$Freq
+if(nrow(out) == 0){
+  out2.fil = data.frame(Reference="",
+                        Position="",
+                        Ref.Base="",
+                        Alt.Base="",
+                        Depth="",
+                        Frequency="",
+                        Count="")
+}else{
+  out$Reference = refname
+  out$Position = out$Pos + as.numeric(opt$startPos) - 1
+  out$Ref.Base = out$Ref
+  out$Alt.Base = out$Var1
+  out$Depth = ncol(seq.mat)
+  out$Frequency = out$Freq / out$Depth
+  out$Count = out$Freq
+  out2 = out[,c(5:11)]
+  #filter bases on cutoff
+  out2.fil = out2[out2$Frequency >= as.numeric(opt$cutoff), ]
+}
 
-out2 = out[,c(5:11)]
-
-#filter bases on cutoff
-out2.fil = out2[out2$Frequency >= as.numeric(opt$cutoff), ]
 
 #output
 write.xlsx2(out2.fil, opt$outputFile, sheetName = "Mutation Profile", col.names = T, row.names = F, quote=F, sep="\t")
