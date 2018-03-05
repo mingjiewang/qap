@@ -73,7 +73,7 @@ sub preprocess {
     system("rm -rf $inputfile");
     
     #return the path of output file
-    return $outputfile;
+    return $inputfileWithRGfixed;
 }
 
 sub gatk {
