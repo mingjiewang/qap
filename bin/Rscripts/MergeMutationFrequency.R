@@ -26,6 +26,9 @@ files = unlist(strsplit(opt$inputFiles,","))
 #merge data
 dat = NULL
 for (f in files){
+  if(file.info(f)$size == 0){
+    next
+  }
   dat.tmp = read.table(f,header = F,sep="\t")
   mutation = paste(dat.tmp$V1,dat.tmp$V2,dat.tmp$V3,dat.tmp$V4,sep="^")
   

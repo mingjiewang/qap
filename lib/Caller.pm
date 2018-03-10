@@ -63,6 +63,7 @@ sub preprocess {
 	#fix read group
 	my $inputfileWithRGfixed = $inputfilesort =~ s/\.bam$/.withRG.bam/r;
 	fixReadGroup($inputfilesort,$inputfileWithRGfixed,$picard_excu);
+	system("$samtools_excu index $inputfileWithRGfixed");
 	
 	#mark duplicates
 	my $outmetrics = File::Spec -> catfile(dirname($outputfile),removeSamBamSuffix2(basename($inputfile),1) . ".metric");
@@ -312,7 +313,7 @@ sub mutationCallerPipeline {
 	if (isBamFile($inputfile)){
 		$cmd = "mv $outputdir/*.bam $outputdir/*.bai $outputdir/*.metric $bamdir";
 	}else{
-		$cmd = "mv $outputdir/*.bam $outputdir/*.sam $outputdir/*.bai $outputdir/*.metric $bamdir";
+		$cmd = "mv $outputdir/*.bam $outputdir/*.bai $outputdir/*.metric $bamdir";
 	}
 	
 	system($cmd);

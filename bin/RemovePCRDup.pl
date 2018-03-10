@@ -112,6 +112,9 @@ if(scalar(@ARGV) == 0){
 
 if (defined $outputDir){
 	$outputDir =~ s/\/$//;
+	if($outputDir eq '.'){
+		InfoError("Using this folder is not allowed. Please specify another directory.","red");
+	}
 	$outputDir = abs_path($outputDir) . "/";
 	if (not -e $outputDir){
  		InfoWarn("The output directory $outputDir does NOT exist.",'yellow');
