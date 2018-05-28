@@ -61,7 +61,7 @@ print "\n";
 
 ## check threads available or not
 $| = 1;
-sleep(1);
+#sleep(1);
 my $threads_usable = eval 'use threads; 1';
 if ($threads_usable) {
 	use threads;
@@ -271,7 +271,7 @@ if(defined $suffix){
 	
 }
 
-sleep(1);
+#sleep(1);
 
 
 ##start to calculate
@@ -341,7 +341,7 @@ for my $f (@inputfiles){
 		$seqID++;
 	}
 	
-	sleep 1;
+	#sleep 1;
 	printf "[%02d] $id: ",$i;
 	print "$seqWithoutDelNum / $seqNum sequences without special characters were detected.\n";
 	$i++;
@@ -357,7 +357,7 @@ for my $f (@f_withoutDel){
 	$id =~ s/withoutDel//;
 	##run swarm for each sample and generate the otu seq
 	Info("Calculating OTU clusters for $id");
-	sleep(1);
+	#sleep(1);
 	my $swarmSeqFile = File::Spec -> catfile($tmpDir, $id . ".swarmOTU.tmp.fasta");
 	my $swarmCountFile = File::Spec -> catfile($tmpDir, $id . ".swarmOTUCluster.tmp.txt");
 	my $swarmCMD = "$swarm_excu -w $swarmSeqFile -o $swarmCountFile $f";

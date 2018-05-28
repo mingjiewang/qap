@@ -569,6 +569,10 @@ sub extractRes {
 			$num = $1;
 			last;
 		}
+        if(/\s+n\/c/){
+            $num = 'nc';
+            last;
+        }
 	}
 	close T;
 	
