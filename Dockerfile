@@ -19,7 +19,7 @@ RUN echo "export CLASSPATH=.:/opt/qap/bin/3rdPartyTools/jdk/lib/dt.jar:/opt/qap/
 RUN echo "cat /opt/qap/lib/bashrcFile >> ~/.bashrc"
 RUN . ~/.bashrc  
 RUN ln -sf /opt/qap/bin/3rdPartyTools/jdk/bin/* /usr/bin/ 
-RUN pip install numpy && pip install biopython weblogo && apt install libgsl0ldbl gsl-bin 
+RUN pip install numpy && pip install biopython==1.76 weblogo && apt install libgsl0ldbl gsl-bin 
 RUN echo "deb http://cloud.r-project.org/bin/linux/debian jessie-cran34/" >> /etc/apt/sources.list 
 RUN apt update 
 RUN apt install -y --force-yes libcurl4-openssl-dev libssl-dev vim libatlas3-base r-base r-base-dev bioperl make gcc autoconf automake g++ pkg-config libpcre3 libpcre3-dev libgcrypt11-dev zlib1g-dev gsl-bin libgsl0-dev libgsl0ldbl 
