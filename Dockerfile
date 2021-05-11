@@ -48,6 +48,7 @@ RUN echo "cat /opt/qap/lib/bashrcFile >> /root/.bashrc"
 RUN . /root/.bashrc
 
 # Create soft link for Java
+RUN chmod 755 /opt/qap/bin/3rdPartyTools/jdk/bin/*
 RUN ln -sf /opt/qap/bin/3rdPartyTools/jdk/bin/* /usr/bin/
 
 # Install Python dependency
