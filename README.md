@@ -1,6 +1,7 @@
 QAP
 ==============
 [![Docker Image CI](https://github.com/mingjiewang/qap/actions/workflows/docker-image.yml/badge.svg)](https://github.com/mingjiewang/qap/actions/workflows/docker-image.yml)
+
 [QAP](https://github.com/mingjiewang/qap) (Quasispecies Analysis Package) is an integrated software to analyze viral quasispecies (QS) high through-put sequencing data, including next generation sequencing (NGS) and third generation sequencing (TGS) data. 
 
 Virus community, also known as Quasispecies (QS) is highly related to pathogenesis of viral infectious diseases. Recent development of high through-put sequencing have dramatically lowered the cost and labor of QS detection, yet making computational analysis a major limiting step and an enormous challenge. There is an urgent need for an integrated workflow combining different processing steps in quasispecies studies to discover clinical significance underlying virus populations that could be used on a daily basis by clinicians and virologists. That's why we developed QAP, a powerful all-in-one software to solve the problem.
