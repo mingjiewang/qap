@@ -45,7 +45,7 @@ RUN echo 'export JAVA_HOME=/opt/qap/bin/3rdPartyTools/jdk' >> /root/.bashrc
 RUN echo 'export JRE_HOME=/opt/qap/bin/3rdPartyTools/jdk/jre' >> /root/.bashrc 
 RUN echo "export CLASSPATH=.:/opt/qap/bin/3rdPartyTools/jdk/lib/dt.jar:/opt/qap/bin/3rdPartyTools/jdk/lib/tools.jar" >> /root/.bashrc
 RUN echo "cat /opt/qap/lib/bashrcFile >> /root/.bashrc"
-RUN source /root/.bashrc
+RUN . /root/.bashrc
 
 # Create soft link for Java
 RUN ln -sf /opt/qap/bin/3rdPartyTools/jdk/bin/* /usr/bin/
