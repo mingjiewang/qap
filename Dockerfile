@@ -13,7 +13,7 @@ RUN conda install cutadapt
 
 # Install tools required for project
 RUN apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
-RUN echo "deb http://cloud.r-project.org/bin/linux/debian jessie-cran35/" >> /etc/apt/sources.list 
+RUN echo "deb http://cloud.r-project.org/bin/linux/debian stretch-cran34/" >> /etc/apt/sources.list 
 RUN apt update && apt install -y --force-yes \
     autoconf \
     automake \
