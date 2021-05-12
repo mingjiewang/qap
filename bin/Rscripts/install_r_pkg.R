@@ -1,11 +1,14 @@
 print("===Installing biocLite.R===")
 source("http://bioconductor.org/biocLite.R")
 options(repos = c(CRAN="http://cran.r-project.org"))
-setRepositories(ind = c(1:9))
+#setRepositories(ind = c(1:9))
 print("===Installing Biostrings===")
 biocLite("Biostrings", ask = FALSE)
 #install.packages(c("gplots", "RColorBrewer", "ggplot2", "seqinr", "optparse", "plyr", 
 #                "xlsx", "stringr", "scatterplot3d", "ggpubr", "futile.logger"), dependencies = TRUE)
+print("===Installing ape===")
+install.packages("ape", dependencies = TRUE) 
+
 print("===Installing gplots===")
 install.packages("gplots", dependencies = TRUE) 
 
