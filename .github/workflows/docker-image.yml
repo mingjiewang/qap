@@ -19,7 +19,7 @@ jobs:
           username: xunuopromise
           password: 1e99998b-b09b-4605-8991-b30b9d689d04
       -
-        name: Build and push
+        name: Build and Push
         id: docker_build
         uses: docker/build-push-action@v2
         with:
