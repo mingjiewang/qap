@@ -12,7 +12,7 @@ RUN conda config --set show_channel_urls yes
 RUN conda install cutadapt
 
 # Install tools required for project
-RUN apt-get update && apt install -y --force-yes \
+RUN apt update && apt install -y --force-yes \
     dirmngr \
     apt-transport-https \
     ca-certificates \
