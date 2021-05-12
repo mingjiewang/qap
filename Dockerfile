@@ -12,6 +12,7 @@ RUN conda config --set show_channel_urls yes
 RUN conda install cutadapt
 
 # Install tools required for project
+RUN echo "deb http://cloud.r-project.org/bin/linux/debian jessie-cran34/" >> /etc/apt/sources.list 
 RUN apt update && apt install -y --force-yes \
     autoconf \
     automake \
@@ -57,7 +58,6 @@ RUN pip install numpy \
     weblogo 
 
 # Install R dependency
-RUN echo "deb http://cloud.r-project.org/bin/linux/debian jessie-cran34/" >> /etc/apt/sources.list 
 WORKDIR /opt/qap 
 RUN R CMD javareconf 
 RUN Rscript /opt/qap/bin/Rscripts/install_r_pkg.R 
