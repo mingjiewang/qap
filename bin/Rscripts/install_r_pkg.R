@@ -4,8 +4,18 @@ options(repos = c(CRAN="http://cran.r-project.org"))
 #setRepositories(ind = c(1:9))
 print("===Installing Biostrings===")
 biocLite("Biostrings", ask = FALSE)
-#install.packages(c("gplots", "RColorBrewer", "ggplot2", "seqinr", "optparse", "plyr", 
-#                "xlsx", "stringr", "scatterplot3d", "ggpubr", "futile.logger"), dependencies = TRUE)
+
+print("===Installing shiny===")
+install.packages("shiny", dependencies = TRUE) 
+
+print("===Installing systemfonts===")
+install.packages("systemfonts", dependencies = TRUE) 
+
+print("===Installing devtools===")
+install.packages("devtools", dependencies = TRUE) 
+require(devtools)
+install_version("caTools", version = "1.17.1", repos = "http://cran.us.r-project.org")
+
 print("===Installing ape===")
 install.packages("ape", dependencies = TRUE) 
 
@@ -41,3 +51,4 @@ install.packages("ggpubr", dependencies = TRUE)
 
 print("===Installing futile.logger===")
 install.packages("futile.logger", dependencies = TRUE) 
+
