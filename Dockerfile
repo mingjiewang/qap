@@ -29,6 +29,7 @@ RUN apt update && apt install -y --force-yes \
     g++ \
     libatlas3-base \
     libcurl4-openssl-dev \
+    libfontconfig1-dev \
     libgcrypt11-dev \
     libgsl0ldbl \
     libgsl0-dev \
