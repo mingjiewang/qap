@@ -36,6 +36,8 @@ RUN apt update && apt install -y --force-yes \
     libpcre3 \
     libpcre3-dev \
     libssl-dev \
+    libudunits2-dev \
+    libxml2-dev \
     make \
     pkg-config \
     r-base \
