@@ -32,8 +32,6 @@ RUN apt update && apt install -y --force-yes \
     libcurl4-openssl-dev \
     libfontconfig1-dev \
     libfribidi-dev \
-    libgcrypt11-dev \
-    libgsl0ldbl \
     libgsl0-dev \
     libharfbuzz-dev \
     libpcre3 \
