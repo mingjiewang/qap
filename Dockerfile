@@ -31,12 +31,16 @@ RUN apt update && apt install -y --force-yes \
     libcairo2-dev \
     libcurl4-openssl-dev \
     libfontconfig1-dev \
+    libfreetype6-dev \
     libfribidi-dev \
     libgsl0-dev \
     libharfbuzz-dev \
+    libjpeg-dev \
     libpcre3 \
     libpcre3-dev \
+    libpng-dev \
     libssl-dev \
+    libtiff5-dev \
     libudunits2-dev \
     libxml2-dev \
     make \
