@@ -1,4 +1,4 @@
-FROM continuumio/miniconda:4.3.14
+FROM continuumio/miniconda:4.7.12
 
 # Metadata
 LABEL maintainer="Mingjie_Wang <huzai@sjtu.edu.cn>, XU_Nuo <xunuo_promise@outlook.com>"
@@ -19,7 +19,7 @@ RUN apt update && apt install -y --force-yes \
     software-properties-common \
     gnupg2
 RUN apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
-RUN add-apt-repository 'deb http://cloud.r-project.org/bin/linux/debian jessie-cran35/'
+RUN add-apt-repository 'deb http://cloud.r-project.org/bin/linux/debian buster-cran40/'
 RUN apt update && apt install -y --force-yes \
     autoconf \
     automake \
@@ -28,11 +28,14 @@ RUN apt update && apt install -y --force-yes \
     gsl-bin \
     g++ \
     libatlas3-base \
+    libcairo2-dev \
     libcurl4-openssl-dev \
     libfontconfig1-dev \
+    libfribidi-dev \
     libgcrypt11-dev \
     libgsl0ldbl \
     libgsl0-dev \
+    libharfbuzz-dev \
     libpcre3 \
     libpcre3-dev \
     libssl-dev \
