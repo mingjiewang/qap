@@ -55,7 +55,7 @@ use General;
 
 ##Show welcome
 print "You are now running subprogram: ";
-printcol ("RawDataFiltraion","green");
+printcol ("RawDataQC","green");
 print "\n";
 
 ## check threads available or not
