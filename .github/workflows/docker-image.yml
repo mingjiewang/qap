@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Test Image
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: xunuopromise/qap:latest
+          tags: xunuopromise/qap:test
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
