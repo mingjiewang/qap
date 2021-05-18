@@ -93,6 +93,11 @@ RUN cpan -fi Readonly
 RUN cpan -fi Set::IntSpan 
 RUN cpan -fi Statistics::Basic 
 RUN cpan -fi Text::Format
+RUN cpan -fi Regexp::Common
+
+# Fix SamTools
+RUN rm -rf /opt/qap/bin/3rdPartyTools/samtools/*
+RUN ln -s /usr/bin/samtools /opt/qap/bin/3rdPartyTools/samtools/samtools
 
 # Wrap up
 RUN cp /opt/qap/README.md /root
