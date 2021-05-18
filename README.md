@@ -1,6 +1,11 @@
+<div align="center">
+
 QAP
 ==============
 [![Docker Image CI](https://github.com/mingjiewang/qap/actions/workflows/docker-image.yml/badge.svg)](https://github.com/mingjiewang/qap/actions/workflows/docker-image.yml)
+![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/xunuopromise/qap)
+![Docker Image Version (latest by date)](https://img.shields.io/docker/v/xunuopromise/qap)
+</div>
 
 [QAP](https://github.com/mingjiewang/qap) (Quasispecies Analysis Package) is an integrated software to analyze viral quasispecies (QS) high through-put sequencing data, including next generation sequencing (NGS) and third generation sequencing (TGS) data. 
 
