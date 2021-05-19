@@ -421,7 +421,7 @@ sub isSamFile {
 	my $fileInfo = `file $file`;
 	chomp $fileInfo;
 	
-	if ($fileInfo =~ /ASCII text/i and $filename =~ /\.sam$/){
+	if ($fileInfo =~ /Sequence Alignment/i and $filename =~ /\.sam$/){
 		return 1;
 	}
 	
