@@ -8,6 +8,7 @@ COPY . /opt/qap
 
 # Setup conda 
 RUN conda config --add channels bioconda 
+RUN conda config --add channels conda-forge
 RUN conda config --set show_channel_urls yes 
 RUN conda install cutadapt
 
@@ -36,6 +37,7 @@ RUN apt update && apt install -y --force-yes \
     libgsl0-dev \
     libharfbuzz-dev \
     libjpeg-dev \
+    libopenblas-base \
     libpcre3 \
     libpcre3-dev \
     libpng-dev \
@@ -71,6 +73,10 @@ RUN ln -sf /opt/qap/bin/3rdPartyTools/jdk/bin/* /usr/bin/
 RUN pip install numpy \
     && pip install biopython==1.76 \
     weblogo 
+RUN conda create --name python3 --yes python==3.6
+RUN conda activate py3
+RUN conda install --yes shorah==1.99.2
+RUN conda deactivate
 
 # Install R dependency
 WORKDIR /opt/qap 
