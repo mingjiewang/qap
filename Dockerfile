@@ -74,9 +74,7 @@ RUN pip install numpy \
     && pip install biopython==1.76 \
     weblogo 
 RUN conda create --name python3 --yes python==3.6
-RUN conda activate py3
-RUN conda install --yes shorah==1.99.2
-RUN conda deactivate
+RUN conda install --name python3 --yes shorah==1.99.2
 
 # Install R dependency
 WORKDIR /opt/qap 
