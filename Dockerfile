@@ -73,7 +73,7 @@ RUN ln -sf /opt/qap/bin/3rdPartyTools/jdk/bin/* /usr/bin/
 RUN pip install numpy \
     && pip install biopython==1.76 \
     weblogo 
-RUN conda create --name python3 --yes python==3.6
+RUN conda create --name python3 --yes python==3.9
 RUN conda install --name python3 --yes shorah==1.99.2
 
 # Install R dependency
