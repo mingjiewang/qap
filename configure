@@ -1120,13 +1120,10 @@ sleep(1);
 $tmpOutFile = File::Spec -> catfile($tmpDir, "78.CheckShoRAH.log");
 open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
 my $shorah_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools",'qsr',"Shorah","shorah");
-$preCMD = "conda activate python3";
 $cmd = "python $shorah_excu -h > $tmpOutFile";
-$postCMD = "conda deactivate";
+$cmd = "bash -c 'source activate python3 && $cmd && source deactivate'";
 
-system($preCMD);
 system($cmd);
-system($postCMD);
 
 #check output
 open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";

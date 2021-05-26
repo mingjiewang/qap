@@ -108,5 +108,7 @@ RUN mv -f /opt/qap/bin/3rdPartyTools/qsr/Shorah/amplicon.py /opt/conda/envs/pyth
 
 # Wrap up
 RUN cp /opt/qap/README.md /root
+RUN conda init bash
+RUN chmod 777 /opt/conda/etc/profile.d/conda.sh
 WORKDIR /root
 

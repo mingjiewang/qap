@@ -495,13 +495,10 @@ sub correction {
 	#run shorah
 	chdir($dir) or die "Can not chdir to $dir:$!";;
 
-	my $preCMD = "conda activate python3";
 	my $cmd = "$shorah_excu --bam $bam --fasta $ref";
-	my $postCMD = "conda deactivate";
+	$cmd = "bash -c 'source activate python3 && $cmd && source deactivate'";
 
-	runcmd($preCMD);
 	runcmd($cmd);
-	runcmd($postCMD);
 
 	chdir($realbin) or die "Can not chdir to $realbin:$!";
 	

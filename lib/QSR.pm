@@ -47,16 +47,13 @@ sub shorah_pipeline {
 	chdir $outdir or die "Can NOT chdir to $outdir:$!";
 	my $cmd;
 	if($amplicon eq 'Y'){
-		$cmd = "python $shorah_excu amplicon -b $bamfile -f $ref"
+		$cmd = "python $shorah_excu amplicon -b $bamfile -f $ref -d"
 	}else{
 		$cmd = "python $shorah_excu -b $bamfile -f $ref";
 	}
-	my $preCMD = "conda activate python3";
-	my $postCMD = "conda deactivate";
+	$cmd = "bash -c 'source activate python3 && $cmd && source deactivate'";
 
-	runcmd($preCMD);
 	runcmd($cmd,1);
-	runcmd($postCMD);
 	
 	chdir $RealBin or die "Can NOT chdir to $RealBin:$!";
 }
