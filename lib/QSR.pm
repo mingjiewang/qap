@@ -47,13 +47,16 @@ sub shorah_pipeline {
 	chdir $outdir or die "Can NOT chdir to $outdir:$!";
 	my $cmd;
 	if($amplicon eq 'Y'){
-		my $shorah_excu_new = File::Spec -> catfile(dirname($shorah_excu), 'amplian.py'); 
-		$cmd = "python $shorah_excu_new -b $bamfile -f $ref"
+		$cmd = "python $shorah_excu amplicon -b $bamfile -f $ref"
 	}else{
 		$cmd = "python $shorah_excu -b $bamfile -f $ref";
 	}
-	
+	my $preCMD = "conda activate python3";
+	my $postCMD = "conda deactivate";
+
+	runcmd($preCMD);
 	runcmd($cmd,1);
+	runcmd($postCMD);
 	
 	chdir $RealBin or die "Can NOT chdir to $RealBin:$!";
 }

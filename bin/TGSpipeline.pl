@@ -364,7 +364,7 @@ if(CheckProgram($samtoolsProgram, __FILE__, __LINE__, $DEBUG_MODE)){
 }
 
 ##check shorah
-my $shorah_excu = File::Spec -> catfile($RealBin,'3rdPartyTools','qsr','Shorah','shorah.py');
+my $shorah_excu = File::Spec -> catfile($RealBin,'3rdPartyTools','qsr','Shorah','shorah');
 if(CheckFile($shorah_excu, __FILE__, __LINE__, $DEBUG_MODE)){
 	#keep running
 }else{
@@ -494,8 +494,15 @@ sub correction {
 	my $dir = dirname($bam);
 	#run shorah
 	chdir($dir) or die "Can not chdir to $dir:$!";;
+
+	my $preCMD = "conda activate python3";
 	my $cmd = "$shorah_excu --bam $bam --fasta $ref";
+	my $postCMD = "conda deactivate";
+
+	runcmd($preCMD);
 	runcmd($cmd);
+	runcmd($postCMD);
+
 	chdir($realbin) or die "Can not chdir to $realbin:$!";
 	
 }

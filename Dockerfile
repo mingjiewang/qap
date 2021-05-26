@@ -74,7 +74,8 @@ RUN pip install numpy \
     && pip install biopython==1.76 \
     weblogo 
 RUN conda create --name python3 --yes python==3.9
-RUN conda install --name python3 --yes shorah==1.99.2
+RUN conda install --name python3 --yes shorah==1.99.2 
+RUN conda install --name python3 --yes matplotlib
 
 # Install R dependency
 WORKDIR /opt/qap 
@@ -102,6 +103,8 @@ RUN cpan -fi Regexp::Common
 # Fix SamTools
 RUN rm -rf /opt/qap/bin/3rdPartyTools/samtools/*
 RUN ln -s /usr/bin/samtools /opt/qap/bin/3rdPartyTools/samtools/samtools
+RUN ln -s /opt/conda/envs/python3/bin/shorah /opt/qap/bin/3rdPartyTools/qsr/Shorah/shorah
+RUN mv -f /opt/qap/bin/3rdPartyTools/qsr/Shorah/amplicon.py /opt/conda/envs/python3/lib/python3.9/site-packages/shorah/amplicon.py
 
 # Wrap up
 RUN cp /opt/qap/README.md /root

@@ -1112,16 +1112,21 @@ if ($out21 =~ /QuRe\.main/){
 }
 
 ##check ShoRAH
-#Usage: shorah.py [options]
+#Usage: shorah [options]
 sleep(1);
 Info("Checking ShoRAH");
 #run check
 sleep(1);
 $tmpOutFile = File::Spec -> catfile($tmpDir, "78.CheckShoRAH.log");
 open STDERR,">$tmpOutFile" or die "Cannot output to file $tmpOutFile:$!";
-my $shorah_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools",'qsr',"Shorah","shorah.py");
+my $shorah_excu = File::Spec -> catfile($mainBin, "bin", "3rdPartyTools",'qsr',"Shorah","shorah");
+$preCMD = "conda activate python3";
 $cmd = "python $shorah_excu -h > $tmpOutFile";
+$postCMD = "conda deactivate";
+
+system($preCMD);
 system($cmd);
+system($postCMD);
 
 #check output
 open T,$tmpOutFile or die "Cannot open $tmpOutFile:$!";
@@ -1134,7 +1139,7 @@ close T;
 
 my $out29 = join '',@out29;
 
-if ($out29 =~ /Usage: shorah.py \[options\]/){
+if ($out29 =~ /Usage: shorah \[options\]/){
 	Info("ShoRAH.........PASS",'green');
 }else{
 	InfoError("ShoRAH is not installed in your system. Please check.");

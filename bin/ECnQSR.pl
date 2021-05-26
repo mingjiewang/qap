@@ -375,7 +375,7 @@ if(CheckProgram($samtools_excu, __FILE__, __LINE__, $DEBUG_MODE)){
 	exit;
 }
 #check Shorah
-my $shorah_excu = File::Spec -> catfile($RealBin,"3rdPartyTools","qsr","Shorah","shorah.py");
+my $shorah_excu = File::Spec -> catfile($RealBin,"3rdPartyTools","qsr","Shorah","shorah");
 if(not existFile($shorah_excu)){
 	InfoError("$shorah_excu does NOT exist. Please check.");
 	exit(0);

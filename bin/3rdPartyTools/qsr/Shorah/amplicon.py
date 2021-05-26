@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-# Copyright 2007-2012
+# Copyright 2007-2018
 # Niko Beerenwinkel,
 # Nicholas Eriksson,
 # Moritz Gerstung,
@@ -22,58 +22,97 @@
 
 # You should have received a copy of the GNU General Public License
 # along with ShoRAH.  If not, see <http://www.gnu.org/licenses/>.
-'''amplian.py is the program that performs the analysis in amplicon mode.
+"""amplian.py is the program that performs the analysis in amplicon mode.
    It creates a MSA of the reads and performs error correction with a
    single run of diri_sampler. Then, it performs SNV discovery by
    calling the program snv.py.
-   '''
+   """
+from __future__ import division
+from __future__ import print_function
 import os
 import os.path
 import sys
+import shlex
+import re
+import shutil
 
 import logging
 import logging.handlers
 
 from Bio import SeqIO
 
-# Make a global logging object.
-amplog = logging.getLogger(__name__)
+dn_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if __name__ == '__main__':
+    if __package__ is None:
+        os.sys.path.insert(1, dn_dir)
+        mod = __import__('shorah')
+        sys.modules["shorah"] = mod
+        import shorah_snv
+else:
+    from . import shorah_snv
+
+# Try fetching diri and b2w exe with pkg resources
+try:
+    from pkg_resources import resource_filename
+except ModuleNotFoundError:
+    diri_exe = None
+    b2w_exe = None
+else:
+    diri_exe = resource_filename(__name__, 'bin/diri_sampler')
+    b2w_exe = resource_filename(__name__, 'bin/b2w')
+# Try fetching diri and b2w exe with bash 'which'
+if not (diri_exe and b2w_exe) or not (os.path.exists(diri_exe) and os.path.exists(b2w_exe)):
+    diri_exe = shutil.which('diri_sampler')
+    b2w_exe = shutil.which('b2w')
+    if not (diri_exe and b2w_exe):
+        # Try fetching diri and b2w exe based on directory structure
+        all_dirs = os.path.abspath(__file__).split(os.sep)
+        base_dir = os.sep.join(all_dirs[:-all_dirs[::-1].index('shorah')])
+        diri_exe = os.path.join(base_dir, 'bin', 'diri_sampler')
+        b2w_exe = os.path.join(base_dir, 'bin', 'b2w')
+        if not (os.path.exists(diri_exe) and os.path.exists(b2w_exe)):
+            logging.error(
+                'Executables b2w and diri_sampler not found, compile first.')
+            sys.exit('Executables b2w and diri_sampler not found, compile first.')
+
 
 win_min_ext = 0.95
 cutoff_depth = 10000
 
-dn = os.path.dirname(__file__)
-
 
 def run_child(exe_name, arg_string):
-    '''use subrocess to run an external program with arguments'''
+    """use subrocess to run an external program with arguments"""
     import subprocess
 
     if not arg_string.startswith(' '):
         arg_string = ' ' + arg_string
 
-    amplog.debug(exe_name + arg_string)
+    logging.debug(exe_name + arg_string)
 
     try:
         retcode = subprocess.call(exe_name + arg_string, shell=True)
         if retcode > 0:
-            amplog.error(exe_name + arg_string)
-            amplog.error("Child %s terminated by signal" % exe_name, retcode)
+            logging.error(exe_name + arg_string)
+            logging.error("Child %s terminated by signal %s",
+                          exe_name, retcode)
         else:
-            amplog.debug("Child %s returned %i" % (exe_name, retcode))
+            logging.debug("Child %s returned %i", exe_name, retcode)
     except OSError as ee:
-        amplog.error("Execution of %s failed:" % exe_name, ee)
+        logging.error("Execution of %s failed: %s", exe_name, ee)
 
     return retcode
 
 
 def run_diagnostics(window_file, reads):
-    '''Performs some basic diagnostics on the quality of the MC sampling
-    '''
+    """Performs some basic diagnostics on the quality of the MC sampling
+    """
     import warnings
 
-    smp_file = window_file.split('.')[0] + '.smp'
-    dbg_file = window_file.split('.')[0] + '.dbg'
+    # greedy re match to handle situation where '.reads' appears in the ID
+    stem = re.match(r'^(?P<stem>.*).reads', window_file).group('stem')
+    smp_file = stem + '.smp'
+    dbg_file = stem + '.dbg'
+    del stem
 
     with open(dbg_file) as l:
         lines = l.readlines()
@@ -95,39 +134,39 @@ def run_diagnostics(window_file, reads):
         lines = smp_reader.readlines()
         # fields = lines[0].split()
         for line in lines[1:]:
-            it, cl, unt = map(int, line.split()[:3])
-            the, gam = map(float, line.split()[3:])
+            it, cl, unt = list(map(int, line.split()[:3]))
+            the, gam = list(map(float, line.split()[3:]))
             clusters.append(cl)
             untouched.append(unt)
             theta.append(the)
             gamma.append(gam)
-            del(it)
+            del it
 
-    amplog.info('sample has %d reads' % reads)
+    logging.info('sample has %d reads', reads)
     untouched_hst = untouched[-2000:]
-    unt_mean = float(sum(untouched_hst)) / len(untouched_hst)
+    unt_mean = sum(untouched_hst) / len(untouched_hst)
     unt_ratio = 100 * unt_mean / q
     unt_msg = '%3.1f %% of untouched objects <should be around 90-95%%>' % \
         unt_ratio
-    amplog.info(unt_msg)
+    logging.info(unt_msg)
     if unt_ratio < 90.0:
         warnings.warn(unt_msg)
 
 
 def matchremove(matchobj):
-    '''Callback function used in mpileup manipulation'''
+    """Callback function used in mpileup manipulation"""
     match = matchobj.group(0)
     if match.startswith('+') or match.startswith('-'):
         c = int(match[1:])
     else:
         c = 0
-    del(c)
+    del c
     return ''
 
 
 def shannon_entropy(bases):
-    '''Shannon entropy of a mpileup column: Pseudocount = 1 and
-    returns 0 if length = 1'''
+    """Shannon entropy of a mpileup column: Pseudocount = 1 and
+    returns 0 if length = 1"""
     import math
     if len(bases) == 1:
         return 0.0
@@ -139,19 +178,19 @@ def shannon_entropy(bases):
 
 
 def plot_entropy(pos_ent, pos_coords, ave_ent, win_coords):
-    '''Plot entropies and window to a pdf file with matplotlib'''
+    """Plot entropies and window to a pdf file with matplotlib"""
     try:
         import matplotlib.pyplot as plt
     except ImportError:
-        amplog.error('could not import matplotlib, no pdf produced')
+        logging.error('could not import matplotlib, no pdf produced')
         return
     high_start, high_stop = win_coords
 
     ent_start, ent_stop = pos_coords
-    X = range(ent_start, ent_stop)
+    X = list(range(ent_start, ent_stop))
 
     fig, ax1 = plt.subplots()
-    #ax1.plot(X, pos_ent, '-', color='#E69F00', alpha=0.8)
+    # ax1.plot(X, pos_ent, '-', color='#E69F00', alpha=0.8)
     ax1.vlines(X, 0, pos_ent[ent_start:ent_stop], color='#E69F00', alpha=0.8)
     ax1.set_xlabel('position on reference')
     # Make the y-axis label and tick labels match the line color.
@@ -171,12 +210,13 @@ def plot_entropy(pos_ent, pos_coords, ave_ent, win_coords):
 
     plt.title('chosen entropy window is %d-%d' % (high_start, high_stop))
     plt.savefig('entropy.pdf')
+    del fig
+
 
 def highest_entropy(bam_file, fasta_file, ent_sel='relative'):
-    '''Parse reads to have their length distribution and compute the
-    trimmed mean read length'''
+    """Parse reads to have their length distribution and compute the
+    trimmed mean read length"""
 
-    import re
     import warnings
 
     read_len = []
@@ -186,13 +226,13 @@ def highest_entropy(bam_file, fasta_file, ent_sel='relative'):
     os.remove('rl.txt')
     read_len = sorted(read_len)
     n_reads = len(read_len)
-    amplog.info('n_reads: %d' % n_reads)
+    logging.info('n_reads: %d', n_reads)
     # max_len = max(read_len)
     trimmed_mean = sum([read_len[i] for i in range(int(0.1 * n_reads),
                                                    int(0.9 * n_reads))])
     trimmed_mean /= (0.8 * n_reads)
     trimmed_mean = int(round(trimmed_mean, 0))
-    amplog.info('trimmed_mean: %d' % trimmed_mean)
+    logging.info('trimmed_mean: %d', trimmed_mean)
     # Build the mpileup and compute the entropy per position
     ref_seq = list(SeqIO.parse(fasta_file, 'fasta'))[0]
     entropy = [None] * (len(ref_seq) + 1)
@@ -213,9 +253,9 @@ def highest_entropy(bam_file, fasta_file, ent_sel='relative'):
         # still not perfect control over mpileup format
         if abs(depth - len(column)) > 10:
             warnings.warn('mpileup column not fully parsed')
-            # print refbase, depth, len(column)
-            # print readbase
-            # print column.replace(',', '').replace('.', '')
+            # print(refbase, depth, len(column))
+            # print(readbase)
+            # print(column.replace(',', '').replace('.', ''))
             # sys.exit()
         column = column.replace(',', refbase).replace('.', refbase)
         entropy[pos] = shannon_entropy(column)
@@ -229,11 +269,11 @@ def highest_entropy(bam_file, fasta_file, ent_sel='relative'):
             stop = i
             break
         stop = i
-    amplog.info('start: %d, stop: %d' % (start, stop))
+    logging.info('start: %d, stop: %d', start, stop)
 
     # mean entropy
     ent_mean = [None] * (len(ref_seq) + 1)
-    delta = int(trimmed_mean / 2)  # used to center the moving window
+    delta = trimmed_mean // 2  # used to center the moving window
     for i in range(start, stop - trimmed_mean):
         ent_mean[i + delta] = sum(entropy[i:i + trimmed_mean]) / trimmed_mean
 
@@ -243,7 +283,7 @@ def highest_entropy(bam_file, fasta_file, ent_sel='relative'):
         if entropy[i] > max_ent_per_pos:
             max_ent_per_pos = entropy[i]
             highest_ent_pos = i
-    amplog.info('highest entropy found at position %d' % highest_ent_pos)
+    logging.info('highest entropy found at position %d', highest_ent_pos)
 
     # the window is chosen as the absolute max mean_entropy or as the
     # max mean entropy covering the position with max entropy
@@ -255,14 +295,14 @@ def highest_entropy(bam_file, fasta_file, ent_sel='relative'):
         rsto = stop - trimmed_mean
     elif ent_sel == 'relative':
         rsta = max(start, highest_ent_pos - trimmed_mean + 1)
-        rsto = min(stop - trimmed_mean, highest_ent_pos + 1)
+        rsto = min(stop - trimmed_mean + 2, highest_ent_pos + 1)
 
     for i in range(rsta, rsto):
         ent_mean[i + delta] = sum(entropy[i:i + trimmed_mean]) / trimmed_mean
         if ent_mean[i + delta] >= max_ent:
             max_ent = ent_mean[i + delta]
             high_ent_start = i
-    high_ent_stop = high_ent_start + trimmed_mean
+    high_ent_stop = high_ent_start + trimmed_mean - 1
 
     # print entropy file
     eh = open('entropy.csv', 'w')
@@ -290,33 +330,36 @@ def highest_entropy(bam_file, fasta_file, ent_sel='relative'):
     return high_ent_start, high_ent_stop
 
 
-def main(in_bam='', in_fasta='', min_overlap=0.95, max_coverage=50000,
-         alpha=0.5, s=0.01, region='', diversity=False):
-    '''
+# def main(in_bam, in_fasta, min_overlap=0.95, max_coverage=50000,
+#         alpha=0.5, s=0.01, region='', diversity=False):
+def main(args):
+    """
     Performs the amplicon analysis, running diri_sampler
     and analyzing the result
-    '''
+    """
+    in_bam = args.b
+    in_fasta = args.f
+    region = args.r
+    max_coverage = args.max_coverage
+    alpha = args.a
+    seed = args.seed
+    sigma = args.sigma
+    cov_thrd = args.cov_thrd
+    diversity = args.diversity
+    min_overlap = args.min_overlap
+    ignore_indels = args.ignore_indels
 
-    import snv
-
-    # set logging level
-    amplog.setLevel(logging.DEBUG)
-    # This handler writes everything to a file.
-    LOG_FILENAME = './amplian.log'
-    hl = logging.handlers.RotatingFileHandler(LOG_FILENAME, 'w',
-                                              maxBytes=100000, backupCount=5)
-    f = logging.Formatter("%(levelname)s %(asctime)s %(funcName)s\
-                          %(lineno)d %(message)s")
-    hl.setFormatter(f)
-    amplog.addHandler(hl)
-    amplog.info(' '.join(sys.argv))
+    logging.info(' '.join(sys.argv))
     # info on reference and region if given, or discover high entropy one
     ref_seq = list(SeqIO.parse(in_fasta, 'fasta'))[0]
     ref_name = ref_seq.id
     if region:
-        reg_bound = region.split(':')[1].split('-')
-        reg_start, reg_stop = int(reg_bound[0]), int(reg_bound[1])
+        # handles situation where ':' or '-' appears in the ID
+        reg_bound = re.search(r':(?P<start>\d+)-(?P<stop>\d+)$', region)
+        reg_start, reg_stop = int(reg_bound.group(
+            'start')), int(reg_bound.group('stop'))
         ref_length = reg_stop - reg_start + 1
+        del reg_bound
     elif region == '' and diversity:
         reg_start, reg_stop = highest_entropy(in_bam, in_fasta)
         ref_length = reg_stop - reg_start + 1
@@ -326,112 +369,33 @@ def main(in_bam='', in_fasta='', min_overlap=0.95, max_coverage=50000,
         ref_length = len(ref_seq)
         reg_stop = ref_length
 
-    amplog.info('analysing region from %d to %d' % (reg_start, reg_stop))
+    logging.info('analysing region from %d to %d', reg_start, reg_stop)
 
     # output the reads, aligned to the amplicon
-    b2w_exe = os.path.join(dn, 'b2w')
-    b2w_args = ' -i 0 -w %d -m %d -x %d %s %s %s' % \
-        (ref_length, int(min_overlap * ref_length),
-         max_coverage, in_bam, in_fasta, region)
-    ret_b2w = run_child(b2w_exe, b2w_args)
-    amplog.debug('b2w returned %d' % ret_b2w)
+    d = ' -d' if ignore_indels else ''
+
+    b2w_args = ' -i 0 -w %d -m %d -x %d -c %i%s %s %s %s' % (ref_length, int(
+        min_overlap * ref_length), max_coverage, cov_thrd, d, in_bam, in_fasta, region)
+    ret_b2w = run_child(shlex.quote(b2w_exe), b2w_args)
+    logging.debug('b2w returned %d', ret_b2w)
 
     # run diri_sampler on the aligned reads
-    win_file = 'w-%s-%d-%d.reads.fas' % (ref_name, reg_start, reg_stop)
+    win_file = 'w-%s-%u-%u.reads.fas' % (ref_name, reg_start, reg_stop)
+    # TODO clean ref_name of special caracters - that would be an alternative to processing everything with regex down the line
+    # BUG the solution currently used by ShoRAH can still fail when path '/'
+    # (or on windows '\\' and ':') characters are present in the ref_seq.id
     h = list(open('coverage.txt'))[0]
     n_reads = int(h.split()[-1])
     assert os.path.exists(win_file), 'window file %s not found' % win_file
-    diri_exe = os.path.join(dn, 'diri_sampler')
+
     iterations = min(30000, n_reads * 20)
     diri_args = '-i %s -j %d -a %f -t 2000' % (win_file, iterations, alpha)
-    ret_diri = run_child(diri_exe, diri_args)
-    amplog.debug('diri_sampler returned %d' % ret_diri)
+    ret_diri = run_child(shlex.quote(diri_exe), diri_args)
+    logging.debug('diri_sampler returned %d', ret_diri)
 
     # diagnostics on the convergence
     run_diagnostics(win_file, n_reads)
 
     # run snv.py to parse single nucleotide variants
-    snv.main(reference=options.in_fasta, bam_file=options.in_bam,
-             sigma=s, increment=1)
-
-if __name__ == "__main__":
-
-    import optparse
-    # parse command line
-    optparser = optparse.OptionParser()
-    opts = main.func_defaults  # set the defaults (see http://bit.ly/2hCTQl)
-
-    # First define all option groups
-    group1 = optparse.OptionGroup(optparser, "Input files", "Required input")
-
-    group2 = optparse.OptionGroup(optparser, "Type of run",
-                                  "You can specify a region, or look for the\
-                                  highest diversity region")
-    group3 = optparse.OptionGroup(optparser, "Run options", "Fine tuning")
-    group4 = optparse.OptionGroup(optparser, "More options",
-                                  "Do you really want to change this?")
-
-    group1.add_option("-b", "--bam",
-                      help="file with aligned reads in .bam format",
-                      default=opts[0], type="string", dest="in_bam")
-
-    group1.add_option("-f", "--fasta",
-                      help="reference genome in fasta format",
-                      default=opts[1], type="string", dest="in_fasta")
-
-    group3.add_option("-m", "--min_overlap",
-                      help="fraction of read overlap to be included",
-                      default=opts[2], type="float", dest="min_overlap")
-
-    group4.add_option("-x", "--maxcov",
-                      help="approximate max coverage allowed <%default>",
-                      default=opts[3], type="int", dest="max_coverage")
-
-    group3.add_option("-a", "--alpha",
-                      help="alpha in dpm sampling <%default>",
-                      default=opts[4], type="float", dest="alpha")
-
-    group4.add_option("-s", "--sigma", default=opts[5], type="float",
-                      dest="s",
-                      help="sigma value to use when calling SNVs\
-                      <%default>")
-
-    group2.add_option("-r", "--region", default=opts[6], type="string",
-                      dest="region",
-                      help="region in format 'chr:start-stop'\
-                            eg 'ch3:1000-1300'")
-
-    group2.add_option("-d", "--diversity", action="store_true",
-                      dest="diversity", default=opts[7],
-                      help="if set, automatically detects the highest\
-                            entropy region and runs there <%default>")
-
-    optparser.add_option_group(group1)
-    optparser.add_option_group(group2)
-    optparser.add_option_group(group3)
-    optparser.add_option_group(group4)
-
-    (options, args) = optparser.parse_args()
-
-    supported_formats = {
-        'bam': 'aligned reads',
-        'fasta': 'reference genome'
-    }
-    # check the input file is in supported format
-    try:
-        tmp_filename = os.path.split(options.in_bam)[1]
-        [in_stem, in_format] = [tmp_filename.split('.')[0],
-                                tmp_filename.split('.')[-1]]
-        t = supported_formats[in_format]
-    except IndexError:
-        print 'The input file must be filestem.format'
-        print 'Supported formats are'
-        for sf in supported_formats.iteritems():
-            print sf[0], ':', sf[1]
-        sys.exit()
-    except KeyError:
-        print 'usage: amplian.py -b bam_file -f fasta_reference'
-        sys.exit('Please run with -h for all options')
-    if options.diversity and options.region != '':
-        sys.exit('Either detect the highest entropy region, or specify one')
-    main(*args, **vars(options))
+    args.increment = 1
+    shorah_snv.main(args)
