@@ -47,7 +47,7 @@ sub shorah_pipeline {
 	chdir $outdir or die "Can NOT chdir to $outdir:$!";
 	my $cmd;
 	if($amplicon eq 'Y'){
-		$cmd = "python $shorah_excu amplicon -b $bamfile -f $ref -d"
+		$cmd = "python $shorah_excu amplicon -b $bamfile -f $ref"
 	}else{
 		$cmd = "python $shorah_excu -b $bamfile -f $ref";
 	}

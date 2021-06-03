@@ -171,10 +171,10 @@ def shannon_entropy(bases):
     if len(bases) == 1:
         return 0.0
     letters = ['A', 'C', 'G', 'T']
-    counts = [float(bases.count(l)) if bases.count(l) else 1.0
+    counts = [float(bases.count(l)) 
               for l in letters]
     sc = sum(counts)
-    return -sum([(c / sc) * math.log(c / sc) / math.log(2.0) for c in counts])
+    return sum([(c / sc) * math.log(sc / c) / math.log(2.0) if c!=0.0 else 0.0 for c in counts])
 
 
 def plot_entropy(pos_ent, pos_coords, ave_ent, win_coords):
