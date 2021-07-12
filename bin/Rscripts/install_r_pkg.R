@@ -56,3 +56,6 @@ install.packages("ggpubr", dependencies = TRUE)
 print("===Installing futile.logger===")
 install.packages("futile.logger", dependencies = TRUE) 
 
+
+print("===Installing qgraph===")
+install.packages("qgraph", dependencies = TRUE) 
